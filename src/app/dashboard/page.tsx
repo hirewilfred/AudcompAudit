@@ -61,8 +61,8 @@ export default function DashboardPage() {
     useEffect(() => {
         window.scrollTo(0, 0);
 
-        // Pick 4 random experts from the pool of 10
-        const allExperts = Array.from({ length: 10 }, (_, i) => i + 1);
+        // Pick 4 random experts from the pool of 8 unique images
+        const allExperts = Array.from({ length: 8 }, (_, i) => i + 1);
         const shuffled = [...allExperts].sort(() => 0.5 - Math.random());
         setRandomExperts(shuffled.slice(0, 4));
     }, []);
@@ -472,7 +472,7 @@ export default function DashboardPage() {
                             ))}
                             {randomExperts.length > 0 && (
                                 <div className="h-10 w-10 rounded-full border-4 border-[#F4F7FE] bg-blue-600 flex items-center justify-center text-[10px] font-black text-white shadow-sm">
-                                    +6
+                                    +4
                                 </div>
                             )}
                         </div>
