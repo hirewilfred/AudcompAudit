@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { motion } from 'framer-motion';
 import {
@@ -64,6 +64,11 @@ export default function DashboardPage() {
     const [profile, setProfile] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+    // Scroll to top on mount
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     // Refs for PDF generation
     const scoreRef = useRef<HTMLDivElement>(null);
@@ -220,6 +225,10 @@ export default function DashboardPage() {
 
     const handleDownloadPDF = async () => {
         setIsGeneratingPDF(true);
+
+        // Add a small delay to ensure all re-renders and animations are settled
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         try {
             const pdf = new jsPDF('p', 'mm', 'a4');
             const pageWidth = pdf.internal.pageSize.getWidth();

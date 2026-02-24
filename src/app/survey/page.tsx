@@ -34,6 +34,11 @@ export default function SurveyPage() {
         checkAuth();
     }, []);
 
+    // Scroll to top when question changes or state changes
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [currentStep, isFinishing, isCheckingAuth]);
+
     const currentQuestion = AUDIT_QUESTIONS[currentStep];
     const progress = ((currentStep + 1) / AUDIT_QUESTIONS.length) * 100;
 
@@ -175,7 +180,7 @@ export default function SurveyPage() {
                 </div>
             </header>
 
-            <main className="mx-auto flex min-h-screen max-w-4xl flex-col items-center justify-center px-6 pt-20">
+            <main className="mx-auto flex min-h-screen max-w-4xl flex-col items-center justify-start px-6 pt-32 pb-24">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentQuestion.id}
