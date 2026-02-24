@@ -169,7 +169,9 @@ export default function AuthPage() {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Password</label>
+                        <label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">
+                            {isLogin ? 'Password' : 'Create new password'}
+                        </label>
                         <div className="relative">
                             <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                             <input
