@@ -265,22 +265,38 @@ export default function DashboardPage() {
                     useCORS: true,
                     backgroundColor: isDark ? '#0f172a' : '#ffffff',
                     logging: false,
-                    onclone: (document) => {
-                        // Fix for html2canvas not supporting modern color functions like oklab/oklch
-                        const elements = document.querySelectorAll('*');
+                    onclone: (clonedDoc) => {
+                        // html2canvas fails on modern CSS color functions (oklch, oklab, lab, lch)
+                        // We must aggressively strip or replace these in the cloned document
+                        const elements = clonedDoc.querySelectorAll('*');
+                        const unsupportedSelectors = ['oklch', 'oklab', 'lab', 'lch'];
+
                         elements.forEach((el) => {
                             const htmlEl = el as HTMLElement;
+                            // Checking computed style is more reliable but slower
+                            // For performance, we'll check common properties and backgrounds
                             const style = window.getComputedStyle(htmlEl);
 
-                            // Check background, color, border-color for oklab/oklch
+                            // 1. Check Background Image (Gradients are high risk)
+                            const bgImg = style.backgroundImage;
+                            if (bgImg && unsupportedSelectors.some(s => bgImg.includes(s))) {
+                                htmlEl.style.setProperty('background-image', 'none', 'important');
+                                // Fallback to solid color
+                                htmlEl.style.setProperty('background-color', isDark ? '#1e293b' : '#ffffff', 'important');
+                            }
+
+                            // 2. Check other common properties
                             ['backgroundColor', 'color', 'borderColor', 'fill', 'stroke'].forEach(prop => {
                                 const val = (style as any)[prop];
-                                if (val && (val.includes('oklch') || val.includes('oklab'))) {
-                                    // Fallback to a safe color if it uses unsupported functions
-                                    // For simplicity, we'll try to map common ones or just generic fallbacks
-                                    if (prop === 'backgroundColor') htmlEl.style.backgroundColor = isDark ? '#1e293b' : '#ffffff';
-                                    if (prop === 'color') htmlEl.style.color = isDark ? '#ffffff' : '#0f172a';
-                                    if (prop === 'borderColor') htmlEl.style.borderColor = '#e2e8f0';
+                                if (val && unsupportedSelectors.some(s => val.includes(s))) {
+                                    if (prop === 'backgroundColor') {
+                                        htmlEl.style.setProperty('background-color', isDark ? '#1e293b' : '#ffffff', 'important');
+                                    } else if (prop === 'color') {
+                                        htmlEl.style.setProperty('color', isDark ? '#ffffff' : '#0f172a', 'important');
+                                    } else {
+                                        // Clear borders/strokes that use modern colors to prevent crash
+                                        htmlEl.style.setProperty(prop.replace(/([A-Z])/g, '-$1').toLowerCase(), 'currentColor', 'important');
+                                    }
                                 }
                             });
                         });
