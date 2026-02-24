@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { motion } from 'framer-motion';
 import {
     Radar,
@@ -46,7 +48,8 @@ import {
     Mail as MailIcon,
     Calendar,
     Compass,
-    Rocket
+    Rocket,
+    Download
 } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -60,6 +63,12 @@ export default function DashboardPage() {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [profile, setProfile] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+    // Refs for PDF generation
+    const roiRef = useRef<HTMLDivElement>(null);
+    const roadmapRef = useRef<HTMLDivElement>(null);
+    const dashboardRef = useRef<HTMLDivElement>(null);
 
     // ROI Calculator State
     const [roiEmployees, setRoiEmployees] = useState(5);
@@ -205,6 +214,70 @@ export default function DashboardPage() {
             console.error("Error updating profile:", err);
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleDownloadPDF = async () => {
+        setIsGeneratingPDF(true);
+        try {
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const margin = 10;
+            const contentWidth = pageWidth - (margin * 2);
+
+            // 1. Add Header Content (Company Name, Audit Date)
+            pdf.setFontSize(22);
+            pdf.setTextColor(15, 23, 42); // slate-900
+            pdf.text("EXECUTIVE AI AUDIT REPORT", margin, 20);
+
+            pdf.setFontSize(10);
+            pdf.setTextColor(100, 116, 139); // slate-500
+            pdf.text(`ORGANIZATION: ${profile?.organization?.toUpperCase() || 'EXTERNAL WORKSPACE'}`, margin, 28);
+            pdf.text(`DATE: ${new Date().toLocaleDateString()}`, margin, 33);
+            pdf.line(margin, 38, pageWidth - margin, 38);
+
+            let yOffset = 45;
+
+            // Function to capture and add component to PDF
+            const addComponentToPDF = async (ref: React.RefObject<HTMLDivElement | null>, title: string) => {
+                if (!ref.current) return yOffset;
+
+                // Add Title
+                pdf.setFontSize(14);
+                pdf.setTextColor(30, 41, 59); // slate-800
+                pdf.text(title, margin, yOffset);
+                yOffset += 10;
+
+                const canvas = await html2canvas(ref.current, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff'
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const imgHeight = (canvas.height * contentWidth) / canvas.width;
+
+                if (yOffset + imgHeight > pageHeight - margin) {
+                    pdf.addPage();
+                    yOffset = margin + 10;
+                }
+
+                pdf.addImage(imgData, 'PNG', margin, yOffset, contentWidth, imgHeight);
+                return yOffset + imgHeight + 15;
+            };
+
+            // Add ROI Section
+            yOffset = await addComponentToPDF(roiRef, "ECONOMIC IMPACT ANALYSIS");
+
+            // Add Roadmap Section
+            await addComponentToPDF(roadmapRef, "IMPLEMENTATION STRATEGY");
+
+            pdf.save(`AI_Audit_Report_${profile?.organization?.replace(/\s+/g, '_') || 'Executive'}.pdf`);
+        } catch (err) {
+            console.error("PDF Generation Error:", err);
+        } finally {
+            setIsGeneratingPDF(false);
         }
     };
 
@@ -361,7 +434,7 @@ export default function DashboardPage() {
                         </section>
 
                         {/* Implementation Roadmap Timeline */}
-                        <section className="bg-white rounded-[48px] p-10 shadow-sm border border-slate-100/50">
+                        <section ref={roadmapRef} className="bg-white rounded-[48px] p-10 shadow-sm border border-slate-100/50">
                             <div className="flex items-center justify-between mb-10">
                                 <div className="flex items-center gap-3">
                                     <div className="h-10 w-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
@@ -688,14 +761,24 @@ export default function DashboardPage() {
                             </div>
                         </section>
 
-                        <section className="bg-slate-900 rounded-[48px] p-10 text-white shadow-2xl shadow-blue-900/20 relative overflow-hidden group">
+                        <section ref={roiRef} className="bg-slate-900 rounded-[48px] p-10 text-white shadow-2xl shadow-blue-900/20 relative overflow-hidden group">
                             <div className="absolute top-0 right-0 w-full h-full opacity-5 bg-[radial-gradient(circle_at_80%_20%,_#3b82f6_0%,_transparent_50%)]" />
                             <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-8">
                                     <div className="h-12 w-12 rounded-2xl bg-blue-600/20 flex items-center justify-center backdrop-blur-md border border-blue-500/20">
                                         <TrendingUp className="h-6 w-6 text-blue-400" />
                                     </div>
-                                    <div className="bg-blue-500/20 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-400/20">Executive ROI Insight</div>
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={handleDownloadPDF}
+                                            disabled={isGeneratingPDF}
+                                            className="bg-white/10 hover:bg-white/20 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full border border-white/10 transition-all flex items-center gap-2 disabled:opacity-50"
+                                        >
+                                            {isGeneratingPDF ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+                                            PDF Report
+                                        </button>
+                                        <div className="bg-blue-500/20 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-400/20">Executive ROI Insight</div>
+                                    </div>
                                 </div>
 
                                 {/* Big Numbers First */}
