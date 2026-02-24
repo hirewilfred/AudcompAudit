@@ -890,14 +890,79 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
 
-                                {/* Big Numbers First */}
-                                <div className="grid grid-cols-1 gap-6 mb-10">
+                                {/* Controls Section - NOW AT TOP */}
+                                <div className="mb-10">
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6 border-b border-white/5 pb-4">Adjust Parameters</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-slate-500">
+                                                <span>Employees Performing Task</span>
+                                                <span className="text-blue-400">{roiEmployees}</span>
+                                            </div>
+                                            <input
+                                                type="range" min="1" max="50"
+                                                value={roiEmployees}
+                                                onChange={(e) => setRoiEmployees(parseInt(e.target.value))}
+                                                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-slate-500">
+                                                <span>Frequency (per Week)</span>
+                                                <span className="text-blue-400">{roiFrequency}</span>
+                                            </div>
+                                            <input
+                                                type="range" min="1" max="100"
+                                                value={roiFrequency}
+                                                onChange={(e) => setRoiFrequency(parseInt(e.target.value))}
+                                                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-slate-500">
+                                                <span>Mins per Task</span>
+                                                <span className="text-blue-400">{roiMinutes}m</span>
+                                            </div>
+                                            <input
+                                                type="range" min="5" max="120" step="5"
+                                                value={roiMinutes}
+                                                onChange={(e) => setRoiMinutes(parseInt(e.target.value))}
+                                                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-slate-500">
+                                                <span>Hourly Labor Cost</span>
+                                                <span className="text-blue-400">${roiHourlyRate}/hr</span>
+                                            </div>
+                                            <input
+                                                type="range" min="20" max="250" step="5"
+                                                value={roiHourlyRate}
+                                                onChange={(e) => setRoiHourlyRate(parseInt(e.target.value))}
+                                                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Results Grid */}
+                                <div className="grid grid-cols-1 gap-6 mb-8">
                                     <div className="p-8 rounded-[40px] bg-gradient-to-br from-blue-600 to-indigo-700 shadow-xl relative overflow-hidden group/card">
                                         <div className="absolute top-0 right-0 p-4 opacity-10">
                                             <Zap className="h-20 w-20" />
                                         </div>
                                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-100 mb-2">Projected Annual Savings</p>
-                                        <h3 className="text-5xl font-black text-white leading-none">${Math.round(annualSavings).toLocaleString()}</h3>
+                                        <motion.h3
+                                            key={annualSavings}
+                                            initial={{ scale: 0.95 }}
+                                            animate={{ scale: 1 }}
+                                            className="text-5xl font-black text-white leading-none"
+                                        >
+                                            ${Math.round(annualSavings).toLocaleString()}
+                                        </motion.h3>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
@@ -912,85 +977,25 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
 
-                                {/* Summary Language */}
+                                {/* Simple Summary Text */}
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     key={annualSavings}
-                                    className="mb-10 p-6 rounded-[32px] bg-blue-500/5 border border-blue-500/10 italic"
+                                    className="mb-10 p-6 rounded-[32px] bg-blue-500/5 border border-blue-500/10 italic text-center"
                                 >
-                                    <p className="text-sm font-bold text-blue-100 leading-relaxed">
-                                        “You currently spend <span className="text-white">${Math.round(currentAnnualCost).toLocaleString()}/year</span> on manual processing. <br className="hidden md:block" />
-                                        With AI automation at <span className="text-blue-400">65%</span>, estimated savings: <span className="text-white">${Math.round(annualSavings).toLocaleString()}/year</span>. <br className="hidden md:block" />
-                                        Payback in <span className="text-blue-400">{paybackMonths} months</span>.”
+                                    <p className="text-sm font-bold text-blue-100/60 leading-relaxed">
+                                        Targeting <span className="text-blue-400">65% automation</span> could save you <span className="text-white">${Math.round(annualSavings).toLocaleString()}</span> per year with a <span className="text-blue-400">{paybackMonths} month</span> payback period.
                                     </p>
                                 </motion.div>
 
-
-
-                                {/* Controls Section */}
-                                <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6 border-b border-white/5 pb-4">Adjust Parameters</h3>
-                                <div className="space-y-6">
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-slate-500">
-                                            <span>Employees Performing Task</span>
-                                            <span className="text-blue-400">{roiEmployees}</span>
-                                        </div>
-                                        <input
-                                            type="range" min="1" max="50"
-                                            value={roiEmployees}
-                                            onChange={(e) => setRoiEmployees(parseInt(e.target.value))}
-                                            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-slate-500">
-                                            <span>Frequency (per Week)</span>
-                                            <span className="text-blue-400">{roiFrequency}</span>
-                                        </div>
-                                        <input
-                                            type="range" min="1" max="100"
-                                            value={roiFrequency}
-                                            onChange={(e) => setRoiFrequency(parseInt(e.target.value))}
-                                            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-slate-500">
-                                            <span>Mins per Task</span>
-                                            <span className="text-blue-400">{roiMinutes}m</span>
-                                        </div>
-                                        <input
-                                            type="range" min="5" max="120" step="5"
-                                            value={roiMinutes}
-                                            onChange={(e) => setRoiMinutes(parseInt(e.target.value))}
-                                            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-slate-500">
-                                            <span>Hourly Labor Cost</span>
-                                            <span className="text-blue-400">${roiHourlyRate}/hr</span>
-                                        </div>
-                                        <input
-                                            type="range" min="20" max="250" step="5"
-                                            value={roiHourlyRate}
-                                            onChange={(e) => setRoiHourlyRate(parseInt(e.target.value))}
-                                            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                                        />
-                                    </div>
-
-                                    <button
-                                        onClick={handleBooking}
-                                        className="w-full bg-white text-slate-900 font-black py-5 rounded-[24px] transition-all hover:bg-blue-50 flex items-center justify-center gap-3 shadow-xl active:scale-95 mt-8 group"
-                                    >
-                                        Capture These Savings
-                                        <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-                                    </button>
-                                </div>
+                                <button
+                                    onClick={handleBooking}
+                                    className="w-full bg-white text-slate-900 font-black py-5 rounded-[24px] transition-all hover:bg-blue-50 flex items-center justify-center gap-3 shadow-xl active:scale-95 group"
+                                >
+                                    Capture These Savings
+                                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                                </button>
                             </div>
                         </section>
                     </div>
