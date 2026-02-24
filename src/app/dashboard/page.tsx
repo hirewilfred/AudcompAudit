@@ -55,10 +55,16 @@ export default function DashboardPage() {
     const [profile, setProfile] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+    const [randomExperts, setRandomExperts] = useState<number[]>([]);
 
-    // Scroll to top on mount
+    // Scroll to top and pick random experts on mount
     useEffect(() => {
         window.scrollTo(0, 0);
+
+        // Pick 4 random experts from the pool of 10
+        const allExperts = Array.from({ length: 10 }, (_, i) => i + 1);
+        const shuffled = [...allExperts].sort(() => 0.5 - Math.random());
+        setRandomExperts(shuffled.slice(0, 4));
     }, []);
 
     // Refs for PDF generation
@@ -372,11 +378,16 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="flex -space-x-3">
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => (
+                            {randomExperts.map(i => (
                                 <div key={i} className="h-10 w-10 rounded-full border-4 border-[#F4F7FE] bg-slate-200 overflow-hidden shadow-sm">
                                     <img src={`/images/experts/expert-${i}.jpg`} alt="Expert" className="h-full w-full object-cover" />
                                 </div>
                             ))}
+                            {randomExperts.length > 0 && (
+                                <div className="h-10 w-10 rounded-full border-4 border-[#F4F7FE] bg-blue-600 flex items-center justify-center text-[10px] font-black text-white shadow-sm">
+                                    +6
+                                </div>
+                            )}
                         </div>
                         <p className="text-sm font-bold text-slate-400 italic">Experts assigned to your roadmap</p>
                     </div>
