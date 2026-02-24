@@ -29,7 +29,12 @@ import {
     Cpu,
     Shield,
     Activity,
-    Globe
+    Globe,
+    User,
+    Settings,
+    Phone,
+    Building,
+    Mail as MailIcon
 } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -40,6 +45,9 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [auditData, setAuditData] = useState<any>(null);
     const [isBookingOpen, setIsBookingOpen] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [profile, setProfile] = useState<any>(null);
+    const [isSaving, setIsSaving] = useState(false);
     const router = useRouter();
     const supabase = createClient();
 
@@ -52,10 +60,10 @@ export default function DashboardPage() {
                     return;
                 }
 
-                // Check if audit is actually finished
+                // Fetch profile
                 const { data: profile } = await supabase
                     .from('profiles')
-                    .select('has_completed_audit')
+                    .select('*')
                     .eq('id', session.user.id)
                     .single() as any;
 
@@ -63,6 +71,7 @@ export default function DashboardPage() {
                     router.push('/survey');
                     return;
                 }
+                setProfile(profile);
 
                 const { data, error } = await supabase
                     .from('audit_scores')
@@ -157,6 +166,29 @@ export default function DashboardPage() {
         setIsBookingOpen(true);
     };
 
+    const handleSaveProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSaving(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { error } = await (supabase.from('profiles') as any).update({
+                full_name: profile.full_name,
+                organization: profile.organization,
+                phone: profile.phone,
+                updated_at: new Date().toISOString()
+            }).eq('id', user.id);
+
+            if (error) throw error;
+            setIsSettingsOpen(false);
+        } catch (err) {
+            console.error("Error updating profile:", err);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-[#F4F7FE]">
@@ -186,25 +218,25 @@ export default function DashboardPage() {
 
                     <nav className="hidden lg:flex items-center gap-1">
                         <button className="px-6 py-2.5 rounded-full bg-slate-900 text-white text-sm font-black shadow-lg shadow-slate-900/10">Dashboard</button>
-                        <button className="px-5 py-2.5 rounded-full text-slate-400 hover:text-slate-900 text-sm font-bold transition-all">My Audit</button>
-                        <button className="px-5 py-2.5 rounded-full text-slate-400 hover:text-slate-900 text-sm font-bold transition-all">Strategy</button>
-                        <button className="px-5 py-2.5 rounded-full text-slate-400 hover:text-slate-900 text-sm font-bold transition-all">Support</button>
                     </nav>
                 </div>
 
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-5 text-slate-300">
-                        <Search className="h-5 w-5 cursor-pointer hover:text-slate-600 transition-colors" />
                         <Bell className="h-5 w-5 cursor-pointer hover:text-slate-600 transition-colors" />
+                        <Settings
+                            className="h-5 w-5 cursor-pointer hover:text-slate-600 transition-colors"
+                            onClick={() => setIsSettingsOpen(true)}
+                        />
                     </div>
-                    <div className="flex items-center gap-4 pl-6 border-l border-slate-100">
+                    <div className="flex items-center gap-4 pl-6 border-l border-slate-100 cursor-pointer group" onClick={() => setIsSettingsOpen(true)}>
                         <div className="text-right hidden sm:block">
-                            <p className="text-sm font-black text-slate-900">Workspace</p>
+                            <p className="text-sm font-black text-slate-900 group-hover:text-blue-600 transition-colors">{profile?.organization || 'Workspace'}</p>
                             <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Premium Plan</p>
                         </div>
-                        <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-[2px] shadow-lg shadow-blue-600/20">
+                        <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-[2px] shadow-lg shadow-blue-600/20 group-hover:scale-105 transition-transform">
                             <div className="h-full w-full rounded-[14px] bg-white flex items-center justify-center overflow-hidden">
-                                <img src={`https://ui-avatars.com/api/?name=Client&background=fff&color=3b82f6`} alt="Avatar" />
+                                <img src={`https://ui-avatars.com/api/?name=${profile?.full_name || 'User'}&background=fff&color=3b82f6`} alt="Avatar" />
                             </div>
                         </div>
                     </div>
@@ -579,6 +611,87 @@ export default function DashboardPage() {
                                 <span>Powered by Cal.com & Audcomp</span>
                                 <span>Secure Strategy Booking</span>
                             </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Profile Settings Modal */}
+            <AnimatePresence>
+                {isSettingsOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md"
+                        onClick={() => setIsSettingsOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="relative w-full max-w-md bg-white rounded-[40px] shadow-2xl p-10"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex items-center justify-between mb-8">
+                                <h3 className="text-2xl font-black text-slate-900 tracking-tight">Organization Profile</h3>
+                                <button onClick={() => setIsSettingsOpen(false)} className="text-slate-400 hover:text-slate-900 transition-colors">
+                                    <X className="h-6 w-6" />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleSaveProfile} className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Full Name</label>
+                                    <div className="relative">
+                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" />
+                                        <input
+                                            type="text"
+                                            value={profile?.full_name || ''}
+                                            onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-blue-600 transition-colors font-bold text-slate-900"
+                                            placeholder="Your Name"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Company Name</label>
+                                    <div className="relative">
+                                        <Building className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" />
+                                        <input
+                                            type="text"
+                                            value={profile?.organization || ''}
+                                            onChange={(e) => setProfile({ ...profile, organization: e.target.value })}
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-blue-600 transition-colors font-bold text-slate-900"
+                                            placeholder="Company Name"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Phone Number</label>
+                                    <div className="relative">
+                                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" />
+                                        <input
+                                            type="tel"
+                                            value={profile?.phone || ''}
+                                            onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-blue-600 transition-colors font-bold text-slate-900"
+                                            placeholder="+1 (555) 000-0000"
+                                        />
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={isSaving}
+                                    className="w-full bg-slate-900 text-white font-black py-5 rounded-[24px] shadow-xl hover:bg-black transition-all flex items-center justify-center gap-2 group disabled:opacity-50"
+                                >
+                                    {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Save Changes'}
+                                    {!isSaving && <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />}
+                                </button>
+                            </form>
                         </motion.div>
                     </motion.div>
                 )}

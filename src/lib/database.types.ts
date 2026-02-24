@@ -14,6 +14,7 @@ export interface Database {
           id: string
           full_name: string | null
           organization: string | null
+          phone: string | null
           has_completed_audit: boolean
           last_audit_score: number | null
           updated_at: string | null
@@ -22,6 +23,7 @@ export interface Database {
           id: string
           full_name?: string | null
           organization?: string | null
+          phone?: string | null
           has_completed_audit?: boolean
           last_audit_score?: number | null
           updated_at?: string | null
@@ -30,6 +32,7 @@ export interface Database {
           id?: string
           full_name?: string | null
           organization?: string | null
+          phone?: string | null
           has_completed_audit?: boolean
           last_audit_score?: number | null
           updated_at?: string | null
