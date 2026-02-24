@@ -23,15 +23,23 @@ import {
     ShieldCheck,
     TrendingUp,
     Layout,
-    FileText
+    FileText,
+    X,
+    Database,
+    Cpu,
+    Shield,
+    Activity,
+    Globe
 } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { AnimatePresence } from 'framer-motion';
 
 export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [auditData, setAuditData] = useState<any>(null);
+    const [isBookingOpen, setIsBookingOpen] = useState(false);
     const router = useRouter();
     const supabase = createClient();
 
@@ -92,46 +100,62 @@ export default function DashboardPage() {
             title: "Advanced Co-pilot Agents",
             desc: "Custom AI workforce tailored for complex departmental operations.",
             tag: "Advanced",
-            color: "bg-blue-50 text-blue-600 border-blue-100/50",
+            color: "bg-gradient-to-br from-sky-50 to-white text-sky-800 border-sky-100/50",
+            iconColor: "text-sky-500",
             icon: Zap,
+            pattern: "radial-gradient(circle at 2px 2px, #bae6fd 1px, transparent 0)",
         },
         {
             title: "Advanced Multi-agent Consulting",
             desc: "Architecting autonomous systems that handle complex multi-step tasks.",
             tag: "Integration",
-            color: "bg-indigo-50 text-indigo-600 border-indigo-100/50",
+            color: "bg-gradient-to-br from-blue-50 to-white text-blue-800 border-blue-100/50",
+            iconColor: "text-blue-500",
             icon: Sparkles,
+            pattern: "radial-gradient(circle at 2px 2px, #bfdbfe 1px, transparent 0)",
         },
         {
             title: "Org-wide AI Implementation",
             desc: "Full-scale deployment strategies for enterprise-wide AI adoption.",
             tag: "Scale",
-            color: "bg-amber-50 text-amber-600 border-amber-100/50",
+            color: "bg-gradient-to-br from-indigo-50 to-white text-indigo-800 border-indigo-100/50",
+            iconColor: "text-indigo-500",
             icon: Target,
+            pattern: "radial-gradient(circle at 2px 2px, #c7d2fe 1px, transparent 0)",
         }
     ] : [
         {
             title: "AI Readiness Assessment",
             desc: "Full deep-dive into your infrastructure and data quality.",
             tag: "Foundation",
-            color: "bg-blue-50 text-blue-600 border-blue-100/50",
+            color: "bg-gradient-to-br from-sky-50 to-white text-sky-800 border-sky-100/50",
+            iconColor: "text-sky-500",
             icon: Target,
+            pattern: "radial-gradient(circle at 2px 2px, #bae6fd 1px, transparent 0)",
         },
         {
             title: "Expert AI Consulting",
             desc: "Strategic roadmap to align AI with your business goals.",
             tag: "Strategy",
-            color: "bg-indigo-50 text-indigo-600 border-indigo-100/50",
+            color: "bg-gradient-to-br from-blue-50 to-white text-blue-800 border-blue-100/50",
+            iconColor: "text-blue-500",
             icon: Sparkles,
+            pattern: "radial-gradient(circle at 2px 2px, #bfdbfe 1px, transparent 0)",
         },
         {
             title: "Co-pilot Agent Development",
             desc: "Build custom AI agents to automate your team's workflows.",
             tag: "Automation",
-            color: "bg-amber-50 text-amber-600 border-amber-100/50",
+            color: "bg-gradient-to-br from-indigo-50 to-white text-indigo-800 border-indigo-100/50",
+            iconColor: "text-indigo-500",
             icon: Zap,
+            pattern: "radial-gradient(circle at 2px 2px, #c7d2fe 1px, transparent 0)",
         }
     ];
+
+    const handleBooking = () => {
+        setIsBookingOpen(true);
+    };
 
     if (loading) {
         return (
@@ -228,22 +252,34 @@ export default function DashboardPage() {
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: i * 0.1 }}
-                                        className={`${rec.color} rounded-[40px] p-8 flex flex-col justify-between min-h-[260px] border relative overflow-hidden group hover:scale-[1.03] transition-all duration-500 cursor-pointer shadow-sm hover:shadow-xl hover:shadow-blue-900/5`}
+                                        onClick={handleBooking}
+                                        className={`${rec.color} rounded-[40px] p-8 flex flex-col justify-between min-h-[260px] border-2 relative overflow-hidden group hover:scale-[1.03] transition-all duration-500 cursor-pointer shadow-sm hover:shadow-2xl hover:shadow-blue-900/10`}
                                     >
-                                        <div>
-                                            <div className="flex items-center justify-between mb-5">
-                                                <div className="bg-white/60 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest leading-none">High Priority</div>
-                                                <rec.icon className="h-6 w-6 opacity-40 group-hover:opacity-100 transition-opacity" />
+                                        <div
+                                            className="absolute inset-0 opacity-[0.4]"
+                                            style={{
+                                                backgroundImage: rec.pattern,
+                                                backgroundSize: '24px 24px'
+                                            }}
+                                        />
+                                        <div className="absolute top-0 right-0 -mr-4 -mt-4 h-32 w-32 bg-current opacity-[0.03] rounded-full blur-3xl group-hover:opacity-[0.08] transition-opacity" />
+
+                                        <div className="relative z-10">
+                                            <div className="flex items-center justify-between mb-6">
+                                                <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-500 animate-float">
+                                                    <rec.icon className={`h-6 w-6 ${rec.iconColor}`} />
+                                                </div>
+                                                <div className="bg-white/80 backdrop-blur-md px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.15em] leading-none border border-black/5 opacity-60">{rec.tag}</div>
                                             </div>
-                                            <h3 className="text-xl font-black leading-[1.2] mb-3 text-slate-900">{rec.title}</h3>
-                                            <p className="text-xs font-bold leading-relaxed opacity-60 group-hover:opacity-80 transition-opacity">{rec.desc}</p>
+                                            <h3 className="text-xl font-black leading-[1.2] mb-3">{rec.title}</h3>
+                                            <p className="text-xs font-bold leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity">{rec.desc}</p>
                                         </div>
-                                        <div className="mt-8 flex items-center justify-between">
+                                        <div className="mt-8 flex items-center justify-between relative z-10">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest bg-white/50 px-3 py-1.5 rounded-full">Book Now</span>
+                                                <span className="text-[11px] font-black uppercase tracking-widest bg-slate-900 text-white px-4 py-2 rounded-full group-hover:bg-blue-600 transition-colors shadow-lg shadow-slate-900/10 group-hover:shadow-blue-600/20">Book Now</span>
                                             </div>
-                                            <div className="h-8 w-8 rounded-full bg-slate-900 flex items-center justify-center text-white shadow-sm -rotate-45 group-hover:rotate-0 transition-transform">
-                                                <ArrowRight className="h-4 w-4" />
+                                            <div className="h-10 w-10 rounded-full border-2 border-slate-900/5 flex items-center justify-center text-slate-900 -rotate-45 group-hover:rotate-0 group-hover:border-blue-600 group-hover:text-blue-600 transition-all bg-white/50 backdrop-blur-sm">
+                                                <ArrowRight className="h-5 w-5" />
                                             </div>
                                         </div>
                                     </motion.div>
@@ -253,27 +289,55 @@ export default function DashboardPage() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <article className="bg-white rounded-[48px] p-10 shadow-sm border border-slate-100/50">
-                                <h3 className="text-xl font-black mb-8 flex items-center gap-3">
-                                    <Layout className="h-5 w-5 text-indigo-500" />
-                                    Metric Breakdown
+                                <h3 className="text-xl font-black mb-10 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-10 w-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                            <Layout className="h-5 w-5" />
+                                        </div>
+                                        Metric Breakdown
+                                    </div>
+                                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Live Data</span>
                                 </h3>
-                                <div className="space-y-6">
-                                    {displayData.category_scores.map((cat: any, i: number) => (
-                                        <div key={i} className="flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-blue-600 transition-colors">
-                                                    <BarChart3 className="h-5 w-5" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-black text-slate-900 leading-none mb-1">{cat.category}</p>
-                                                    <div className="w-24 h-1 bg-slate-100 rounded-full overflow-hidden">
-                                                        <div className="h-full bg-blue-600 rounded-full" style={{ width: `${cat.score}%` }} />
+                                <div className="space-y-5">
+                                    {displayData.category_scores.map((cat: any, i: number) => {
+                                        const configMap: Record<string, any> = {
+                                            'Strategy': { icon: Globe, color: 'from-sky-400 to-sky-600', bg: 'bg-sky-50', text: 'text-sky-600' },
+                                            'Data': { icon: Database, color: 'from-blue-500 to-blue-700', bg: 'bg-blue-50', text: 'text-blue-600' },
+                                            'Technical': { icon: Cpu, color: 'from-indigo-500 to-indigo-700', bg: 'bg-indigo-50', text: 'text-indigo-600' },
+                                            'Governance': { icon: Shield, color: 'from-slate-700 to-slate-900', bg: 'bg-slate-50', text: 'text-slate-900' },
+                                            'Operational': { icon: Activity, color: 'from-emerald-500 to-emerald-700', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+                                        };
+                                        const config = configMap[cat.category] || { icon: BarChart3, color: 'from-blue-600 to-indigo-600', bg: 'bg-slate-50', text: 'text-blue-600' };
+
+                                        return (
+                                            <motion.div
+                                                key={i}
+                                                whileHover={{ x: 5 }}
+                                                className="group flex flex-col gap-3 p-4 rounded-[28px] hover:bg-slate-50/50 transition-all duration-300 border border-transparent hover:border-slate-100"
+                                            >
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={`h-10 w-10 rounded-2xl ${config.bg} flex items-center justify-center ${config.text} shadow-sm group-hover:scale-110 transition-transform duration-500`}>
+                                                            <config.icon className="h-5 w-5" />
+                                                        </div>
+                                                        <span className="text-sm font-black text-slate-900">{cat.category}</span>
+                                                    </div>
+                                                    <div className="flex items-baseline gap-1">
+                                                        <span className="text-sm font-black text-slate-900">{cat.score}</span>
+                                                        <span className="text-[10px] font-bold text-slate-400">%</span>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <span className="text-sm font-black text-slate-900">{cat.score}%</span>
-                                        </div>
-                                    ))}
+                                                <div className="relative h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                                    <motion.div
+                                                        initial={{ width: 0 }}
+                                                        animate={{ width: `${cat.score}%` }}
+                                                        transition={{ duration: 1.5, delay: i * 0.1 + 0.5, ease: [0.16, 1, 0.3, 1] }}
+                                                        className={`absolute inset-y-0 left-0 rounded-full bg-gradient-to-r ${config.color} shadow-[0_0_10px_rgba(59,130,246,0.3)]`}
+                                                    />
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })}
                                 </div>
                             </article>
 
@@ -317,47 +381,105 @@ export default function DashboardPage() {
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-10">Verified Readiness Rank</p>
 
                                 <div className="relative flex items-center justify-center mb-10">
-                                    <div className="relative h-56 w-56 scale-110">
-                                        <svg viewBox="0 0 100 100" className="h-full w-full transform -rotate-90">
-                                            {/* Outer Ring */}
-                                            <circle cx="50" cy="50" r="44" fill="transparent" stroke="#F8FAFC" strokeWidth="10" />
+                                    <div className="relative h-64 w-64">
+                                        {/* Outer Spinning Glow Ring */}
+                                        <motion.div
+                                            animate={{ rotate: 360 }}
+                                            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                                            className="absolute inset-0 rounded-full border border-dashed border-blue-200/50 opacity-50"
+                                        />
+
+                                        <svg viewBox="0 0 100 100" className="h-full w-full transform -rotate-90 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                                            <defs>
+                                                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                                    <feGaussianBlur stdDeviation="3" result="blur" />
+                                                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                                </filter>
+                                                <linearGradient id="neon-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                    <stop offset="0%" stopColor="#3b82f6" />
+                                                    <stop offset="50%" stopColor="#60a5fa" />
+                                                    <stop offset="100%" stopColor="#818cf8" />
+                                                </linearGradient>
+                                                <radialGradient id="center-glass">
+                                                    <stop offset="0%" stopColor="rgba(255, 255, 255, 1)" />
+                                                    <stop offset="100%" stopColor="rgba(244, 247, 254, 0.5)" />
+                                                </radialGradient>
+                                            </defs>
+
+                                            {/* Track Background */}
+                                            <circle cx="50" cy="50" r="46" fill="transparent" stroke="#F1F5F9" strokeWidth="8" />
+
+                                            {/* Main Score Ring (Animated) */}
                                             <motion.circle
-                                                cx="50" cy="50" r="44"
+                                                cx="50" cy="50" r="46"
                                                 fill="transparent"
-                                                stroke="url(#grad-blue)"
-                                                strokeWidth="10"
-                                                strokeDasharray="276.46"
-                                                initial={{ strokeDashoffset: 276.46 }}
-                                                animate={{ strokeDashoffset: 276.46 * (1 - displayData.overall_score / 100) }}
+                                                stroke="url(#neon-grad)"
+                                                strokeWidth="8"
+                                                strokeDasharray="289"
+                                                initial={{ strokeDashoffset: 289 }}
+                                                animate={{ strokeDashoffset: 289 * (1 - displayData.overall_score / 100) }}
                                                 transition={{ duration: 2.5, ease: [0.16, 1, 0.3, 1] }}
                                                 strokeLinecap="round"
+                                                filter="url(#glow)"
                                             />
 
-                                            {/* Middle Ring */}
-                                            <circle cx="50" cy="50" r="32" fill="transparent" stroke="#F8FAFC" strokeWidth="8" />
+                                            {/* Secondary Data Ring */}
+                                            <circle cx="50" cy="50" r="38" fill="url(#center-glass)" stroke="#F8FAFC" strokeWidth="1" />
                                             <motion.circle
-                                                cx="50" cy="50" r="32"
+                                                cx="50" cy="50" r="38"
                                                 fill="transparent"
-                                                stroke="#818cf8"
-                                                strokeWidth="8"
-                                                strokeDasharray="201.06"
-                                                initial={{ strokeDashoffset: 201.06 }}
-                                                animate={{ strokeDashoffset: 201.06 * (0.6) }}
-                                                transition={{ duration: 2, delay: 0.3, ease: "easeOut" }}
+                                                stroke="#E2E8F0"
+                                                strokeWidth="3"
+                                                strokeDasharray="238"
+                                                initial={{ strokeDashoffset: 238 }}
+                                                animate={{ strokeDashoffset: 238 * 0.3 }}
+                                                transition={{ duration: 2, delay: 0.5 }}
+                                                strokeLinecap="round"
+                                                opacity="0.5"
+                                            />
+
+                                            {/* Radar Sweep Effect */}
+                                            <motion.circle
+                                                cx="50" cy="50" r="46"
+                                                fill="transparent"
+                                                stroke="#3b82f6"
+                                                strokeWidth="2"
+                                                strokeDasharray="1 288"
+                                                animate={{ rotate: 360 }}
+                                                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                                                 strokeLinecap="round"
                                             />
-
-                                            <defs>
-                                                <linearGradient id="grad-blue" x1="0%" y1="0%" x2="100%" y2="0%">
-                                                    <stop offset="0%" stopColor="#2563eb" />
-                                                    <stop offset="100%" stopColor="#3b82f6" />
-                                                </linearGradient>
-                                            </defs>
                                         </svg>
+
+                                        {/* Center Text Container */}
                                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                            <span className="text-5xl font-black text-slate-900 tracking-tighter leading-none">{displayData.overall_score}%</span>
-                                            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">Ready</span>
+                                            <div className="relative">
+                                                <motion.span
+                                                    initial={{ opacity: 0, scale: 0.5 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    className="text-6xl font-black text-slate-900 tracking-tighter tabular-nums"
+                                                >
+                                                    {displayData.overall_score}
+                                                </motion.span>
+                                                <span className="text-2xl font-black text-blue-600/40 absolute -top-1 -right-6">%</span>
+                                            </div>
+                                            <div className="bg-blue-600 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest mt-2 shadow-lg shadow-blue-600/20 animate-pulse">
+                                                AI Verified
+                                            </div>
                                         </div>
+
+                                        {/* Outer Decorative Dots */}
+                                        {[...Array(8)].map((_, i) => (
+                                            <div
+                                                key={i}
+                                                className="absolute w-1.5 h-1.5 rounded-full bg-slate-200"
+                                                style={{
+                                                    top: '50%',
+                                                    left: '50%',
+                                                    transform: `rotate(${i * 45}deg) translateY(-54px)`
+                                                }}
+                                            />
+                                        ))}
                                     </div>
                                 </div>
 
@@ -398,7 +520,10 @@ export default function DashboardPage() {
                                 <p className="text-sm font-bold opacity-60 mb-8 leading-relaxed">
                                     Your assessment is ready. Let's build your custom AI automation roadmap together.
                                 </p>
-                                <button className="w-full bg-white text-slate-900 font-black py-4 rounded-[20px] transition-all hover:bg-blue-50 flex items-center justify-center gap-3 shadow-xl">
+                                <button
+                                    onClick={handleBooking}
+                                    className="w-full bg-white text-slate-900 font-black py-4 rounded-[20px] transition-all hover:bg-blue-50 flex items-center justify-center gap-3 shadow-xl active:scale-95"
+                                >
                                     Book 15-Min Discovery
                                 </button>
                             </div>
@@ -406,6 +531,58 @@ export default function DashboardPage() {
                     </div>
                 </div>
             </main>
+
+            {/* Booking Modal */}
+            <AnimatePresence>
+                {isBookingOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-md"
+                        onClick={() => setIsBookingOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                            className="relative w-full max-w-4xl h-[85vh] bg-white rounded-[40px] shadow-2xl overflow-hidden flex flex-col"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Modal Header */}
+                            <div className="flex items-center justify-between px-8 py-6 border-b border-slate-50">
+                                <div>
+                                    <h3 className="text-xl font-black text-slate-900 tracking-tight">Schedule Your AI Strategy Session</h3>
+                                    <p className="text-sm font-bold text-slate-400">Select a time that works best for your team.</p>
+                                </div>
+                                <button
+                                    onClick={() => setIsBookingOpen(false)}
+                                    className="h-10 w-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+
+                            {/* Booking Embed Container */}
+                            <div className="flex-1 w-full bg-slate-50/50">
+                                {/* Replace the URL below with your actual Cal.com or Calendly embed URL */}
+                                <iframe
+                                    src="https://cal.com/hirewilfred/15min?embed=true"
+                                    className="w-full h-full border-0"
+                                    title="Schedule Session"
+                                />
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="px-8 py-4 bg-white border-t border-slate-50 flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-300">
+                                <span>Powered by Cal.com & Audcomp</span>
+                                <span>Secure Strategy Booking</span>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

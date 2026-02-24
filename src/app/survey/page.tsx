@@ -73,8 +73,8 @@ export default function SurveyPage() {
                     answer: val
                 }));
 
-                const { error: respError } = await supabase
-                    .from('audit_responses')
+                const { error: respError } = await (supabase
+                    .from('audit_responses') as any)
                     .insert(responseData);
 
                 if (respError) throw respError;
@@ -87,19 +87,19 @@ export default function SurveyPage() {
                     recommendations: ["Based on your answers, prioritize AI Readiness Assessment and Security guidelines."]
                 };
 
-                const { error: scoreError } = await supabase
-                    .from('audit_scores')
+                const { error: scoreError } = await (supabase
+                    .from('audit_scores') as any)
                     .insert(scoreData);
 
                 if (scoreError) throw scoreError;
 
                 // 3. Update profile
-                const { error: profileError } = await supabase.from('profiles').upsert({
+                const { error: profileError } = await (supabase.from('profiles') as any).upsert({
                     id: user.id,
                     has_completed_audit: true,
                     last_audit_score: overallScore,
                     updated_at: new Date().toISOString()
-                } as any);
+                });
 
                 if (profileError) throw profileError;
             }

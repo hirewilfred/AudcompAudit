@@ -33,7 +33,7 @@ export default function AuthPage() {
                         .from('profiles')
                         .select('has_completed_audit')
                         .eq('id', user.id)
-                        .single();
+                        .single() as any;
 
                     if (profile?.has_completed_audit) {
                         router.push('/dashboard');
