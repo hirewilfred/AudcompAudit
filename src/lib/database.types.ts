@@ -18,6 +18,7 @@ export interface Database {
           has_completed_audit: boolean
           last_audit_score: number | null
           directors_notes: string | null
+          is_admin: boolean
           updated_at: string | null
         }
         Insert: {
@@ -28,6 +29,7 @@ export interface Database {
           has_completed_audit?: boolean
           last_audit_score?: number | null
           directors_notes?: string | null
+          is_admin?: boolean
           updated_at?: string | null
         }
         Update: {
@@ -38,6 +40,39 @@ export interface Database {
           has_completed_audit?: boolean
           last_audit_score?: number | null
           directors_notes?: string | null
+          is_admin?: boolean
+          updated_at?: string | null
+        }
+      }
+      experts: {
+        Row: {
+          id: string
+          full_name: string
+          email: string | null
+          linkedin_url: string | null
+          bookings_url: string | null
+          photo_url: string | null
+          created_at: string
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          full_name: string
+          email?: string | null
+          linkedin_url?: string | null
+          bookings_url?: string | null
+          photo_url?: string | null
+          created_at?: string
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          full_name?: string
+          email?: string | null
+          linkedin_url?: string | null
+          bookings_url?: string | null
+          photo_url?: string | null
+          created_at?: string
           updated_at?: string | null
         }
       }

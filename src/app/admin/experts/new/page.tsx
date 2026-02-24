@@ -17,6 +17,7 @@ import {
     CheckCircle2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Database } from '@/lib/database.types';
 
 export default function NewExpertPage() {
     const [loading, setLoading] = useState(false);
@@ -67,7 +68,8 @@ export default function NewExpertPage() {
         e.preventDefault();
         setLoading(true);
         try {
-            const { error } = await (supabase.from('experts') as any)
+            const { error } = await supabase
+                .from('experts')
                 .insert([formData]);
 
             if (error) throw error;

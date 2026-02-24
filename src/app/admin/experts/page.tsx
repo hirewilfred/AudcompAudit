@@ -18,9 +18,11 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { Database } from '@/lib/database.types';
+
 export default function ExpertsListPage() {
     const [loading, setLoading] = useState(true);
-    const [experts, setExperts] = useState<any[]>([]);
+    const [experts, setExperts] = useState<Database['public']['Tables']['experts']['Row'][]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
 

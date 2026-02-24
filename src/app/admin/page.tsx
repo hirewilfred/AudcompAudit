@@ -41,7 +41,7 @@ export default function AdminPage() {
                     .from('profiles')
                     .select('is_admin')
                     .eq('id', session.user.id)
-                    .single() as any;
+                    .single();
 
                 if (error || !profile?.is_admin) {
                     setIsAdmin(false);

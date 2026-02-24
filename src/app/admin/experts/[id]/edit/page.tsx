@@ -17,6 +17,7 @@ import {
     CheckCircle2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Database } from '@/lib/database.types';
 
 export default function EditExpertPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -43,7 +44,7 @@ export default function EditExpertPage({ params }: { params: Promise<{ id: strin
                     .from('experts')
                     .select('*')
                     .eq('id', id)
-                    .single() as any;
+                    .single();
 
                 if (error) throw error;
                 if (data) {
@@ -99,7 +100,8 @@ export default function EditExpertPage({ params }: { params: Promise<{ id: strin
         e.preventDefault();
         setSaving(true);
         try {
-            const { error } = await (supabase.from('experts') as any)
+            const { error } = await supabase
+                .from('experts')
                 .update(formData)
                 .eq('id', id);
 
