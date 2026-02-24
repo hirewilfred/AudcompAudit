@@ -57,9 +57,12 @@ export default function Home() {
               Start Free AI Audit
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>
-            <button className="rounded-xl border border-white/10 bg-white/5 px-8 py-4 text-lg font-semibold backdrop-blur-sm transition-all hover:bg-white/10">
+            <Link
+              href="/how-it-works"
+              className="rounded-xl border border-white/10 bg-white/5 px-8 py-4 text-lg font-semibold backdrop-blur-sm transition-all hover:bg-white/10"
+            >
               How It Works
-            </button>
+            </Link>
           </div>
         </motion.div>
 
