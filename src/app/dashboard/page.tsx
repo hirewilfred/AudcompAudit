@@ -1,8 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
     Radar,
@@ -39,8 +37,7 @@ import {
     Mail as MailIcon,
     Calendar,
     Compass,
-    Rocket,
-    Download
+    Rocket
 } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -54,8 +51,18 @@ export default function DashboardPage() {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [profile, setProfile] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
-    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const [randomExperts, setRandomExperts] = useState<number[]>([]);
+    const [activeBookingUrl, setActiveBookingUrl] = useState<string>("https://cal.com/hirewilfred/15min?embed=true");
+    const [experts, setExperts] = useState<any[]>([]);
+
+    // ROI Calculator State
+    const [roiEmployees, setRoiEmployees] = useState(5);
+    const [roiFrequency, setRoiFrequency] = useState(10); // per week
+    const [roiMinutes, setRoiMinutes] = useState(30);
+    const [roiHourlyRate, setRoiHourlyRate] = useState(50);
+
+    const router = useRouter();
+    const supabase = createClient();
 
     // Scroll to top and pick random experts on mount
     useEffect(() => {
@@ -67,21 +74,6 @@ export default function DashboardPage() {
         setRandomExperts(shuffled.slice(0, 4));
     }, []);
 
-    // Refs for PDF generation
-    const scoreRef = useRef<HTMLDivElement>(null);
-    const roiRef = useRef<HTMLDivElement>(null);
-    const roadmapRef = useRef<HTMLDivElement>(null);
-    const dashboardRef = useRef<HTMLDivElement>(null);
-
-    // ROI Calculator State
-    const [roiEmployees, setRoiEmployees] = useState(5);
-    const [roiFrequency, setRoiFrequency] = useState(10); // per week
-    const [roiMinutes, setRoiMinutes] = useState(30);
-    const [roiHourlyRate, setRoiHourlyRate] = useState(50);
-
-    const router = useRouter();
-    const supabase = createClient();
-
     useEffect(() => {
         async function fetchResults() {
             try {
@@ -91,18 +83,24 @@ export default function DashboardPage() {
                     return;
                 }
 
-                // Fetch profile
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', session.user.id)
-                    .single() as any;
+                // Fetch profile and experts in parallel
+                const [profileRes, expertsRes]: [any, any] = await Promise.all([
+                    supabase.from('profiles').select('*').eq('id', session.user.id).single(),
+                    supabase.from('experts').select('*').limit(8)
+                ]);
 
-                if (!profile?.has_completed_audit) {
-                    router.push('/survey');
-                    return;
+                if (profileRes.data) {
+                    const prof = profileRes.data as any;
+                    if (!prof.has_completed_audit) {
+                        router.push('/survey');
+                        return;
+                    }
+                    setProfile(prof);
                 }
-                setProfile(profile);
+
+                if (expertsRes.data && expertsRes.data.length > 0) {
+                    setExperts(expertsRes.data as any[]);
+                }
 
                 const { data, error } = await supabase
                     .from('audit_scores')
@@ -193,7 +191,13 @@ export default function DashboardPage() {
         }
     ];
 
-    const handleBooking = () => {
+    const handleBooking = (bookingUrl?: string) => {
+        if (bookingUrl) {
+            setActiveBookingUrl(bookingUrl);
+        } else {
+            // Default booking if none provided
+            setActiveBookingUrl("https://cal.com/hirewilfred/15min?embed=true");
+        }
         setIsBookingOpen(true);
     };
 
@@ -221,174 +225,6 @@ export default function DashboardPage() {
         }
     };
 
-    const handleDownloadPDF = async () => {
-        setIsGeneratingPDF(true);
-
-        // Add a small delay to ensure all re-renders and animations are settled
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        try {
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const pageWidth = pdf.internal.pageSize.getWidth();
-            const pageHeight = pdf.internal.pageSize.getHeight();
-            const margin = 10;
-            const contentWidth = pageWidth - (margin * 2);
-
-            // 1. Add Header Content (Company Name, Audit Date)
-            pdf.setFontSize(22);
-            pdf.setTextColor(15, 23, 42); // slate-900
-            pdf.text("EXECUTIVE AI AUDIT REPORT", margin, 20);
-
-            pdf.setFontSize(10);
-            pdf.setTextColor(100, 116, 139); // slate-500
-            pdf.text(`ORGANIZATION: ${profile?.organization?.toUpperCase() || 'EXTERNAL WORKSPACE'}`, margin, 28);
-            pdf.text(`DATE: ${new Date().toLocaleDateString()}`, margin, 33);
-            pdf.line(margin, 38, pageWidth - margin, 38);
-
-            let yOffset = 45;
-
-            // Function to capture and add component to PDF
-            const addComponentToPDF = async (ref: React.RefObject<HTMLDivElement | null>, title: string, isDark: boolean = false) => {
-                if (!ref.current) return yOffset;
-
-                // Check if we need a new page before adding title + component
-                // Estimated height of title + spacing + component
-                // html2canvas doesn't give us the height until after, but we can do a quick check
-
-                // Add Title
-                pdf.setFontSize(14);
-                pdf.setTextColor(30, 41, 59); // slate-800
-                pdf.text(title, margin, yOffset);
-                yOffset += 8;
-
-                const canvas = await html2canvas(ref.current, {
-                    scale: 1.5,
-                    useCORS: true,
-                    backgroundColor: isDark ? '#0f172a' : '#ffffff',
-                    logging: false,
-                    onclone: (clonedDoc) => {
-                        // html2canvas fails on modern CSS color functions (oklch, oklab, lab, lch)
-                        // We must aggressively strip or replace these in the cloned document
-                        const elements = clonedDoc.querySelectorAll('*');
-                        const unsupportedSelectors = ['oklch', 'oklab', 'lab', 'lch'];
-
-                        elements.forEach((el) => {
-                            const htmlEl = el as HTMLElement;
-                            // Checking computed style is more reliable but slower
-                            // For performance, we'll check common properties and backgrounds
-                            const style = window.getComputedStyle(htmlEl);
-
-                            // 1. Check Background Image (Gradients are high risk)
-                            const bgImg = style.backgroundImage;
-                            if (bgImg && unsupportedSelectors.some(s => bgImg.includes(s))) {
-                                htmlEl.style.setProperty('background-image', 'none', 'important');
-                                // Fallback to solid color
-                                htmlEl.style.setProperty('background-color', isDark ? '#1e293b' : '#ffffff', 'important');
-                            }
-
-                            // 2. Check other common properties
-                            ['backgroundColor', 'color', 'borderColor', 'fill', 'stroke'].forEach(prop => {
-                                const val = (style as any)[prop];
-                                if (val && unsupportedSelectors.some(s => val.includes(s))) {
-                                    if (prop === 'backgroundColor') {
-                                        htmlEl.style.setProperty('background-color', isDark ? '#1e293b' : '#ffffff', 'important');
-                                    } else if (prop === 'color') {
-                                        htmlEl.style.setProperty('color', isDark ? '#ffffff' : '#0f172a', 'important');
-                                    } else {
-                                        // Clear borders/strokes that use modern colors to prevent crash
-                                        htmlEl.style.setProperty(prop.replace(/([A-Z])/g, '-$1').toLowerCase(), 'currentColor', 'important');
-                                    }
-                                }
-                            });
-                        });
-                    }
-                });
-
-                const imgData = canvas.toDataURL('image/png');
-                const imgHeight = (canvas.height * contentWidth) / canvas.width;
-
-                // If the component itself is larger than the page, it will be squashed or cut.
-                // We handle basic page breaks between sections.
-                if (yOffset + imgHeight > pageHeight - margin) {
-                    pdf.addPage();
-                    yOffset = margin + 10;
-                    // Re-add title on new page if it was cut
-                    pdf.setFontSize(14);
-                    pdf.setTextColor(30, 41, 59);
-                    pdf.text(title + " (cont.)", margin, yOffset);
-                    yOffset += 8;
-                }
-
-                pdf.addImage(imgData, 'PNG', margin, yOffset, contentWidth, imgHeight);
-                return yOffset + imgHeight + 15;
-            };
-
-            // 1. Add Overall Score Section
-            yOffset = await addComponentToPDF(scoreRef, "AI READINESS SCORE CARD", false);
-
-            // 2. Add ROI Section
-            yOffset = await addComponentToPDF(roiRef, "ECONOMIC IMPACT & ROI ANALYSIS", true);
-
-            // 3. Add Roadmap Section
-            await addComponentToPDF(roadmapRef, "IMPLEMENTATION STRATEGY ROADMAP", false);
-
-            const filename = `AI_Audit_Full_Report_${profile?.organization?.replace(/\s+/g, '_') || 'Executive'}_${Date.now()}.pdf`;
-
-            // Generate Blob for direct upload
-            const pdfBlob = pdf.output('blob');
-
-            // Upload directly to Supabase from Client
-            try {
-                const { data: uploadData, error: uploadError } = await supabase.storage
-                    .from('reports')
-                    .upload(filename, pdfBlob, {
-                        contentType: 'application/pdf',
-                        cacheControl: '3600',
-                        upsert: true
-                    });
-
-                if (uploadError) throw uploadError;
-
-                const { data: urlData } = supabase.storage
-                    .from('reports')
-                    .getPublicUrl(filename);
-
-                const reportUrl = urlData.publicUrl;
-
-                // Update Database with link
-                try {
-                    const { data: { user } } = await supabase.auth.getUser();
-                    if (user) {
-                        const { data: latestScore } = await supabase
-                            .from('audit_scores')
-                            .select('id')
-                            .eq('user_id', user.id)
-                            .order('created_at', { ascending: false })
-                            .limit(1)
-                            .single();
-
-                        if (latestScore) {
-                            await (supabase.from('audit_scores') as any)
-                                .update({ report_url: reportUrl })
-                                .eq('id', (latestScore as any).id);
-                        }
-                    }
-                } catch (dbErr) {
-                    console.error("DB Update failed:", dbErr);
-                }
-
-                // Open in new tab
-                window.open(reportUrl, '_blank');
-            } catch (uploadError) {
-                console.error("Upload failed, falling back to download:", uploadError);
-                pdf.save(filename);
-            }
-        } catch (err) {
-            console.error("PDF Generation Error:", err);
-        } finally {
-            setIsGeneratingPDF(false);
-        }
-    };
 
     // ROI Calculations
     const automationPotential = 0.65;
@@ -465,14 +301,22 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="flex -space-x-3">
-                            {randomExperts.map(i => (
-                                <div key={i} className="h-10 w-10 rounded-full border-4 border-[#F4F7FE] bg-slate-200 overflow-hidden shadow-sm">
-                                    <img src={`/images/experts/expert-${i}.jpg`} alt="Expert" className="h-full w-full object-cover" />
-                                </div>
-                            ))}
-                            {randomExperts.length > 0 && (
+                            {experts.length > 0 ? (
+                                experts.slice(0, 4).map((expert, i) => (
+                                    <div key={expert.id} className="h-10 w-10 rounded-full border-4 border-[#F4F7FE] bg-slate-200 overflow-hidden shadow-sm">
+                                        <img src={expert.photo_url || `/images/experts/expert-${(i % 10) + 1}.jpg`} alt={expert.full_name} className="h-full w-full object-cover" />
+                                    </div>
+                                ))
+                            ) : (
+                                randomExperts.map(i => (
+                                    <div key={i} className="h-10 w-10 rounded-full border-4 border-[#F4F7FE] bg-slate-200 overflow-hidden shadow-sm">
+                                        <img src={`/images/experts/expert-${i}.jpg`} alt="Expert" className="h-full w-full object-cover" />
+                                    </div>
+                                ))
+                            )}
+                            {(experts.length > 4 || (!experts.length && randomExperts.length > 0)) && (
                                 <div className="h-10 w-10 rounded-full border-4 border-[#F4F7FE] bg-blue-600 flex items-center justify-center text-[10px] font-black text-white shadow-sm">
-                                    +4
+                                    +{Math.max(0, experts.length - 4 || 4)}
                                 </div>
                             )}
                         </div>
@@ -503,7 +347,7 @@ export default function DashboardPage() {
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: i * 0.1 }}
-                                        onClick={handleBooking}
+                                        onClick={() => handleBooking(experts[i % experts.length]?.bookings_url)}
                                         className={`${rec.color} rounded-[40px] p-8 flex flex-col justify-between min-h-[260px] border-2 relative overflow-hidden group hover:scale-[1.03] transition-all duration-500 cursor-pointer shadow-sm hover:shadow-2xl hover:shadow-blue-900/10`}
                                     >
                                         <div
@@ -539,7 +383,7 @@ export default function DashboardPage() {
                         </section>
 
                         {/* Implementation Roadmap Timeline */}
-                        <section ref={roadmapRef} className="bg-white rounded-[48px] p-10 shadow-sm border border-slate-100/50">
+                        <section className="bg-white rounded-[48px] p-10 shadow-sm border border-slate-100/50">
                             <div className="flex items-center justify-between mb-10">
                                 <div className="flex items-center gap-3">
                                     <div className="h-10 w-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
@@ -727,7 +571,7 @@ export default function DashboardPage() {
 
                     {/* Right Panel - Core Score */}
                     <div className="col-span-12 lg:col-span-4 space-y-8">
-                        <section ref={scoreRef} className="bg-white rounded-[48px] p-10 shadow-sm border border-slate-100/50 relative overflow-hidden">
+                        <section className="bg-white rounded-[48px] p-10 shadow-sm border border-slate-100/50 relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-10 opacity-5">
                                 <Sparkles className="h-32 w-32" />
                             </div>
@@ -858,19 +702,10 @@ export default function DashboardPage() {
                                         <span className="text-sm font-black text-slate-900">42%</span>
                                     </div>
                                 </div>
-
-                                <button
-                                    onClick={handleDownloadPDF}
-                                    disabled={isGeneratingPDF}
-                                    className="w-full mt-10 bg-slate-900 hover:bg-black text-white font-black py-5 rounded-[24px] shadow-2xl shadow-slate-900/20 transition-all hover:scale-[1.02] flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
-                                >
-                                    {isGeneratingPDF ? <Loader2 className="h-5 w-5 animate-spin" /> : <FileText className="h-5 w-5" />}
-                                    Download Full Report
-                                </button>
                             </div>
                         </section>
 
-                        <section ref={roiRef} className="bg-slate-900 rounded-[48px] p-10 text-white shadow-2xl shadow-blue-900/20 relative overflow-hidden group">
+                        <section className="bg-slate-900 rounded-[48px] p-10 text-white shadow-2xl shadow-blue-900/20 relative overflow-hidden group">
                             <div className="absolute top-0 right-0 w-full h-full opacity-5 bg-[radial-gradient(circle_at_80%_20%,_#3b82f6_0%,_transparent_50%)]" />
                             <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-8">
@@ -878,14 +713,6 @@ export default function DashboardPage() {
                                         <TrendingUp className="h-6 w-6 text-blue-400" />
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <button
-                                            onClick={handleDownloadPDF}
-                                            disabled={isGeneratingPDF}
-                                            className="bg-white/10 hover:bg-white/20 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full border border-white/10 transition-all flex items-center gap-2 disabled:opacity-50"
-                                        >
-                                            {isGeneratingPDF ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
-                                            PDF Report
-                                        </button>
                                         <div className="bg-blue-500/20 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-400/20">Executive ROI Insight</div>
                                     </div>
                                 </div>
@@ -990,7 +817,7 @@ export default function DashboardPage() {
                                 </motion.div>
 
                                 <button
-                                    onClick={handleBooking}
+                                    onClick={() => handleBooking()}
                                     className="w-full bg-white text-slate-900 font-black py-5 rounded-[24px] transition-all hover:bg-blue-50 flex items-center justify-center gap-3 shadow-xl active:scale-95 group"
                                 >
                                     Capture These Savings
