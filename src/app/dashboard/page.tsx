@@ -264,7 +264,27 @@ export default function DashboardPage() {
                     scale: 1.5,
                     useCORS: true,
                     backgroundColor: isDark ? '#0f172a' : '#ffffff',
-                    logging: false
+                    logging: false,
+                    onclone: (document) => {
+                        // Fix for html2canvas not supporting modern color functions like oklab/oklch
+                        const elements = document.querySelectorAll('*');
+                        elements.forEach((el) => {
+                            const htmlEl = el as HTMLElement;
+                            const style = window.getComputedStyle(htmlEl);
+
+                            // Check background, color, border-color for oklab/oklch
+                            ['backgroundColor', 'color', 'borderColor', 'fill', 'stroke'].forEach(prop => {
+                                const val = (style as any)[prop];
+                                if (val && (val.includes('oklch') || val.includes('oklab'))) {
+                                    // Fallback to a safe color if it uses unsupported functions
+                                    // For simplicity, we'll try to map common ones or just generic fallbacks
+                                    if (prop === 'backgroundColor') htmlEl.style.backgroundColor = isDark ? '#1e293b' : '#ffffff';
+                                    if (prop === 'color') htmlEl.style.color = isDark ? '#ffffff' : '#0f172a';
+                                    if (prop === 'borderColor') htmlEl.style.borderColor = '#e2e8f0';
+                                }
+                            });
+                        });
+                    }
                 });
 
                 const imgData = canvas.toDataURL('image/png');
