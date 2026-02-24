@@ -66,6 +66,7 @@ export default function DashboardPage() {
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
     // Refs for PDF generation
+    const scoreRef = useRef<HTMLDivElement>(null);
     const roiRef = useRef<HTMLDivElement>(null);
     const roadmapRef = useRef<HTMLDivElement>(null);
     const dashboardRef = useRef<HTMLDivElement>(null);
@@ -240,40 +241,55 @@ export default function DashboardPage() {
             let yOffset = 45;
 
             // Function to capture and add component to PDF
-            const addComponentToPDF = async (ref: React.RefObject<HTMLDivElement | null>, title: string) => {
+            const addComponentToPDF = async (ref: React.RefObject<HTMLDivElement | null>, title: string, isDark: boolean = false) => {
                 if (!ref.current) return yOffset;
+
+                // Check if we need a new page before adding title + component
+                // Estimated height of title + spacing + component
+                // html2canvas doesn't give us the height until after, but we can do a quick check
 
                 // Add Title
                 pdf.setFontSize(14);
                 pdf.setTextColor(30, 41, 59); // slate-800
                 pdf.text(title, margin, yOffset);
-                yOffset += 10;
+                yOffset += 8;
 
                 const canvas = await html2canvas(ref.current, {
-                    scale: 2,
+                    scale: 1.5,
                     useCORS: true,
-                    backgroundColor: '#ffffff'
+                    backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                    logging: false
                 });
 
                 const imgData = canvas.toDataURL('image/png');
                 const imgHeight = (canvas.height * contentWidth) / canvas.width;
 
+                // If the component itself is larger than the page, it will be squashed or cut.
+                // We handle basic page breaks between sections.
                 if (yOffset + imgHeight > pageHeight - margin) {
                     pdf.addPage();
                     yOffset = margin + 10;
+                    // Re-add title on new page if it was cut
+                    pdf.setFontSize(14);
+                    pdf.setTextColor(30, 41, 59);
+                    pdf.text(title + " (cont.)", margin, yOffset);
+                    yOffset += 8;
                 }
 
                 pdf.addImage(imgData, 'PNG', margin, yOffset, contentWidth, imgHeight);
                 return yOffset + imgHeight + 15;
             };
 
-            // Add ROI Section
-            yOffset = await addComponentToPDF(roiRef, "ECONOMIC IMPACT ANALYSIS");
+            // 1. Add Overall Score Section
+            yOffset = await addComponentToPDF(scoreRef, "AI READINESS SCORE CARD", false);
 
-            // Add Roadmap Section
-            await addComponentToPDF(roadmapRef, "IMPLEMENTATION STRATEGY");
+            // 2. Add ROI Section
+            yOffset = await addComponentToPDF(roiRef, "ECONOMIC IMPACT & ROI ANALYSIS", true);
 
-            pdf.save(`AI_Audit_Report_${profile?.organization?.replace(/\s+/g, '_') || 'Executive'}.pdf`);
+            // 3. Add Roadmap Section
+            await addComponentToPDF(roadmapRef, "IMPLEMENTATION STRATEGY ROADMAP", false);
+
+            pdf.save(`AI_Audit_Full_Report_${profile?.organization?.replace(/\s+/g, '_') || 'Executive'}.pdf`);
         } catch (err) {
             console.error("PDF Generation Error:", err);
         } finally {
@@ -625,7 +641,7 @@ export default function DashboardPage() {
 
                     {/* Right Panel - Core Score */}
                     <div className="col-span-12 lg:col-span-4 space-y-8">
-                        <section className="bg-white rounded-[48px] p-10 shadow-sm border border-slate-100/50 relative overflow-hidden">
+                        <section ref={scoreRef} className="bg-white rounded-[48px] p-10 shadow-sm border border-slate-100/50 relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-10 opacity-5">
                                 <Sparkles className="h-32 w-32" />
                             </div>
@@ -757,9 +773,13 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
 
-                                <button className="w-full mt-10 bg-slate-900 hover:bg-black text-white font-black py-5 rounded-[24px] shadow-2xl shadow-slate-900/20 transition-all hover:scale-[1.02] flex items-center justify-center gap-3 active:scale-95">
-                                    <FileText className="h-5 w-5" />
-                                    Download Full Roadmap
+                                <button
+                                    onClick={handleDownloadPDF}
+                                    disabled={isGeneratingPDF}
+                                    className="w-full mt-10 bg-slate-900 hover:bg-black text-white font-black py-5 rounded-[24px] shadow-2xl shadow-slate-900/20 transition-all hover:scale-[1.02] flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                                >
+                                    {isGeneratingPDF ? <Loader2 className="h-5 w-5 animate-spin" /> : <FileText className="h-5 w-5" />}
+                                    Download Full Report
                                 </button>
                             </div>
                         </section>
