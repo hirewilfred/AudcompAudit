@@ -8,9 +8,37 @@ import {
     ArrowRight,
     CheckCircle2,
     Zap,
-    Search
+    Search,
+    TrendingUp
 } from 'lucide-react';
 import Link from 'next/link';
+
+const successStories = [
+    {
+        company: "Summit Manufacturing",
+        industry: "Custom Fabrication",
+        challenge: "Spending 20+ hours weekly on manual inventory reconciliation and order tracking.",
+        solution: "Deployed a custom Inventory Agent that syncs shop floor data with procurement in real-time.",
+        result: "18 Hours/Week Saved",
+        metric: "90% Reduction in manual data entry"
+    },
+    {
+        company: "Lakeside Legal",
+        industry: "Professional Services",
+        challenge: "Inbound inquiry overload was causing 48-hour response delays for potential clients.",
+        solution: "Implemented an AI Triage system to classify, prioritize, and draft initial responses.",
+        result: "40% Higher Lead Conversion",
+        metric: "< 5 Minute response time for high-value leads"
+    },
+    {
+        company: "Echo Logistics",
+        industry: "Transportation & Supply",
+        challenge: "Reactive maintenance and unpredictable dispatch gaps affecting profit margins.",
+        solution: "Integrated a Predictive Dispatch Engine using historical route data and AI forecasting.",
+        result: "$54k Annual Labor Savings",
+        metric: "15% Efficiency gain across 12-truck fleet"
+    }
+];
 
 const steps = [
     {
@@ -149,6 +177,53 @@ export default function HowItWorks() {
                                 </div>
                             </motion.section>
                         ))}
+                    </div>
+
+                    {/* Success Stories Section */}
+                    <div className="mt-48">
+                        <div className="text-center mb-16">
+                            <h2 className="text-sm font-black text-indigo-500 uppercase tracking-[0.3em] mb-4">Success Stories</h2>
+                            <h3 className="text-4xl font-black text-white tracking-tight">Real Results for Real SMBs</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {successStories.map((story, i) => (
+                                <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: i * 0.1 }}
+                                    className="p-8 rounded-[40px] bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-blue-500/20 transition-all duration-500 group"
+                                >
+                                    <div className="flex items-center justify-between mb-8">
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{story.industry}</span>
+                                            <span className="text-lg font-black text-white">{story.company}</span>
+                                        </div>
+                                        <div className="h-10 w-10 rounded-2xl bg-blue-600/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
+                                            <TrendingUp className="h-5 w-5" />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <div>
+                                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-500/60 mb-2">The Challenge</p>
+                                            <p className="text-xs font-bold text-slate-400 group-hover:text-slate-300 transition-colors">{story.challenge}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-500/60 mb-2">The AI Solution</p>
+                                            <p className="text-xs font-bold text-slate-400 group-hover:text-slate-300 transition-colors">{story.solution}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-10 pt-8 border-t border-white/5 text-center">
+                                        <p className="text-2xl font-black text-white mb-1">{story.result}</p>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">{story.metric}</p>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
                     </div>
 
                     {/* Final CTA */}
