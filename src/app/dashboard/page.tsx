@@ -9,16 +9,7 @@ import {
     RadarChart,
     PolarGrid,
     PolarAngleAxis,
-    ResponsiveContainer,
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    AreaChart,
-    Area
+    ResponsiveContainer
 } from 'recharts';
 import {
     BarChart3,
@@ -317,16 +308,7 @@ export default function DashboardPage() {
     const paybackMonths = Math.max(1, (implementationCost / monthlySavings)).toFixed(1);
     const netRoi = Math.round(((annualSavings - implementationCost) / implementationCost) * 100);
 
-    const comparisonData = [
-        { name: 'Current', cost: Math.round(currentAnnualCost) },
-        { name: 'With AI', cost: Math.round(currentAnnualCost - annualSavings) },
-    ];
 
-    const timelineData = Array.from({ length: 12 }, (_, i) => ({
-        month: `M${i + 1}`,
-        savings: Math.round(monthlySavings * (i + 1)),
-        breakeven: implementationCost
-    }));
 
     if (loading) {
         return (
@@ -849,48 +831,7 @@ export default function DashboardPage() {
                                     </p>
                                 </motion.div>
 
-                                {/* Visuals: Bar Chart */}
-                                <div className="mb-10 space-y-4">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Cost Comparison (Annual)</p>
-                                    <div className="h-48 w-full bg-white/5 rounded-[32px] p-6 border border-white/5">
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={comparisonData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                                <XAxis dataKey="name" stroke="#475569" fontSize={10} fontWeight="bold" axisLine={false} tickLine={false} />
-                                                <Tooltip
-                                                    contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '16px', fontSize: '12px', fontWeight: 'bold' }}
-                                                    itemStyle={{ color: '#60a5fa' }}
-                                                />
-                                                <Bar dataKey="cost" radius={[8, 8, 0, 0]}>
-                                                    {comparisonData.map((entry, index) => (
-                                                        <rect key={`cell-${index}`} fill={index === 0 ? '#1e293b' : '#3b82f6'} />
-                                                    ))}
-                                                </Bar>
-                                            </BarChart>
-                                        </ResponsiveContainer>
-                                    </div>
-                                </div>
 
-                                {/* Visuals: Timeline */}
-                                <div className="mb-10 space-y-4">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Cumulative Savings Timeline</p>
-                                    <div className="h-48 w-full bg-white/5 rounded-[32px] p-6 border border-white/5">
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <AreaChart data={timelineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                                <defs>
-                                                    <linearGradient id="colorSavings" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                                                    </linearGradient>
-                                                </defs>
-                                                <XAxis dataKey="month" stroke="#475569" fontSize={8} axisLine={false} tickLine={false} />
-                                                <Tooltip
-                                                    contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '16px', fontSize: '10px' }}
-                                                />
-                                                <Area type="monotone" dataKey="savings" stroke="#3b82f6" fillOpacity={1} fill="url(#colorSavings)" strokeWidth={3} />
-                                            </AreaChart>
-                                        </ResponsiveContainer>
-                                    </div>
-                                </div>
 
                                 {/* Controls Section */}
                                 <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6 border-b border-white/5 pb-4">Adjust Parameters</h3>
