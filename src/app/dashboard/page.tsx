@@ -266,8 +266,17 @@ export default function DashboardPage() {
                         />
                     </Link>
 
-                    <nav className="hidden lg:flex items-center gap-1">
+                    <nav className="hidden lg:flex items-center gap-2">
                         <button className="px-6 py-2.5 rounded-full bg-slate-900 text-white text-sm font-black shadow-lg shadow-slate-900/10">Dashboard</button>
+                        {profile?.is_admin && (
+                            <Link
+                                href="/admin"
+                                className="px-6 py-2.5 rounded-full bg-white border border-slate-100 text-slate-500 hover:text-blue-600 hover:border-blue-100 text-sm font-black transition-all flex items-center gap-2"
+                            >
+                                <Shield className="h-4 w-4" />
+                                Admin Management
+                            </Link>
+                        )}
                     </nav>
                 </div>
 
