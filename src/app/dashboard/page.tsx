@@ -208,6 +208,7 @@ export default function DashboardPage() {
                 full_name: profile.full_name,
                 organization: profile.organization,
                 phone: profile.phone,
+                directors_notes: profile.directors_notes,
                 updated_at: new Date().toISOString()
             }).eq('id', user.id);
 
@@ -333,28 +334,53 @@ export default function DashboardPage() {
 
             const filename = `AI_Audit_Full_Report_${profile?.organization?.replace(/\s+/g, '_') || 'Executive'}_${Date.now()}.pdf`;
 
-            // Generate Base64
-            const pdfBase64 = pdf.output('datauristring');
+            // Generate Blob for direct upload
+            const pdfBlob = pdf.output('blob');
 
-            // Save to folder via API
+            // Upload directly to Supabase from Client
             try {
-                const response = await fetch('/api/save-pdf', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ base64: pdfBase64, filename })
-                });
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('reports')
+                    .upload(filename, pdfBlob, {
+                        contentType: 'application/pdf',
+                        cacheControl: '3600',
+                        upsert: true
+                    });
 
-                const data = await response.json();
+                if (uploadError) throw uploadError;
 
-                if (data.url) {
-                    // Open in new tab
-                    window.open(data.url, '_blank');
-                } else {
-                    // Fallback to direct download if API fails
-                    pdf.save(filename);
+                const { data: urlData } = supabase.storage
+                    .from('reports')
+                    .getPublicUrl(filename);
+
+                const reportUrl = urlData.publicUrl;
+
+                // Update Database with link
+                try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (user) {
+                        const { data: latestScore } = await supabase
+                            .from('audit_scores')
+                            .select('id')
+                            .eq('user_id', user.id)
+                            .order('created_at', { ascending: false })
+                            .limit(1)
+                            .single();
+
+                        if (latestScore) {
+                            await (supabase.from('audit_scores') as any)
+                                .update({ report_url: reportUrl })
+                                .eq('id', (latestScore as any).id);
+                        }
+                    }
+                } catch (dbErr) {
+                    console.error("DB Update failed:", dbErr);
                 }
-            } catch (saveError) {
-                console.error("Error saving to folder:", saveError);
+
+                // Open in new tab
+                window.open(reportUrl, '_blank');
+            } catch (uploadError) {
+                console.error("Upload failed, falling back to download:", uploadError);
                 pdf.save(filename);
             }
         } catch (err) {
@@ -1086,6 +1112,19 @@ export default function DashboardPage() {
                                             onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                                             className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-blue-600 transition-colors font-bold text-slate-900"
                                             placeholder="+1 (555) 000-0000"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Director's Notes (AI Influence)</label>
+                                    <div className="relative">
+                                        <Sparkles className="absolute left-4 top-4 h-5 w-5 text-slate-300" />
+                                        <textarea
+                                            value={profile?.directors_notes || ''}
+                                            onChange={(e) => setProfile({ ...profile, directors_notes: e.target.value })}
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-blue-600 transition-colors font-bold text-slate-900 min-h-[100px] resize-none"
+                                            placeholder="Specify video style, tone, or specific AI instructions..."
                                         />
                                     </div>
                                 </div>

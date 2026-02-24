@@ -17,6 +17,7 @@ export interface Database {
           phone: string | null
           has_completed_audit: boolean
           last_audit_score: number | null
+          directors_notes: string | null
           updated_at: string | null
         }
         Insert: {
@@ -26,6 +27,7 @@ export interface Database {
           phone?: string | null
           has_completed_audit?: boolean
           last_audit_score?: number | null
+          directors_notes?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -35,6 +37,7 @@ export interface Database {
           phone?: string | null
           has_completed_audit?: boolean
           last_audit_score?: number | null
+          directors_notes?: string | null
           updated_at?: string | null
         }
       }
@@ -68,6 +71,7 @@ export interface Database {
           overall_score: number
           category_scores: Json
           recommendations: string[]
+          report_url: string | null
           created_at: string
         }
         Insert: {
@@ -76,6 +80,7 @@ export interface Database {
           overall_score: number
           category_scores: Json
           recommendations: string[]
+          report_url?: string | null
           created_at?: string
         }
         Update: {
@@ -84,6 +89,7 @@ export interface Database {
           overall_score?: number
           category_scores?: Json
           recommendations?: string[]
+          report_url?: string | null
           created_at?: string
         }
       }
