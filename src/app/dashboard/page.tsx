@@ -331,7 +331,32 @@ export default function DashboardPage() {
             // 3. Add Roadmap Section
             await addComponentToPDF(roadmapRef, "IMPLEMENTATION STRATEGY ROADMAP", false);
 
-            pdf.save(`AI_Audit_Full_Report_${profile?.organization?.replace(/\s+/g, '_') || 'Executive'}.pdf`);
+            const filename = `AI_Audit_Full_Report_${profile?.organization?.replace(/\s+/g, '_') || 'Executive'}_${Date.now()}.pdf`;
+
+            // Generate Base64
+            const pdfBase64 = pdf.output('datauristring');
+
+            // Save to folder via API
+            try {
+                const response = await fetch('/api/save-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ base64: pdfBase64, filename })
+                });
+
+                const data = await response.json();
+
+                if (data.url) {
+                    // Open in new tab
+                    window.open(data.url, '_blank');
+                } else {
+                    // Fallback to direct download if API fails
+                    pdf.save(filename);
+                }
+            } catch (saveError) {
+                console.error("Error saving to folder:", saveError);
+                pdf.save(filename);
+            }
         } catch (err) {
             console.error("PDF Generation Error:", err);
         } finally {
