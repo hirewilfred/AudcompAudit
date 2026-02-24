@@ -34,7 +34,10 @@ import {
     Settings,
     Phone,
     Building,
-    Mail as MailIcon
+    Mail as MailIcon,
+    Calendar,
+    Compass,
+    Rocket
 } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -316,6 +319,114 @@ export default function DashboardPage() {
                                         </div>
                                     </motion.div>
                                 ))}
+                            </div>
+                        </section>
+
+                        {/* Implementation Roadmap Timeline */}
+                        <section className="bg-white rounded-[48px] p-10 shadow-sm border border-slate-100/50">
+                            <div className="flex items-center justify-between mb-10">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
+                                        <Compass className="h-5 w-5" />
+                                    </div>
+                                    <h2 className="text-2xl font-black tracking-tight text-slate-900">Your AI Implementation Roadmap</h2>
+                                </div>
+                                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 border border-indigo-100">
+                                    <div className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Active Phase</span>
+                                </div>
+                            </div>
+
+                            <div className="relative">
+                                {/* Vertical Line */}
+                                <div className="absolute left-8 top-0 bottom-0 w-[2px] bg-slate-100" />
+
+                                <div className="space-y-12 relative px-2">
+                                    {[
+                                        {
+                                            phase: "Phase 01: Assessment",
+                                            title: "Strategic Infrastructure Audit",
+                                            status: "Completed",
+                                            desc: "Comprehensive review of current technical stack and data sovereignty requirements.",
+                                            icon: ShieldCheck,
+                                            active: false,
+                                            done: true
+                                        },
+                                        {
+                                            phase: "Phase 02: Alignment",
+                                            title: "Executive Strategy Session",
+                                            status: "In Progress",
+                                            desc: "Mapping AI opportunities to high-ROI business outcomes and departmental workflows.",
+                                            icon: Calendar,
+                                            active: true,
+                                            done: false
+                                        },
+                                        {
+                                            phase: "Phase 03: Foundation",
+                                            title: "Enterprise Agent Framework",
+                                            status: "Scheduled",
+                                            desc: "Deployment of custom LLM gateways and secure data connectors.",
+                                            icon: Database,
+                                            active: false,
+                                            done: false
+                                        },
+                                        {
+                                            phase: "Phase 04: Automation",
+                                            title: "Departmental Co-pilot Launch",
+                                            status: "Waitlisted",
+                                            desc: "Full rollout of autonomous agents across high-impact business units.",
+                                            icon: Rocket,
+                                            active: false,
+                                            done: false
+                                        }
+                                    ].map((item, i) => (
+                                        <motion.div
+                                            key={i}
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: i * 0.1 }}
+                                            className="flex gap-8 group"
+                                        >
+                                            <div className="relative z-10">
+                                                <div className={`h-12 w-12 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-lg ${item.done
+                                                        ? 'bg-blue-600 text-white shadow-blue-600/20'
+                                                        : item.active
+                                                            ? 'bg-indigo-600 text-white shadow-indigo-600/40 scale-110 ring-4 ring-indigo-50'
+                                                            : 'bg-slate-50 text-slate-300 border border-slate-100 group-hover:bg-slate-100 group-hover:text-slate-500'
+                                                    }`}>
+                                                    <item.icon className={`h-6 w-6 ${item.active ? 'animate-pulse' : ''}`} />
+                                                </div>
+                                                {item.done && (
+                                                    <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-green-500 border-2 border-white flex items-center justify-center">
+                                                        <CheckCircle2 className="h-3 w-3 text-white" />
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="flex-1 pt-1">
+                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-2">
+                                                    <h3 className={`text-sm font-black uppercase tracking-widest ${item.active ? 'text-indigo-600' : 'text-slate-400'}`}>
+                                                        {item.phase}
+                                                    </h3>
+                                                    <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border ${item.done
+                                                            ? 'bg-blue-50 text-blue-600 border-blue-100'
+                                                            : item.active
+                                                                ? 'bg-indigo-50 text-indigo-600 border-indigo-200'
+                                                                : 'bg-slate-50 text-slate-400 border-slate-100'
+                                                        }`}>
+                                                        {item.status}
+                                                    </span>
+                                                </div>
+                                                <h4 className={`text-xl font-black mb-2 transition-colors ${item.active ? 'text-slate-900 leading-none' : 'text-slate-500'}`}>
+                                                    {item.title}
+                                                </h4>
+                                                <p className="text-sm font-bold text-slate-400 max-w-lg leading-relaxed">
+                                                    {item.desc}
+                                                </p>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
                             </div>
                         </section>
 
