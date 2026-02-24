@@ -130,7 +130,7 @@ export default function SurveyPage() {
                 >
                     <div className="mb-10 relative">
                         <div className="absolute inset-0 animate-ping rounded-full bg-blue-600/10 blur-xl" />
-                        <img src="/images/logo.png" alt="AUDCOMP Logo" className="h-16 w-auto relative z-10 animate-pulse" />
+                        <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP Logo" className="h-16 w-auto relative z-10 animate-pulse brightness-0" />
                     </div>
                     <h2 className="text-4xl font-black mb-4">Finalizing Your Roadmap...</h2>
                     <p className="max-w-md text-slate-500 mb-8 font-medium">
