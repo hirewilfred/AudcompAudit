@@ -40,8 +40,8 @@ export default function EditExpertPage({ params }: { params: Promise<{ id: strin
     useEffect(() => {
         async function fetchExpert() {
             try {
-                const { data, error } = await supabase
-                    .from('experts')
+                const { data, error } = await (supabase
+                    .from('experts') as any)
                     .select('*')
                     .eq('id', id)
                     .single();
@@ -100,8 +100,7 @@ export default function EditExpertPage({ params }: { params: Promise<{ id: strin
         e.preventDefault();
         setSaving(true);
         try {
-            const { error } = await supabase
-                .from('experts')
+            const { error } = await (supabase.from('experts') as any)
                 .update(formData)
                 .eq('id', id);
 

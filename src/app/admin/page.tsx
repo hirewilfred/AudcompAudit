@@ -12,7 +12,9 @@ import {
     Plus,
     Loader2,
     CheckCircle2,
-    ShieldAlert
+    ShieldAlert,
+    ShieldOff,
+    LogOut
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -28,6 +30,12 @@ export default function AdminPage() {
     const router = useRouter();
     const supabase = createClient();
 
+    const handleLogout = async () => {
+        setLoading(true);
+        await supabase.auth.signOut();
+        router.push('/auth');
+    };
+
     useEffect(() => {
         async function checkAdmin() {
             try {
@@ -37,11 +45,13 @@ export default function AdminPage() {
                     return;
                 }
 
-                const { data: profile, error } = await supabase
+                const { data, error } = await supabase
                     .from('profiles')
                     .select('is_admin')
                     .eq('id', session.user.id)
                     .single();
+
+                const profile = data as { is_admin: boolean } | null;
 
                 if (error || !profile?.is_admin) {
                     setIsAdmin(false);
@@ -89,13 +99,22 @@ export default function AdminPage() {
                     <p className="text-slate-500 font-bold leading-relaxed mb-10">
                         This area is restricted to system administrators. Please contact your coordinator if you believe this is an error.
                     </p>
-                    <button
-                        onClick={() => router.push('/dashboard')}
-                        className="w-full bg-slate-900 text-white font-black py-5 rounded-[24px] hover:bg-black transition-all flex items-center justify-center gap-2 group"
-                    >
-                        Return to Dashboard
-                        <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                    </button>
+                    <div className="flex flex-col gap-4">
+                        <button
+                            onClick={() => router.push('/dashboard')}
+                            className="w-full bg-slate-900 text-white font-black py-5 rounded-[24px] hover:bg-black transition-all flex items-center justify-center gap-2 group"
+                        >
+                            Return to Dashboard
+                            <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                        </button>
+                        <button
+                            onClick={handleLogout}
+                            className="w-full bg-white text-red-600 border border-red-100 font-black py-5 rounded-[24px] hover:bg-red-50 transition-all flex items-center justify-center gap-2 group"
+                        >
+                            <LogOut className="h-5 w-5" />
+                            Sign Out & Switch Account
+                        </button>
+                    </div>
                 </div>
             </div>
         );

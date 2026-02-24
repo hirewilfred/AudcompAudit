@@ -68,8 +68,7 @@ export default function NewExpertPage() {
         e.preventDefault();
         setLoading(true);
         try {
-            const { error } = await supabase
-                .from('experts')
+            const { error } = await (supabase.from('experts') as any)
                 .insert([formData]);
 
             if (error) throw error;
