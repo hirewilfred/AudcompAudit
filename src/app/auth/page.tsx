@@ -8,10 +8,13 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
 export default function AuthPage() {
-    const [isLogin, setIsLogin] = useState(true);
+    const [isLogin, setIsLogin] = useState(false);
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [fullName, setFullName] = useState('');
+    const [companyName, setCompanyName] = useState('');
+    const [phone, setPhone] = useState('');
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
     const supabase = createClient();
@@ -42,18 +45,30 @@ export default function AuthPage() {
                     }
                 }
             } else {
-                const { error: authError } = await supabase.auth.signUp({
+                const { data: signUpData, error: authError } = await supabase.auth.signUp({
                     email,
                     password,
                     options: {
                         data: {
-                            full_name: email.split('@')[0],
+                            full_name: fullName,
+                            organization: companyName,
                         }
                     }
                 });
                 if (authError) throw authError;
 
-                // Wait a moment for the profile trigger (if exists) or redirected to survey
+                if (signUpData.user) {
+                    // Update the profile table immediately
+                    const { error: profileError } = await (supabase.from('profiles') as any).upsert({
+                        id: signUpData.user.id,
+                        full_name: fullName,
+                        organization: companyName,
+                        phone: phone,
+                        updated_at: new Date().toISOString()
+                    });
+                    if (profileError) console.error("Profile update error:", profileError);
+                }
+
                 router.push('/survey');
             }
         } catch (err: any) {
@@ -98,6 +113,46 @@ export default function AuthPage() {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {!isLogin && (
+                        <>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Full Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={fullName}
+                                    onChange={(e) => setFullName(e.target.value)}
+                                    placeholder="John Doe"
+                                    className="w-full rounded-2xl border border-slate-100 bg-slate-50 py-4 px-6 text-slate-900 outline-none transition-all focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-600/5 font-medium"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Company Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={companyName}
+                                    onChange={(e) => setCompanyName(e.target.value)}
+                                    placeholder="Acme Corp"
+                                    className="w-full rounded-2xl border border-slate-100 bg-slate-50 py-4 px-6 text-slate-900 outline-none transition-all focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-600/5 font-medium"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Phone Number</label>
+                                <input
+                                    type="tel"
+                                    required
+                                    value={phone}
+                                    onChange={(e) => setPhone(e.target.value)}
+                                    placeholder="+1 (555) 000-0000"
+                                    className="w-full rounded-2xl border border-slate-100 bg-slate-50 py-4 px-6 text-slate-900 outline-none transition-all focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-600/5 font-medium"
+                                />
+                            </div>
+                        </>
+                    )}
+
                     <div className="space-y-2">
                         <label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Email Address</label>
                         <div className="relative">

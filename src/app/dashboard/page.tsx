@@ -51,6 +51,13 @@ export default function DashboardPage() {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [profile, setProfile] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
+
+    // ROI Calculator State
+    const [roiEmployees, setRoiEmployees] = useState(5);
+    const [roiFrequency, setRoiFrequency] = useState(10); // per week
+    const [roiMinutes, setRoiMinutes] = useState(30);
+    const [roiHourlyRate, setRoiHourlyRate] = useState(50);
+
     const router = useRouter();
     const supabase = createClient();
 
@@ -191,6 +198,11 @@ export default function DashboardPage() {
             setIsSaving(false);
         }
     };
+
+    // ROI Calculations
+    const hoursPerMonth = (roiEmployees * roiFrequency * 4.33 * roiMinutes) / 60;
+    const costPerMonth = hoursPerMonth * roiHourlyRate;
+    const costPerYear = costPerMonth * 12;
 
     if (loading) {
         return (
@@ -389,10 +401,10 @@ export default function DashboardPage() {
                                         >
                                             <div className="relative z-10">
                                                 <div className={`h-12 w-12 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-lg ${item.done
-                                                        ? 'bg-blue-600 text-white shadow-blue-600/20'
-                                                        : item.active
-                                                            ? 'bg-indigo-600 text-white shadow-indigo-600/40 scale-110 ring-4 ring-indigo-50'
-                                                            : 'bg-slate-50 text-slate-300 border border-slate-100 group-hover:bg-slate-100 group-hover:text-slate-500'
+                                                    ? 'bg-blue-600 text-white shadow-blue-600/20'
+                                                    : item.active
+                                                        ? 'bg-indigo-600 text-white shadow-indigo-600/40 scale-110 ring-4 ring-indigo-50'
+                                                        : 'bg-slate-50 text-slate-300 border border-slate-100 group-hover:bg-slate-100 group-hover:text-slate-500'
                                                     }`}>
                                                     <item.icon className={`h-6 w-6 ${item.active ? 'animate-pulse' : ''}`} />
                                                 </div>
@@ -409,10 +421,10 @@ export default function DashboardPage() {
                                                         {item.phase}
                                                     </h3>
                                                     <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border ${item.done
-                                                            ? 'bg-blue-50 text-blue-600 border-blue-100'
-                                                            : item.active
-                                                                ? 'bg-indigo-50 text-indigo-600 border-indigo-200'
-                                                                : 'bg-slate-50 text-slate-400 border-slate-100'
+                                                        ? 'bg-blue-50 text-blue-600 border-blue-100'
+                                                        : item.active
+                                                            ? 'bg-indigo-50 text-indigo-600 border-indigo-200'
+                                                            : 'bg-slate-50 text-slate-400 border-slate-100'
                                                         }`}>
                                                         {item.status}
                                                     </span>
@@ -650,25 +662,97 @@ export default function DashboardPage() {
                             </div>
                         </section>
 
-                        <section className="bg-gradient-to-br from-slate-900 to-blue-900 rounded-[48px] p-10 text-white shadow-2xl shadow-blue-900/20 relative overflow-hidden group">
-                            <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(circle_at_20%_20%,_white_0%,_transparent_50%)]" />
+                        <section className="bg-slate-900 rounded-[48px] p-10 text-white shadow-2xl shadow-blue-900/20 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-full h-full opacity-5 bg-[radial-gradient(circle_at_80%_20%,_#3b82f6_0%,_transparent_50%)]" />
                             <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-8">
-                                    <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-md">
-                                        <MessageSquare className="h-6 w-6 text-blue-400" />
+                                    <div className="h-12 w-12 rounded-2xl bg-blue-600/20 flex items-center justify-center backdrop-blur-md border border-blue-500/20">
+                                        <TrendingUp className="h-6 w-6 text-blue-400" />
                                     </div>
-                                    <div className="bg-blue-500/20 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-400/20">24/7 Agent</div>
+                                    <div className="bg-blue-500/20 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-400/20">ROI AI Calculator</div>
                                 </div>
-                                <h2 className="text-2xl font-black mb-4 tracking-tight leading-tight">Expert Strategy Call</h2>
-                                <p className="text-sm font-bold opacity-60 mb-8 leading-relaxed">
-                                    Your assessment is ready. Let's build your custom AI automation roadmap together.
-                                </p>
-                                <button
-                                    onClick={handleBooking}
-                                    className="w-full bg-white text-slate-900 font-black py-4 rounded-[20px] transition-all hover:bg-blue-50 flex items-center justify-center gap-3 shadow-xl active:scale-95"
-                                >
-                                    Book 15-Min Discovery
-                                </button>
+                                <h2 className="text-2xl font-black mb-6 tracking-tight leading-tight">Labor & Process Savings</h2>
+
+                                <div className="space-y-5">
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-slate-500">
+                                            <span>Employees Involved</span>
+                                            <span className="text-blue-400">{roiEmployees}</span>
+                                        </div>
+                                        <input
+                                            type="range" min="1" max="50"
+                                            value={roiEmployees}
+                                            onChange={(e) => setRoiEmployees(parseInt(e.target.value))}
+                                            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-slate-500">
+                                            <span>Frequency (Tasks/Week)</span>
+                                            <span className="text-blue-400">{roiFrequency}</span>
+                                        </div>
+                                        <input
+                                            type="range" min="1" max="100"
+                                            value={roiFrequency}
+                                            onChange={(e) => setRoiFrequency(parseInt(e.target.value))}
+                                            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-slate-500">
+                                            <span>Mins per Task</span>
+                                            <span className="text-blue-400">{roiMinutes}m</span>
+                                        </div>
+                                        <input
+                                            type="range" min="5" max="120" step="5"
+                                            value={roiMinutes}
+                                            onChange={(e) => setRoiMinutes(parseInt(e.target.value))}
+                                            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-slate-500">
+                                            <span>Hourly Labor Cost</span>
+                                            <span className="text-blue-400">${roiHourlyRate}/hr</span>
+                                        </div>
+                                        <input
+                                            type="range" min="20" max="250" step="5"
+                                            value={roiHourlyRate}
+                                            onChange={(e) => setRoiHourlyRate(parseInt(e.target.value))}
+                                            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                        />
+                                    </div>
+
+                                    <div className="mt-10 p-6 rounded-[32px] bg-white/5 border border-white/10 backdrop-blur-sm">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Monthly Hours</p>
+                                                <p className="text-xl font-black text-white">{Math.round(hoursPerMonth)}h</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Monthly Cost</p>
+                                                <p className="text-xl font-black text-blue-400">${Math.round(costPerMonth).toLocaleString()}</p>
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 pt-4 border-t border-white/10">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Projected Annual Savings</p>
+                                            <p className="text-3xl font-black text-white decoration-blue-500/50 underline-offset-8 underline decoration-4">
+                                                ${Math.round(costPerYear).toLocaleString()}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={handleBooking}
+                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-[20px] transition-all flex items-center justify-center gap-3 shadow-xl active:scale-95 mt-4"
+                                    >
+                                        Capture These Savings
+                                        <ArrowRight className="h-5 w-5" />
+                                    </button>
+                                </div>
                             </div>
                         </section>
                     </div>
