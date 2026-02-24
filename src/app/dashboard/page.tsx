@@ -7,7 +7,16 @@ import {
     RadarChart,
     PolarGrid,
     PolarAngleAxis,
-    ResponsiveContainer
+    ResponsiveContainer,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    Legend,
+    AreaChart,
+    Area
 } from 'recharts';
 import {
     BarChart3,
@@ -200,9 +209,26 @@ export default function DashboardPage() {
     };
 
     // ROI Calculations
+    const automationPotential = 0.65;
+    const implementationCost = 15000;
+
     const hoursPerMonth = (roiEmployees * roiFrequency * 4.33 * roiMinutes) / 60;
-    const costPerMonth = hoursPerMonth * roiHourlyRate;
-    const costPerYear = costPerMonth * 12;
+    const currentAnnualCost = hoursPerMonth * 12 * roiHourlyRate;
+    const annualSavings = currentAnnualCost * automationPotential;
+    const monthlySavings = annualSavings / 12;
+    const paybackMonths = Math.max(1, (implementationCost / monthlySavings)).toFixed(1);
+    const netRoi = Math.round(((annualSavings - implementationCost) / implementationCost) * 100);
+
+    const comparisonData = [
+        { name: 'Current', cost: Math.round(currentAnnualCost) },
+        { name: 'With AI', cost: Math.round(currentAnnualCost - annualSavings) },
+    ];
+
+    const timelineData = Array.from({ length: 12 }, (_, i) => ({
+        month: `M${i + 1}`,
+        savings: Math.round(monthlySavings * (i + 1)),
+        breakeven: implementationCost
+    }));
 
     if (loading) {
         return (
@@ -669,14 +695,94 @@ export default function DashboardPage() {
                                     <div className="h-12 w-12 rounded-2xl bg-blue-600/20 flex items-center justify-center backdrop-blur-md border border-blue-500/20">
                                         <TrendingUp className="h-6 w-6 text-blue-400" />
                                     </div>
-                                    <div className="bg-blue-500/20 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-400/20">ROI AI Calculator</div>
+                                    <div className="bg-blue-500/20 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-400/20">Executive ROI Insight</div>
                                 </div>
-                                <h2 className="text-2xl font-black mb-6 tracking-tight leading-tight">Labor & Process Savings</h2>
 
-                                <div className="space-y-5">
+                                {/* Big Numbers First */}
+                                <div className="grid grid-cols-1 gap-6 mb-10">
+                                    <div className="p-8 rounded-[40px] bg-gradient-to-br from-blue-600 to-indigo-700 shadow-xl relative overflow-hidden group/card">
+                                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                                            <Zap className="h-20 w-20" />
+                                        </div>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-100 mb-2">Projected Annual Savings</p>
+                                        <h3 className="text-5xl font-black text-white leading-none">${Math.round(annualSavings).toLocaleString()}</h3>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="p-6 rounded-[32px] bg-white/5 border border-white/10 backdrop-blur-sm">
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2">Payback Period</p>
+                                            <p className="text-2xl font-black text-white">{paybackMonths} <span className="text-xs text-blue-400">Months</span></p>
+                                        </div>
+                                        <div className="p-6 rounded-[32px] bg-white/5 border border-white/10 backdrop-blur-sm">
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2">Net ROI %</p>
+                                            <p className="text-2xl font-black text-blue-400">+{netRoi}%</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Summary Language */}
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    key={annualSavings}
+                                    className="mb-10 p-6 rounded-[32px] bg-blue-500/5 border border-blue-500/10 italic"
+                                >
+                                    <p className="text-sm font-bold text-blue-100 leading-relaxed">
+                                        “You currently spend <span className="text-white">${Math.round(currentAnnualCost).toLocaleString()}/year</span> on manual processing. <br className="hidden md:block" />
+                                        With AI automation at <span className="text-blue-400">65%</span>, estimated savings: <span className="text-white">${Math.round(annualSavings).toLocaleString()}/year</span>. <br className="hidden md:block" />
+                                        Payback in <span className="text-blue-400">{paybackMonths} months</span>.”
+                                    </p>
+                                </motion.div>
+
+                                {/* Visuals: Bar Chart */}
+                                <div className="mb-10 space-y-4">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Cost Comparison (Annual)</p>
+                                    <div className="h-48 w-full bg-white/5 rounded-[32px] p-6 border border-white/5">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={comparisonData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                                <XAxis dataKey="name" stroke="#475569" fontSize={10} fontWeight="bold" axisLine={false} tickLine={false} />
+                                                <Tooltip
+                                                    contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '16px', fontSize: '12px', fontWeight: 'bold' }}
+                                                    itemStyle={{ color: '#60a5fa' }}
+                                                />
+                                                <Bar dataKey="cost" radius={[8, 8, 0, 0]}>
+                                                    {comparisonData.map((entry, index) => (
+                                                        <rect key={`cell-${index}`} fill={index === 0 ? '#1e293b' : '#3b82f6'} />
+                                                    ))}
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+
+                                {/* Visuals: Timeline */}
+                                <div className="mb-10 space-y-4">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Cumulative Savings Timeline</p>
+                                    <div className="h-48 w-full bg-white/5 rounded-[32px] p-6 border border-white/5">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart data={timelineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                                <defs>
+                                                    <linearGradient id="colorSavings" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <XAxis dataKey="month" stroke="#475569" fontSize={8} axisLine={false} tickLine={false} />
+                                                <Tooltip
+                                                    contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '16px', fontSize: '10px' }}
+                                                />
+                                                <Area type="monotone" dataKey="savings" stroke="#3b82f6" fillOpacity={1} fill="url(#colorSavings)" strokeWidth={3} />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+
+                                {/* Controls Section */}
+                                <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6 border-b border-white/5 pb-4">Adjust Parameters</h3>
+                                <div className="space-y-6">
                                     <div className="space-y-2">
                                         <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-slate-500">
-                                            <span>Employees Involved</span>
+                                            <span>Employees Performing Task</span>
                                             <span className="text-blue-400">{roiEmployees}</span>
                                         </div>
                                         <input
@@ -689,7 +795,7 @@ export default function DashboardPage() {
 
                                     <div className="space-y-2">
                                         <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-slate-500">
-                                            <span>Frequency (Tasks/Week)</span>
+                                            <span>Frequency (per Week)</span>
                                             <span className="text-blue-400">{roiFrequency}</span>
                                         </div>
                                         <input
@@ -726,31 +832,12 @@ export default function DashboardPage() {
                                         />
                                     </div>
 
-                                    <div className="mt-10 p-6 rounded-[32px] bg-white/5 border border-white/10 backdrop-blur-sm">
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Monthly Hours</p>
-                                                <p className="text-xl font-black text-white">{Math.round(hoursPerMonth)}h</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Monthly Cost</p>
-                                                <p className="text-xl font-black text-blue-400">${Math.round(costPerMonth).toLocaleString()}</p>
-                                            </div>
-                                        </div>
-                                        <div className="mt-4 pt-4 border-t border-white/10">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Projected Annual Savings</p>
-                                            <p className="text-3xl font-black text-white decoration-blue-500/50 underline-offset-8 underline decoration-4">
-                                                ${Math.round(costPerYear).toLocaleString()}
-                                            </p>
-                                        </div>
-                                    </div>
-
                                     <button
                                         onClick={handleBooking}
-                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-[20px] transition-all flex items-center justify-center gap-3 shadow-xl active:scale-95 mt-4"
+                                        className="w-full bg-white text-slate-900 font-black py-5 rounded-[24px] transition-all hover:bg-blue-50 flex items-center justify-center gap-3 shadow-xl active:scale-95 mt-8 group"
                                     >
                                         Capture These Savings
-                                        <ArrowRight className="h-5 w-5" />
+                                        <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                                     </button>
                                 </div>
                             </div>
