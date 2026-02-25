@@ -5,8 +5,11 @@
 -- 1. Ensure 'is_admin' column exists in profiles
 DO $$ 
 BEGIN 
-    IF NOT EXISTS (SELECT 1 FROM medical_columns WHERE table_name='profiles' AND column_name='is_admin') THEN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='is_admin') THEN
         ALTER TABLE public.profiles ADD COLUMN is_admin BOOLEAN DEFAULT FALSE;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='assigned_expert_id') THEN
+        ALTER TABLE public.profiles ADD COLUMN assigned_expert_id UUID REFERENCES public.experts(id);
     END IF;
 END $$;
 
@@ -58,7 +61,7 @@ CREATE POLICY "Admin Upload" ON storage.objects FOR INSERT WITH CHECK (
 UPDATE public.profiles 
 SET is_admin = true, has_completed_audit = true
 WHERE id IN (
-  SELECT id FROM auth.users WHERE email = 'admin@admin.com'
+  SELECT id FROM auth.users WHERE email IN ('admin@admin.com', 'vgreco@me.com')
 );
 
 -- ==========================================

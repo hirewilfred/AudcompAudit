@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AUDIT_QUESTIONS } from '@/lib/audit-questions';
-import { ChevronRight, ChevronLeft, Sparkles, CheckCircle2, Loader2, Info } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Sparkles, CheckCircle2, Loader2, Info, User, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -19,6 +19,9 @@ export default function SurveyPage() {
     const [isFinishing, setIsFinishing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+    const [experts, setExperts] = useState<any[]>([]);
+    const [selectedExpertId, setSelectedExpertId] = useState('');
+    const [fetchingExperts, setFetchingExperts] = useState(false);
     const router = useRouter();
     const supabase = createClient();
 
@@ -32,6 +35,24 @@ export default function SurveyPage() {
             }
         }
         checkAuth();
+
+        async function fetchExperts() {
+            setFetchingExperts(true);
+            try {
+                const { data, error } = await supabase
+                    .from('experts')
+                    .select('id, full_name')
+                    .order('full_name');
+                if (!error && data) {
+                    setExperts(data);
+                }
+            } catch (err) {
+                console.error("Error fetching experts:", err);
+            } finally {
+                setFetchingExperts(false);
+            }
+        }
+        fetchExperts();
     }, []);
 
     // Scroll to top when question changes or state changes
@@ -40,14 +61,16 @@ export default function SurveyPage() {
     }, [currentStep, isFinishing, isCheckingAuth]);
 
     const currentQuestion = AUDIT_QUESTIONS[currentStep];
-    const progress = ((currentStep + 1) / AUDIT_QUESTIONS.length) * 100;
+    const totalSteps = AUDIT_QUESTIONS.length + 1; // +1 for Expert Selection
+    const progress = ((currentStep + 1) / totalSteps) * 100;
+    const isExpertStep = currentStep === AUDIT_QUESTIONS.length;
 
     const handleSelect = (value: number) => {
         setAnswers({ ...answers, [currentQuestion.id]: value });
     };
 
     const nextStep = () => {
-        if (currentStep < AUDIT_QUESTIONS.length - 1) {
+        if (currentStep < totalSteps - 1) {
             setCurrentStep(currentStep + 1);
         } else {
             finishAudit();
@@ -103,6 +126,7 @@ export default function SurveyPage() {
                     id: user.id,
                     has_completed_audit: true,
                     last_audit_score: overallScore,
+                    assigned_expert_id: selectedExpertId || null,
                     updated_at: new Date().toISOString()
                 });
 
@@ -169,7 +193,7 @@ export default function SurveyPage() {
                     <span className="font-bold tracking-tight border-l border-slate-200 ml-2 pl-4 text-slate-400">Readiness Audit</span>
                 </div>
                 <div className="flex items-center gap-4">
-                    <span className="text-sm font-bold text-slate-400">Step {currentStep + 1} of {AUDIT_QUESTIONS.length}</span>
+                    <span className="text-sm font-bold text-slate-400">Step {currentStep + 1} of {totalSteps}</span>
                     <div className="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
                         <motion.div
                             className="h-full bg-blue-600"
@@ -183,7 +207,7 @@ export default function SurveyPage() {
             <main className="mx-auto flex min-h-screen max-w-4xl flex-col items-center justify-start px-6 pt-32 pb-24">
                 <AnimatePresence mode="wait">
                     <motion.div
-                        key={currentQuestion.id}
+                        key={isExpertStep ? 'expert-step' : currentQuestion.id}
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
@@ -191,48 +215,90 @@ export default function SurveyPage() {
                     >
                         <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-blue-600 border border-blue-100/50">
                             <Sparkles className="h-3 w-3" />
-                            {currentQuestion.category}
+                            {isExpertStep ? "Expert Assignment" : currentQuestion.category}
                         </div>
 
                         <h1 className="mb-10 text-4xl font-black sm:text-6xl leading-[1.1] text-slate-900 tracking-tight">
-                            {currentQuestion.text}
+                            {isExpertStep ? "Are you working with a sales rep or an AI expert?" : currentQuestion.text}
                         </h1>
 
                         <div className="grid gap-4 mt-8">
-                            {currentQuestion.options.map((option, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => handleSelect(option.value)}
-                                    className={`group relative flex w-full items-center justify-between rounded-[32px] border p-8 text-left transition-all hover:scale-[1.01] ${answers[currentQuestion.id] === option.value
-                                        ? 'border-blue-600 bg-white shadow-xl shadow-blue-900/5 ring-1 ring-blue-600/5'
-                                        : 'border-slate-100 bg-white/50 hover:border-slate-200 hover:bg-white'
-                                        }`}
-                                >
-                                    <div className="flex items-center gap-6">
-                                        <div className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-colors ${answers[currentQuestion.id] === option.value
-                                            ? 'border-blue-600 bg-blue-600'
-                                            : 'border-slate-200 bg-transparent'
-                                            }`}>
-                                            {answers[currentQuestion.id] === option.value && (
-                                                <CheckCircle2 className="h-5 w-5 text-white" />
-                                            )}
+                            {isExpertStep ? (
+                                <div className="space-y-6">
+                                    <div className="p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm">
+                                        <label className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 block">Select Your Assigned Expert</label>
+                                        <div className="relative">
+                                            <User className="absolute left-6 top-1/2 h-6 w-6 -translate-y-1/2 text-slate-400" />
+                                            <select
+                                                required
+                                                value={selectedExpertId}
+                                                onChange={(e) => setSelectedExpertId(e.target.value)}
+                                                className="w-full rounded-[24px] border border-slate-100 bg-slate-50 py-6 pl-16 pr-12 text-xl text-slate-900 outline-none transition-all focus:border-blue-600 focus:bg-white focus:ring-8 focus:ring-blue-600/5 font-bold appearance-none cursor-pointer"
+                                            >
+                                                {fetchingExperts ? (
+                                                    <option>Loading experts...</option>
+                                                ) : experts.length === 0 ? (
+                                                    <option value="">No experts found in system</option>
+                                                ) : (
+                                                    <>
+                                                        <option value="" disabled>Who are you dealing with?</option>
+                                                        {experts.map((expert) => (
+                                                            <option key={expert.id} value={expert.id}>
+                                                                {expert.full_name}
+                                                            </option>
+                                                        ))}
+                                                    </>
+                                                )}
+                                            </select>
+                                            <div className="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 text-slate-400">
+                                                {fetchingExperts ? (
+                                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                                ) : (
+                                                    <ChevronDown className="h-6 w-6" />
+                                                )}
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="text-xl font-bold text-slate-800">{option.label}</span>
-                                            {option.feedback && answers[currentQuestion.id] === option.value && (
-                                                <motion.div
-                                                    initial={{ height: 0, opacity: 0 }}
-                                                    animate={{ height: 'auto', opacity: 1 }}
-                                                    className="mt-3 flex items-start gap-2 text-sm text-blue-600 font-bold bg-blue-50/50 p-3 rounded-2xl border border-blue-100/20"
-                                                >
-                                                    <Info className="h-4 w-4 mt-0.5 shrink-0" />
-                                                    <span>{option.feedback}</span>
-                                                </motion.div>
-                                            )}
-                                        </div>
+                                        <p className="mt-6 text-sm font-medium text-slate-400 leading-relaxed italic border-t border-slate-50 pt-6">
+                                            This will link your custom roadmap directly to your advisor so they can review your results before your session.
+                                        </p>
                                     </div>
-                                </button>
-                            ))}
+                                </div>
+                            ) : (
+                                currentQuestion.options.map((option, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => handleSelect(option.value)}
+                                        className={`group relative flex w-full items-center justify-between rounded-[32px] border p-8 text-left transition-all hover:scale-[1.01] ${answers[currentQuestion.id] === option.value
+                                            ? 'border-blue-600 bg-white shadow-xl shadow-blue-900/5 ring-1 ring-blue-600/5'
+                                            : 'border-slate-100 bg-white/50 hover:border-slate-200 hover:bg-white'
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-6">
+                                            <div className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-colors ${answers[currentQuestion.id] === option.value
+                                                ? 'border-blue-600 bg-blue-600'
+                                                : 'border-slate-200 bg-transparent'
+                                                }`}>
+                                                {answers[currentQuestion.id] === option.value && (
+                                                    <CheckCircle2 className="h-5 w-5 text-white" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <span className="text-xl font-bold text-slate-800">{option.label}</span>
+                                                {option.feedback && answers[currentQuestion.id] === option.value && (
+                                                    <motion.div
+                                                        initial={{ height: 0, opacity: 0 }}
+                                                        animate={{ height: 'auto', opacity: 1 }}
+                                                        className="mt-3 flex items-start gap-2 text-sm text-blue-600 font-bold bg-blue-50/50 p-3 rounded-2xl border border-blue-100/20"
+                                                    >
+                                                        <Info className="h-4 w-4 mt-0.5 shrink-0" />
+                                                        <span>{option.feedback}</span>
+                                                    </motion.div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </button>
+                                ))
+                            )}
                         </div>
                     </motion.div>
                 </AnimatePresence>
@@ -257,10 +323,10 @@ export default function SurveyPage() {
 
                     <button
                         onClick={nextStep}
-                        disabled={answers[currentQuestion.id] === undefined}
+                        disabled={!isExpertStep ? answers[currentQuestion.id] === undefined : selectedExpertId === ''}
                         className={`group flex items-center justify-center gap-3 rounded-[24px] bg-blue-600 px-10 py-5 text-lg font-black text-white transition-all hover:scale-105 shadow-xl shadow-blue-600/20 disabled:opacity-50 disabled:grayscale`}
                     >
-                        {currentStep === AUDIT_QUESTIONS.length - 1 ? 'Analyze Now' : 'Continue'}
+                        {currentStep === totalSteps - 1 ? 'Analyze Now' : 'Continue'}
                         <ChevronRight className="h-6 w-6 transition-transform group-hover:translate-x-1" />
                     </button>
                 </div>

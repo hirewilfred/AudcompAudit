@@ -37,7 +37,8 @@ import {
     Mail as MailIcon,
     Calendar,
     Compass,
-    Rocket
+    Rocket,
+    LogOut
 } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -50,6 +51,7 @@ export default function DashboardPage() {
     const [isBookingOpen, setIsBookingOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [profile, setProfile] = useState<any>(null);
+    const [assignedExpert, setAssignedExpert] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [randomExperts, setRandomExperts] = useState<number[]>([]);
     const [activeBookingUrl, setActiveBookingUrl] = useState<string>("https://cal.com/hirewilfred/15min?embed=true");
@@ -95,11 +97,27 @@ export default function DashboardPage() {
                         router.push('/survey');
                         return;
                     }
+                    if (!prof.assigned_expert_id && !prof.is_admin) {
+                        router.push('/select-expert');
+                        return;
+                    }
                     setProfile(prof);
                 }
 
                 if (expertsRes.data && expertsRes.data.length > 0) {
                     setExperts(expertsRes.data as any[]);
+                }
+
+                // If assigned expert exists, fetch their full details
+                if (profileRes.data?.assigned_expert_id) {
+                    const { data: expertData } = await supabase
+                        .from('experts')
+                        .select('*')
+                        .eq('id', profileRes.data.assigned_expert_id)
+                        .single();
+                    if (expertData) {
+                        setAssignedExpert(expertData);
+                    }
                 }
 
                 const { data, error } = await supabase
@@ -212,7 +230,6 @@ export default function DashboardPage() {
                 full_name: profile.full_name,
                 organization: profile.organization,
                 phone: profile.phone,
-                directors_notes: profile.directors_notes,
                 updated_at: new Date().toISOString()
             }).eq('id', user.id);
 
@@ -223,6 +240,11 @@ export default function DashboardPage() {
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        router.push('/auth');
     };
 
 
@@ -310,8 +332,13 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="flex -space-x-3">
+                            {assignedExpert ? (
+                                <div className="h-10 w-10 rounded-full border-4 border-blue-600 bg-slate-200 overflow-hidden shadow-lg z-10 scale-110">
+                                    <img src={assignedExpert.photo_url || `/images/experts/expert-1.jpg`} alt={assignedExpert.full_name} className="h-full w-full object-cover" />
+                                </div>
+                            ) : null}
                             {experts.length > 0 ? (
-                                experts.slice(0, 4).map((expert, i) => (
+                                experts.filter(e => e.id !== assignedExpert?.id).slice(0, 4).map((expert, i) => (
                                     <div key={expert.id} className="h-10 w-10 rounded-full border-4 border-[#F4F7FE] bg-slate-200 overflow-hidden shadow-sm">
                                         <img src={expert.photo_url || `/images/experts/expert-${(i % 10) + 1}.jpg`} alt={expert.full_name} className="h-full w-full object-cover" />
                                     </div>
@@ -323,13 +350,10 @@ export default function DashboardPage() {
                                     </div>
                                 ))
                             )}
-                            {(experts.length > 4 || (!experts.length && randomExperts.length > 0)) && (
-                                <div className="h-10 w-10 rounded-full border-4 border-[#F4F7FE] bg-blue-600 flex items-center justify-center text-[10px] font-black text-white shadow-sm">
-                                    +{Math.max(0, experts.length - 4 || 4)}
-                                </div>
-                            )}
                         </div>
-                        <p className="text-sm font-bold text-slate-400 italic">Experts assigned to your roadmap</p>
+                        <p className="text-sm font-bold text-slate-400 italic">
+                            {assignedExpert ? `Dealing with ${assignedExpert.full_name}` : 'Experts assigned to your roadmap'}
+                        </p>
                     </div>
                 </div>
 
@@ -957,19 +981,6 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Director's Notes (AI Influence)</label>
-                                    <div className="relative">
-                                        <Sparkles className="absolute left-4 top-4 h-5 w-5 text-slate-300" />
-                                        <textarea
-                                            value={profile?.directors_notes || ''}
-                                            onChange={(e) => setProfile({ ...profile, directors_notes: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-blue-600 transition-colors font-bold text-slate-900 min-h-[100px] resize-none"
-                                            placeholder="Specify video style, tone, or specific AI instructions..."
-                                        />
-                                    </div>
-                                </div>
-
                                 <button
                                     type="submit"
                                     disabled={isSaving}
@@ -978,6 +989,27 @@ export default function DashboardPage() {
                                     {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Save Changes'}
                                     {!isSaving && <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />}
                                 </button>
+
+                                <div className="pt-2 border-t border-slate-50 mt-4">
+                                    <Link
+                                        href="/select-expert"
+                                        className="w-full bg-blue-50 text-blue-600 font-bold py-4 rounded-[24px] hover:bg-blue-100 transition-all flex items-center justify-center gap-2 group mb-4"
+                                    >
+                                        <User className="h-5 w-5" />
+                                        Change Assigned Expert
+                                    </Link>
+                                </div>
+
+                                <div className="pt-4 border-t border-slate-50">
+                                    <button
+                                        type="button"
+                                        onClick={handleLogout}
+                                        className="w-full bg-white border border-red-100 text-red-600 font-black py-4 rounded-[24px] hover:bg-red-50 transition-all flex items-center justify-center gap-2 group"
+                                    >
+                                        <LogOut className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+                                        Log Out
+                                    </button>
+                                </div>
                             </form>
                         </motion.div>
                     </motion.div>
