@@ -43,7 +43,8 @@ import {
     Calendar,
     Compass,
     Rocket,
-    LogOut
+    LogOut,
+    Linkedin
 } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -215,8 +216,9 @@ export default function DashboardPage() {
     ];
 
     const handleBooking = (bookingUrl?: string) => {
-        // Use the new calendly link for all bookings "for now" as requested
-        setActiveBookingUrl("https://calendly.com/vgreco-oo4/30min");
+        // Use the expert's specific booking URL if provided, otherwise fallback to the global one
+        const finalUrl = bookingUrl || "https://calendly.com/vgreco-oo4/30min";
+        setActiveBookingUrl(finalUrl);
         setIsBookingOpen(true);
     };
 
@@ -345,9 +347,45 @@ export default function DashboardPage() {
                                 ))
                             )}
                         </div>
-                        <p className="text-sm font-bold text-slate-400 italic">
-                            {assignedExpert ? `Your Assigned Expert: ${assignedExpert.full_name}` : 'Experts assigned to your roadmap'}
-                        </p>
+                        <div className="flex flex-col">
+                            <p className="text-sm font-bold text-slate-400 italic">
+                                {assignedExpert ? `Your Assigned Expert: ${assignedExpert.full_name}` : 'Experts assigned to your roadmap'}
+                            </p>
+                            {assignedExpert && (
+                                <div className="flex items-center gap-4 mt-2">
+                                    {assignedExpert.email && (
+                                        <a
+                                            href={`mailto:${assignedExpert.email}`}
+                                            className="flex items-center gap-2 text-[11px] font-black text-slate-400 hover:text-blue-600 transition-colors uppercase tracking-widest"
+                                            title={assignedExpert.email}
+                                        >
+                                            <MailIcon className="h-3.5 w-3.5" />
+                                            Email
+                                        </a>
+                                    )}
+                                    {assignedExpert.linkedin_url && (
+                                        <a
+                                            href={assignedExpert.linkedin_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 text-[11px] font-black text-slate-400 hover:text-blue-600 transition-colors uppercase tracking-widest"
+                                            title="LinkedIn Profile"
+                                        >
+                                            <Linkedin className="h-3.5 w-3.5" />
+                                            LinkedIn
+                                        </a>
+                                    )}
+                                    {assignedExpert.bookings_url && (
+                                        <button
+                                            onClick={() => handleBooking(assignedExpert.bookings_url)}
+                                            className="bg-blue-600/10 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                        >
+                                            Book Strategic Session
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
