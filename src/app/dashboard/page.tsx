@@ -1,5 +1,10 @@
 'use client';
 
+/**
+ * Triggering a fresh build to ensure all latest syntax fixes and 
+ * expert selection updates are correctly deployed to the cloud.
+ */
+
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
