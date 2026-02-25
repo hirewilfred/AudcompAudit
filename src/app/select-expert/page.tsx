@@ -63,8 +63,14 @@ export default function SelectExpertPage() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
 
+            let finalExpertId = selectedExpertId;
+            if (selectedExpertId === 'not-sure' && experts.length > 0) {
+                const randomIndex = Math.floor(Math.random() * experts.length);
+                finalExpertId = experts[randomIndex].id;
+            }
+
             const { error } = await (supabase.from('profiles') as any).update({
-                assigned_expert_id: selectedExpertId,
+                assigned_expert_id: finalExpertId,
                 updated_at: new Date().toISOString()
             }).eq('id', session.user.id);
 
@@ -130,6 +136,7 @@ export default function SelectExpertPage() {
                                     className="w-full rounded-[32px] border border-slate-100 bg-slate-50 py-7 pl-16 pr-12 text-xl text-slate-900 outline-none transition-all focus:border-blue-600 focus:bg-white focus:ring-8 focus:ring-blue-600/5 font-bold appearance-none cursor-pointer"
                                 >
                                     <option value="" disabled>Search or select expert name...</option>
+                                    <option value="not-sure">I'm not sure / Not working with anyone yet</option>
                                     {experts.map((expert) => (
                                         <option key={expert.id} value={expert.id}>
                                             {expert.full_name}

@@ -59,7 +59,7 @@ export default function DashboardPage() {
     const [assignedExpert, setAssignedExpert] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [randomExperts, setRandomExperts] = useState<number[]>([]);
-    const [activeBookingUrl, setActiveBookingUrl] = useState<string>("https://calendly.com/audocmp/30min");
+    const [activeBookingUrl, setActiveBookingUrl] = useState<string>("https://calendly.com/vgreco-oo4/30min");
     const [experts, setExperts] = useState<any[]>([]);
 
     // ROI Calculator State
@@ -216,7 +216,7 @@ export default function DashboardPage() {
 
     const handleBooking = (bookingUrl?: string) => {
         // Use the new calendly link for all bookings "for now" as requested
-        setActiveBookingUrl("https://calendly.com/audocmp/30min");
+        setActiveBookingUrl("https://calendly.com/vgreco-oo4/30min");
         setIsBookingOpen(true);
     };
 
@@ -334,26 +334,19 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-3">
                         <div className="flex -space-x-3">
                             {assignedExpert ? (
-                                <div className="h-10 w-10 rounded-full border-4 border-blue-600 bg-slate-200 overflow-hidden shadow-lg z-10 scale-110">
+                                <div className="h-12 w-12 rounded-full border-4 border-blue-600 bg-slate-200 overflow-hidden shadow-lg z-10 scale-110">
                                     <img src={assignedExpert.photo_url || `/images/experts/expert-1.jpg`} alt={assignedExpert.full_name} className="h-full w-full object-cover" />
                                 </div>
-                            ) : null}
-                            {experts.length > 0 ? (
-                                experts.filter(e => e.id !== assignedExpert?.id).slice(0, 4).map((expert, i) => (
+                            ) : (
+                                experts.slice(0, 4).map((expert, i) => (
                                     <div key={expert.id} className="h-10 w-10 rounded-full border-4 border-[#F4F7FE] bg-slate-200 overflow-hidden shadow-sm">
                                         <img src={expert.photo_url || `/images/experts/expert-${(i % 10) + 1}.jpg`} alt={expert.full_name} className="h-full w-full object-cover" />
-                                    </div>
-                                ))
-                            ) : (
-                                randomExperts.map(i => (
-                                    <div key={i} className="h-10 w-10 rounded-full border-4 border-[#F4F7FE] bg-slate-200 overflow-hidden shadow-sm">
-                                        <img src={`/images/experts/expert-${i}.jpg`} alt="Expert" className="h-full w-full object-cover" />
                                     </div>
                                 ))
                             )}
                         </div>
                         <p className="text-sm font-bold text-slate-400 italic">
-                            {assignedExpert ? `Dealing with ${assignedExpert.full_name}` : 'Experts assigned to your roadmap'}
+                            {assignedExpert ? `Your Assigned Expert: ${assignedExpert.full_name}` : 'Experts assigned to your roadmap'}
                         </p>
                     </div>
                 </div>
@@ -381,7 +374,7 @@ export default function DashboardPage() {
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: i * 0.1 }}
-                                        onClick={() => handleBooking(experts[i % experts.length]?.bookings_url)}
+                                        onClick={() => handleBooking(assignedExpert?.bookings_url)}
                                         className={`${rec.color} rounded-[40px] p-8 flex flex-col justify-between min-h-[260px] border-2 relative overflow-hidden group hover:scale-[1.03] transition-all duration-500 cursor-pointer shadow-sm hover:shadow-2xl hover:shadow-blue-900/10`}
                                     >
                                         <div
@@ -899,7 +892,7 @@ export default function DashboardPage() {
                             <div className="flex-1 w-full bg-slate-50/50">
                                 {/* Replace the URL below with your actual Cal.com or Calendly embed URL */}
                                 <iframe
-                                    src="https://calendly.com/audocmp/30min"
+                                    src="https://calendly.com/vgreco-oo4/30min"
                                     className="w-full h-full border-0"
                                     title="Schedule Session"
                                 />

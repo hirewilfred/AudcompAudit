@@ -19,6 +19,7 @@ export interface Database {
           last_audit_score: number | null
           directors_notes: string | null
           is_admin: boolean
+          assigned_expert_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -30,6 +31,7 @@ export interface Database {
           last_audit_score?: number | null
           directors_notes?: string | null
           is_admin?: boolean
+          assigned_expert_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -41,6 +43,7 @@ export interface Database {
           last_audit_score?: number | null
           directors_notes?: string | null
           is_admin?: boolean
+          assigned_expert_id?: string | null
           updated_at?: string | null
         }
       }

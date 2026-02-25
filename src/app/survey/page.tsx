@@ -122,11 +122,17 @@ export default function SurveyPage() {
                 if (scoreError) throw scoreError;
 
                 // 3. Update profile
+                let finalExpertId = selectedExpertId;
+                if (selectedExpertId === 'not-sure' && experts.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * experts.length);
+                    finalExpertId = experts[randomIndex].id;
+                }
+
                 const { error: profileError } = await (supabase.from('profiles') as any).upsert({
                     id: user.id,
                     has_completed_audit: true,
                     last_audit_score: overallScore,
-                    assigned_expert_id: selectedExpertId || null,
+                    assigned_expert_id: finalExpertId || null,
                     updated_at: new Date().toISOString()
                 });
 
@@ -242,6 +248,7 @@ export default function SurveyPage() {
                                                 ) : (
                                                     <>
                                                         <option value="" disabled>Who are you dealing with?</option>
+                                                        <option value="not-sure">I'm not sure / Not working with anyone yet</option>
                                                         {experts.map((expert) => (
                                                             <option key={expert.id} value={expert.id}>
                                                                 {expert.full_name}
