@@ -54,7 +54,7 @@ export default function DashboardPage() {
     const [assignedExpert, setAssignedExpert] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [randomExperts, setRandomExperts] = useState<number[]>([]);
-    const [activeBookingUrl, setActiveBookingUrl] = useState<string>("https://cal.com/hirewilfred/15min?embed=true");
+    const [activeBookingUrl, setActiveBookingUrl] = useState<string>("https://calendly.com/audocmp/30min");
     const [experts, setExperts] = useState<any[]>([]);
 
     // ROI Calculator State
@@ -210,12 +210,8 @@ export default function DashboardPage() {
     ];
 
     const handleBooking = (bookingUrl?: string) => {
-        if (bookingUrl) {
-            setActiveBookingUrl(bookingUrl);
-        } else {
-            // Default booking if none provided
-            setActiveBookingUrl("https://cal.com/hirewilfred/15min?embed=true");
-        }
+        // Use the new calendly link for all bookings "for now" as requested
+        setActiveBookingUrl("https://calendly.com/audocmp/30min");
         setIsBookingOpen(true);
     };
 
@@ -898,7 +894,7 @@ export default function DashboardPage() {
                             <div className="flex-1 w-full bg-slate-50/50">
                                 {/* Replace the URL below with your actual Cal.com or Calendly embed URL */}
                                 <iframe
-                                    src="https://cal.com/hirewilfred/15min?embed=true"
+                                    src="https://calendly.com/audocmp/30min"
                                     className="w-full h-full border-0"
                                     title="Schedule Session"
                                 />
@@ -906,7 +902,7 @@ export default function DashboardPage() {
 
                             {/* Modal Footer */}
                             <div className="px-8 py-4 bg-white border-t border-slate-50 flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-300">
-                                <span>Powered by Cal.com & Audcomp</span>
+                                <span>Powered by Calendly & Audcomp</span>
                                 <span>Secure Strategy Booking</span>
                             </div>
                         </motion.div>
