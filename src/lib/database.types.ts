@@ -19,6 +19,7 @@ export interface Database {
           last_audit_score: number | null
           directors_notes: string | null
           is_admin: boolean
+          is_bdm: boolean
           assigned_expert_id: string | null
           updated_at: string | null
         }
@@ -31,6 +32,7 @@ export interface Database {
           last_audit_score?: number | null
           directors_notes?: string | null
           is_admin?: boolean
+          is_bdm?: boolean
           assigned_expert_id?: string | null
           updated_at?: string | null
         }
@@ -43,6 +45,7 @@ export interface Database {
           last_audit_score?: number | null
           directors_notes?: string | null
           is_admin?: boolean
+          is_bdm?: boolean
           assigned_expert_id?: string | null
           updated_at?: string | null
         }

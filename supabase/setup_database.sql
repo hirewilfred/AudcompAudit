@@ -11,6 +11,9 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='assigned_expert_id') THEN
         ALTER TABLE public.profiles ADD COLUMN assigned_expert_id UUID REFERENCES public.experts(id);
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='is_bdm') THEN
+        ALTER TABLE public.profiles ADD COLUMN is_bdm BOOLEAN DEFAULT FALSE;
+    END IF;
 END $$;
 
 -- 2. Create experts table

@@ -62,6 +62,7 @@ export default function DashboardPage() {
     const [randomExperts, setRandomExperts] = useState<number[]>([]);
     const [activeBookingUrl, setActiveBookingUrl] = useState<string>("https://calendly.com/vgreco-oo4/30min");
     const [experts, setExperts] = useState<any[]>([]);
+    const [bdms, setBdms] = useState<any[]>([]);
 
     // ROI Calculator State
     const [roiEmployees, setRoiEmployees] = useState(5);
@@ -91,10 +92,11 @@ export default function DashboardPage() {
                     return;
                 }
 
-                // Fetch profile and experts in parallel
-                const [profileRes, expertsRes]: [any, any] = await Promise.all([
+                // Fetch profile, experts, and bdms in parallel
+                const [profileRes, expertsRes, bdmsRes]: [any, any, any] = await Promise.all([
                     supabase.from('profiles').select('*').eq('id', session.user.id).single(),
-                    supabase.from('experts').select('*').limit(8)
+                    supabase.from('experts').select('*').limit(8),
+                    supabase.from('profiles').select('*').eq('is_bdm', true)
                 ]);
 
                 if (profileRes.data) {
@@ -112,6 +114,10 @@ export default function DashboardPage() {
 
                 if (expertsRes.data && expertsRes.data.length > 0) {
                     setExperts(expertsRes.data as any[]);
+                }
+
+                if (bdmsRes.data) {
+                    setBdms(bdmsRes.data);
                 }
 
                 // If assigned expert exists, fetch their full details
@@ -334,9 +340,14 @@ export default function DashboardPage() {
                         <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none">Your AI Readiness</h1>
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className="flex -space-x-3">
+                        <div className="flex -space-x-3 items-center">
+                            {bdms.map((bdm, i) => (
+                                <div key={`bdm-${bdm.id}`} className="h-10 w-10 rounded-full border-4 border-[#F4F7FE] bg-slate-200 overflow-hidden shadow-sm hover:scale-110 transition-transform cursor-help z-10" title={`BDM: ${bdm.full_name}`}>
+                                    <img src={`https://ui-avatars.com/api/?name=${bdm.full_name || 'BDM'}&background=fff&color=3b82f6`} alt={bdm.full_name} className="h-full w-full object-cover" />
+                                </div>
+                            ))}
                             {assignedExpert ? (
-                                <div className="h-12 w-12 rounded-full border-4 border-blue-600 bg-slate-200 overflow-hidden shadow-lg z-10 scale-110">
+                                <div className="h-12 w-12 rounded-full border-4 border-blue-600 bg-slate-200 overflow-hidden shadow-lg z-20 scale-110" title={`Expert: ${assignedExpert.full_name}`}>
                                     <img src={assignedExpert.photo_url || `/images/experts/expert-1.jpg`} alt={assignedExpert.full_name} className="h-full w-full object-cover" />
                                 </div>
                             ) : (
@@ -351,6 +362,13 @@ export default function DashboardPage() {
                             <p className="text-sm font-bold text-slate-400 italic">
                                 {assignedExpert ? `Your Assigned Expert: ${assignedExpert.full_name}` : 'Experts assigned to your roadmap'}
                             </p>
+
+                            {bdms.length > 0 && (
+                                <p className="text-xs font-bold text-slate-400 mt-1">
+                                    + {bdms.map(b => b.full_name).join(', ')} (BDMs)
+                                </p>
+                            )}
+
                             {assignedExpert && (
                                 <div className="flex items-center gap-4 mt-2">
                                     {assignedExpert.email && (

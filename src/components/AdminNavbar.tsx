@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Settings, Home, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, UserCircle, Settings, Home, LogOut } from 'lucide-react';
 
 export default function AdminNavbar() {
     const pathname = usePathname();
@@ -10,6 +10,7 @@ export default function AdminNavbar() {
     const navItems = [
         { label: 'Admin Home', href: '/admin', icon: LayoutDashboard },
         { label: 'Manage Experts', href: '/admin/experts', icon: Users },
+        { label: 'Manage Users', href: '/admin/users', icon: UserCircle },
         { label: 'System Settings', href: '/admin/settings', icon: Settings },
     ];
 
@@ -30,8 +31,8 @@ export default function AdminNavbar() {
                             key={item.href}
                             href={item.href}
                             className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 group ${isActive
-                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                                : 'text-slate-400 hover:bg-white/5 hover:text-white'
                                 }`}
                         >
                             <item.icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-blue-400'}`} />

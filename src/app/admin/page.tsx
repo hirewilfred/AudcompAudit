@@ -26,6 +26,7 @@ export default function AdminPage() {
         totalProfiles: 0,
         totalAudits: 0
     });
+    const [recentCompletions, setRecentCompletions] = useState<any[]>([]);
 
     const router = useRouter();
     const supabase = createClient();
@@ -58,10 +59,23 @@ export default function AdminPage() {
                 } else {
                     setIsAdmin(true);
                     // Fetch stats if admin
-                    const [expertsRes, profilesRes, scoresRes] = await Promise.all([
+                    const [expertsRes, profilesRes, scoresRes, completionsRes] = await Promise.all([
                         supabase.from('experts').select('*', { count: 'exact', head: true }),
                         supabase.from('profiles').select('*', { count: 'exact', head: true }),
-                        supabase.from('audit_scores').select('*', { count: 'exact', head: true })
+                        supabase.from('audit_scores').select('*', { count: 'exact', head: true }),
+                        supabase.from('profiles')
+                            .select(`
+                                id,
+                                full_name,
+                                organization,
+                                has_completed_audit,
+                                assigned_expert_id,
+                                experts ( id, full_name, photo_url ),
+                                audit_scores ( created_at, overall_score )
+                            `)
+                            .eq('has_completed_audit', true)
+                            .order('updated_at', { ascending: false })
+                            .limit(10)
                     ]);
 
                     setStats({
@@ -69,6 +83,11 @@ export default function AdminPage() {
                         totalProfiles: profilesRes.count || 0,
                         totalAudits: scoresRes.count || 0
                     });
+
+                    if (completionsRes.data) {
+                        setRecentCompletions(completionsRes.data);
+                    }
+
                 }
             } catch (err) {
                 console.error("Auth check failed:", err);
@@ -172,21 +191,99 @@ export default function AdminPage() {
 
                 {/* Main Content Area */}
                 <div className="grid grid-cols-12 gap-8">
-                    <section className="col-span-12 lg:col-span-8 bg-white rounded-[48px] p-10 shadow-sm border border-slate-100 border-dashed min-h-[400px] flex flex-col items-center justify-center text-center">
-                        <div className="h-24 w-24 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6">
-                            <Users className="h-12 w-12" />
+                    <section className="col-span-12 lg:col-span-8 bg-white rounded-[48px] p-10 shadow-sm border border-slate-100 flex flex-col relative overflow-hidden">
+                        <div className="flex items-center justify-between mb-8">
+                            <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                    <CheckCircle2 className="h-5 w-5" />
+                                </div>
+                                Recent Completions
+                            </h2>
+                            <button
+                                onClick={() => router.push('/admin/users')}
+                                className="text-slate-400 font-bold hover:text-blue-600 transition-colors uppercase tracking-widest text-xs flex items-center gap-2"
+                            >
+                                View All Users <ArrowRight className="h-4 w-4" />
+                            </button>
                         </div>
-                        <h2 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">Manage Your Expert Pool</h2>
-                        <p className="text-slate-400 font-bold max-w-sm leading-relaxed mb-8">
-                            Add or update experts displayed on the user dashboard. Include photos, LinkedIn profiles, and booking links.
-                        </p>
-                        <button
-                            onClick={() => router.push('/admin/experts')}
-                            className="bg-slate-900 text-white px-10 py-5 rounded-[24px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center gap-3 group"
-                        >
-                            Manage Experts
-                            <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                        </button>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-slate-100">
+                                        <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400">User</th>
+                                        <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400">Score</th>
+                                        <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400">Assigned Expert</th>
+                                        <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Completion Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {recentCompletions.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4} className="py-8 text-center text-slate-400 font-bold">
+                                                No completed audits yet.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        recentCompletions.map((completion, idx) => {
+                                            const scoreObj = Array.isArray(completion.audit_scores) ? completion.audit_scores[0] : completion.audit_scores;
+                                            const expertObj = Array.isArray(completion.experts) ? completion.experts[0] : completion.experts;
+
+                                            // Handle case where scoreObj might be undefined if no scores exist
+                                            const completionDate = scoreObj?.created_at
+                                                ? new Date(scoreObj.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                                : 'Unknown';
+
+                                            return (
+                                                <tr key={completion.id || idx} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
+                                                    <td className="py-4 font-black flex items-center gap-3">
+                                                        <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                                                            {completion.full_name?.charAt(0) || 'U'}
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span>{completion.full_name || 'Unknown User'}</span>
+                                                            <span className="text-xs font-bold text-slate-400">{completion.organization || 'No Organization'}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-4">
+                                                        {scoreObj?.overall_score ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-black text-slate-900">{scoreObj.overall_score}%</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-slate-300 font-bold">N/A</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="py-4">
+                                                        {expertObj ? (
+                                                            <div className="flex items-center gap-2">
+                                                                {expertObj.photo_url ? (
+                                                                    <div className="h-8 w-8 rounded-full overflow-hidden bg-slate-200 border border-slate-100">
+                                                                        <img src={expertObj.photo_url} alt={expertObj.full_name} className="h-full w-full object-cover" />
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200">
+                                                                        <Users className="h-4 w-4" />
+                                                                    </div>
+                                                                )}
+                                                                <span className="font-bold text-slate-600 text-sm">{expertObj.full_name}</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-xs font-bold uppercase tracking-widest text-amber-500 bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
+                                                                Unassigned
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="py-4 text-right">
+                                                        <span className="font-bold text-slate-500 text-sm">{completionDate}</span>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </section>
 
                     <aside className="col-span-12 lg:col-span-4 space-y-8">
