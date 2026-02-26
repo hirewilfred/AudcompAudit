@@ -62,6 +62,7 @@ export default function AuthPage() {
                     const { error: profileError } = await (supabase.from('profiles') as any).upsert({
                         id: signUpData.user.id,
                         full_name: fullName,
+                        email: email,
                         organization: companyName,
                         phone: phone,
                         updated_at: new Date().toISOString()

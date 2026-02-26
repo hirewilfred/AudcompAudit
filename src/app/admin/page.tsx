@@ -67,10 +67,10 @@ export default function AdminPage() {
                             .select(`
                                 id,
                                 full_name,
+                                email,
                                 organization,
                                 has_completed_audit,
                                 assigned_expert_id,
-                                created_at,
                                 updated_at,
                                 experts ( id, full_name, photo_url ),
                                 audit_scores ( created_at, overall_score )
@@ -84,6 +84,11 @@ export default function AdminPage() {
                         totalProfiles: profilesRes.count || 0,
                         totalAudits: scoresRes.count || 0
                     });
+
+                    if (completionsRes.error) {
+                        console.error("Dashboard fetch error details:", completionsRes.error.message, completionsRes.error.details, completionsRes.error.hint);
+                    }
+                    console.log("completionsRes data raw:", completionsRes.data);
 
                     if (completionsRes.data) {
                         setRecentUsers(completionsRes.data);
@@ -214,7 +219,7 @@ export default function AdminPage() {
                                     <tr className="border-b border-slate-100">
                                         <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400">User</th>
                                         <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400">Status</th>
-                                        <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400">Score</th>
+                                        <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400">Readiness Score</th>
                                         <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400">Assigned Expert</th>
                                         <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Account Created</th>
                                     </tr>
@@ -232,7 +237,7 @@ export default function AdminPage() {
                                             const expertObj = Array.isArray(userRow.experts) ? userRow.experts[0] : userRow.experts;
 
                                             // Fallback to the profile's original creation date if they haven't made a score yet
-                                            const rawDate = scoreObj?.created_at || userRow.created_at || userRow.updated_at;
+                                            const rawDate = scoreObj?.created_at || userRow.updated_at;
                                             const completionDate = rawDate
                                                 ? new Date(rawDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                                                 : 'Unknown';
@@ -240,12 +245,13 @@ export default function AdminPage() {
                                             return (
                                                 <tr key={userRow.id || idx} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
                                                     <td className="py-4 font-black flex items-center gap-3">
-                                                        <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center uppercase">
+                                                        <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center uppercase shrink-0">
                                                             {userRow.full_name?.charAt(0) || 'U'}
                                                         </div>
                                                         <div className="flex flex-col">
-                                                            <span>{userRow.full_name || 'Unknown User'}</span>
-                                                            <span className="text-xs font-bold text-slate-400">{userRow.organization || 'No Organization'}</span>
+                                                            <span className="truncate max-w-[180px]">{userRow.full_name || 'Unknown User'}</span>
+                                                            <span className="text-xs font-bold text-slate-400 truncate max-w-[180px]" title={userRow.email}>{userRow.email || 'No email provided'}</span>
+                                                            {userRow.organization && <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-0.5 truncate max-w-[180px]">{userRow.organization}</span>}
                                                         </div>
                                                     </td>
                                                     <td className="py-4">
@@ -261,8 +267,11 @@ export default function AdminPage() {
                                                     </td>
                                                     <td className="py-4">
                                                         {scoreObj?.overall_score ? (
-                                                            <div className="flex items-center gap-2">
+                                                            <div className="flex flex-col">
                                                                 <span className="font-black text-slate-900">{scoreObj.overall_score}%</span>
+                                                                <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-0.5 whitespace-nowrap">
+                                                                    {scoreObj.overall_score >= 65 ? 'Advanced (Tier 1)' : 'Foundation (Tier 2)'}
+                                                                </span>
                                                             </div>
                                                         ) : (
                                                             <span className="text-slate-300 font-bold">N/A</span>
