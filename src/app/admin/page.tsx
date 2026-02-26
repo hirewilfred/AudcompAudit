@@ -59,24 +59,16 @@ export default function AdminPage() {
                 } else {
                     setIsAdmin(true);
                     // Fetch stats if admin
-                    const [expertsRes, profilesRes, scoresRes, completionsRes] = await Promise.all([
+                    const [expertsRes, profilesRes, scoresRes, profilesListRes, expertsListRes, scoresListRes] = await Promise.all([
                         supabase.from('experts').select('*', { count: 'exact', head: true }),
                         supabase.from('profiles').select('*', { count: 'exact', head: true }),
                         supabase.from('audit_scores').select('*', { count: 'exact', head: true }),
                         supabase.from('profiles')
-                            .select(`
-                                id,
-                                full_name,
-                                email,
-                                organization,
-                                has_completed_audit,
-                                assigned_expert_id,
-                                updated_at,
-                                experts ( id, full_name, photo_url ),
-                                audit_scores ( created_at, overall_score )
-                            `)
+                            .select(`id, full_name, email, organization, has_completed_audit, assigned_expert_id, updated_at`)
                             .order('updated_at', { ascending: false })
-                            .limit(50)
+                            .limit(50),
+                        supabase.from('experts').select('id, full_name, photo_url'),
+                        supabase.from('audit_scores').select('user_id, created_at, overall_score')
                     ]);
 
                     setStats({
@@ -85,13 +77,27 @@ export default function AdminPage() {
                         totalAudits: scoresRes.count || 0
                     });
 
-                    if (completionsRes.error) {
-                        console.error("Dashboard fetch error details:", completionsRes.error.message, completionsRes.error.details, completionsRes.error.hint);
+                    if (profilesListRes.error) {
+                        console.error("Dashboard fetch error details:", profilesListRes.error);
                     }
-                    console.log("completionsRes data raw:", completionsRes.data);
 
-                    if (completionsRes.data) {
-                        setRecentUsers(completionsRes.data);
+                    if (profilesListRes.data) {
+                        const allExperts = expertsListRes.data || [];
+                        const allScores = scoresListRes.data || [];
+
+                        const mergedProfiles = profilesListRes.data.map((profile: any) => {
+                            const expert = allExperts.find((e: any) => e.id === profile.assigned_expert_id);
+                            // Get the most recent score for the user
+                            const userScores = allScores.filter((s: any) => s.user_id === profile.id).sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                            const score = userScores.length > 0 ? userScores[0] : null;
+
+                            return {
+                                ...profile,
+                                experts: expert ? [expert] : [],
+                                audit_scores: score ? [score] : []
+                            };
+                        });
+                        setRecentUsers(mergedProfiles);
                     }
 
                 }
