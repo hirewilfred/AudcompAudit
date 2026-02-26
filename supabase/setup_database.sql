@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS public.experts (
   linkedin_url TEXT,
   bookings_url TEXT,
   photo_url TEXT,
+  is_bdm BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

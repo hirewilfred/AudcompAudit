@@ -58,6 +58,7 @@ export interface Database {
           linkedin_url: string | null
           bookings_url: string | null
           photo_url: string | null
+          is_bdm: boolean | null
           created_at: string
           updated_at: string | null
         }
@@ -68,6 +69,7 @@ export interface Database {
           linkedin_url?: string | null
           bookings_url?: string | null
           photo_url?: string | null
+          is_bdm?: boolean | null
           created_at?: string
           updated_at?: string | null
         }
@@ -78,6 +80,7 @@ export interface Database {
           linkedin_url?: string | null
           bookings_url?: string | null
           photo_url?: string | null
+          is_bdm?: boolean | null
           created_at?: string
           updated_at?: string | null
         }

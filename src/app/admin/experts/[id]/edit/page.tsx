@@ -31,7 +31,8 @@ export default function EditExpertPage({ params }: { params: Promise<{ id: strin
         email: '',
         linkedin_url: '',
         bookings_url: '',
-        photo_url: ''
+        photo_url: '',
+        is_bdm: false
     });
 
     const router = useRouter();
@@ -53,7 +54,8 @@ export default function EditExpertPage({ params }: { params: Promise<{ id: strin
                         email: data.email || '',
                         linkedin_url: data.linkedin_url || '',
                         bookings_url: data.bookings_url || '',
-                        photo_url: data.photo_url || ''
+                        photo_url: data.photo_url || '',
+                        is_bdm: data.is_bdm || false
                     });
                 }
             } catch (err) {
@@ -191,6 +193,25 @@ export default function EditExpertPage({ params }: { params: Promise<{ id: strin
                                             onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                                             className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-14 pr-6 outline-none focus:border-blue-600 transition-all font-bold text-slate-900"
                                         />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4 pt-4 border-t border-slate-50">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-black text-slate-900">Business Development Manager</span>
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pin to user dashboards</span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData(prev => ({ ...prev, is_bdm: !prev.is_bdm }))}
+                                            className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${formData.is_bdm ? 'bg-blue-600' : 'bg-slate-200'}`}
+                                        >
+                                            <span className="sr-only">Toggle BDM status</span>
+                                            <span
+                                                className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${formData.is_bdm ? 'translate-x-5' : 'translate-x-0'}`}
+                                            />
+                                        </button>
                                     </div>
                                 </div>
                             </div>
