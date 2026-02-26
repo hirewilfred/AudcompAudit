@@ -44,7 +44,10 @@ import {
     Compass,
     Rocket,
     LogOut,
-    Linkedin
+    Linkedin,
+    BookOpen,
+    Bot,
+    Users
 } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -471,7 +474,7 @@ export default function DashboardPage() {
                                         </div>
                                         <div className="mt-8 flex items-center justify-between relative z-10">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[11px] font-black uppercase tracking-widest bg-slate-900 text-white px-4 py-2 rounded-full group-hover:bg-blue-600 transition-colors shadow-lg shadow-slate-900/10 group-hover:shadow-blue-600/20">Book Now</span>
+                                                <span className="text-[11px] font-black uppercase tracking-widest bg-slate-900 text-white px-4 py-2 rounded-full group-hover:bg-blue-600 transition-colors shadow-lg shadow-slate-900/10 group-hover:shadow-blue-600/20">Book Strategy Session</span>
                                             </div>
                                             <div className="h-10 w-10 rounded-full border-2 border-slate-900/5 flex items-center justify-center text-slate-900 -rotate-45 group-hover:rotate-0 group-hover:border-blue-600 group-hover:text-blue-600 transition-all bg-white/50 backdrop-blur-sm">
                                                 <ArrowRight className="h-5 w-5" />
@@ -479,6 +482,63 @@ export default function DashboardPage() {
                                         </div>
                                     </motion.div>
                                 ))}
+                            </div>
+
+                            {/* SMB Training Services */}
+                            <div className="mt-12 pt-10 border-t border-slate-100/50">
+                                <div className="flex items-center gap-3 mb-8">
+                                    <div className="h-8 w-8 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600">
+                                        <BookOpen className="h-4 w-4" />
+                                    </div>
+                                    <h3 className="text-xl font-black tracking-tight text-slate-900">SMB Training Programs</h3>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {[
+                                        {
+                                            title: 'Building AI Agents',
+                                            desc: 'Learn to design and deploy custom autonomous agents for your business workflows.',
+                                            icon: Bot,
+                                            color: 'bg-indigo-50/50 hover:bg-indigo-50',
+                                            iconColor: 'text-indigo-600'
+                                        },
+                                        {
+                                            title: 'Team Adoption Training',
+                                            desc: 'Train your staff on AI safety, daily integration, and operational efficiency.',
+                                            icon: Users,
+                                            color: 'bg-emerald-50/50 hover:bg-emerald-50',
+                                            iconColor: 'text-emerald-600'
+                                        },
+                                        {
+                                            title: 'Prompt Engineering',
+                                            desc: 'Master communication structures to get the best outputs from GenAI tools.',
+                                            icon: MessageSquare,
+                                            color: 'bg-amber-50/50 hover:bg-amber-50',
+                                            iconColor: 'text-amber-600'
+                                        }
+                                    ].map((training, i) => (
+                                        <motion.div
+                                            key={`training-${i}`}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.3 + (i * 0.1) }}
+                                            onClick={() => handleBooking(assignedExpert?.bookings_url)}
+                                            className={`${training.color} rounded-[24px] p-6 border border-slate-100/50 cursor-pointer group hover:shadow-lg transition-all duration-300 flex flex-col justify-between min-h-[180px]`}
+                                        >
+                                            <div>
+                                                <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                                    <training.icon className={`h-5 w-5 ${training.iconColor}`} />
+                                                </div>
+                                                <h4 className="text-[15px] font-black text-slate-900 mb-2">{training.title}</h4>
+                                                <p className="text-xs font-bold text-slate-500 leading-relaxed">{training.desc}</p>
+                                            </div>
+                                            <div className="mt-6 flex items-center gap-2 text-blue-600 group-hover:text-blue-700">
+                                                <span className="text-[10px] font-black uppercase tracking-widest">Book Strategy Session</span>
+                                                <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
                             </div>
                         </section>
 
