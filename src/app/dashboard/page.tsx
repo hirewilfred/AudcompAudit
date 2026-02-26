@@ -272,7 +272,7 @@ export default function DashboardPage() {
         );
     }
 
-    // --- NEW LOGIC: Calculate Exactly 4 Display Experts ---
+    // --- NEW LOGIC: Calculate Display Experts (Max 3) ---
     const displayExperts = [];
 
     // 1. Always prioritize Assigned Expert
@@ -283,7 +283,7 @@ export default function DashboardPage() {
     // 2. Add BDMs (ensure no duplicates with assignedExpert)
     const availableBdms = experts.filter(e => e.is_bdm && e.id !== assignedExpert?.id);
     for (const bdm of availableBdms) {
-        if (displayExperts.length < 4) {
+        if (displayExperts.length < 3) {
             displayExperts.push(bdm);
         }
     }
@@ -291,7 +291,7 @@ export default function DashboardPage() {
     // 3. Fill remaining slots with random experts
     const remainingExperts = experts.filter(e => e.id !== assignedExpert?.id && !e.is_bdm);
     for (const exp of remainingExperts) {
-        if (displayExperts.length < 4) {
+        if (displayExperts.length < 3) {
             displayExperts.push(exp);
         }
     }
