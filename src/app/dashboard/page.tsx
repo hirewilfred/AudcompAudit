@@ -484,37 +484,43 @@ export default function DashboardPage() {
                                 ))}
                             </div>
 
-                            {/* SMB Training Services */}
+                            {/* AI Training Programs */}
                             <div className="mt-12 pt-10 border-t border-slate-100/50">
                                 <div className="flex items-center gap-3 mb-8">
                                     <div className="h-8 w-8 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600">
                                         <BookOpen className="h-4 w-4" />
                                     </div>
-                                    <h3 className="text-xl font-black tracking-tight text-slate-900">SMB Training Programs</h3>
+                                    <h3 className="text-xl font-black tracking-tight text-slate-900">AI Training Programs</h3>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     {[
                                         {
                                             title: 'Building AI Agents',
                                             desc: 'Learn to design and deploy custom autonomous agents for your business workflows.',
+                                            tag: 'Agents',
                                             icon: Bot,
-                                            color: 'bg-indigo-50/50 hover:bg-indigo-50',
-                                            iconColor: 'text-indigo-600'
+                                            color: 'bg-gradient-to-br from-indigo-50 to-white text-indigo-800 border-indigo-100/50',
+                                            iconColor: 'text-indigo-500',
+                                            pattern: 'radial-gradient(circle at 2px 2px, #c7d2fe 1px, transparent 0)'
                                         },
                                         {
-                                            title: 'Team Adoption Training',
+                                            title: 'Team Adoption masterclass',
                                             desc: 'Train your staff on AI safety, daily integration, and operational efficiency.',
+                                            tag: 'Adoption',
                                             icon: Users,
-                                            color: 'bg-emerald-50/50 hover:bg-emerald-50',
-                                            iconColor: 'text-emerald-600'
+                                            color: 'bg-gradient-to-br from-emerald-50 to-white text-emerald-800 border-emerald-100/50',
+                                            iconColor: 'text-emerald-500',
+                                            pattern: 'radial-gradient(circle at 2px 2px, #a7f3d0 1px, transparent 0)'
                                         },
                                         {
                                             title: 'Prompt Engineering',
                                             desc: 'Master communication structures to get the best outputs from GenAI tools.',
+                                            tag: 'Prompting',
                                             icon: MessageSquare,
-                                            color: 'bg-amber-50/50 hover:bg-amber-50',
-                                            iconColor: 'text-amber-600'
+                                            color: 'bg-gradient-to-br from-amber-50 to-white text-amber-800 border-amber-100/50',
+                                            iconColor: 'text-amber-500',
+                                            pattern: 'radial-gradient(circle at 2px 2px, #fde68a 1px, transparent 0)'
                                         }
                                     ].map((training, i) => (
                                         <motion.div
@@ -523,18 +529,34 @@ export default function DashboardPage() {
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 0.3 + (i * 0.1) }}
                                             onClick={() => handleBooking(assignedExpert?.bookings_url)}
-                                            className={`${training.color} rounded-[24px] p-6 border border-slate-100/50 cursor-pointer group hover:shadow-lg transition-all duration-300 flex flex-col justify-between min-h-[180px]`}
+                                            className={`${training.color} rounded-[32px] p-6 flex flex-col justify-between min-h-[220px] border-2 relative overflow-hidden group hover:scale-[1.03] transition-all duration-500 cursor-pointer shadow-sm hover:shadow-xl hover:shadow-blue-900/10`}
                                         >
-                                            <div>
-                                                <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                                    <training.icon className={`h-5 w-5 ${training.iconColor}`} />
+                                            <div
+                                                className="absolute inset-0 opacity-[0.4]"
+                                                style={{
+                                                    backgroundImage: training.pattern,
+                                                    backgroundSize: '24px 24px'
+                                                }}
+                                            />
+                                            <div className="absolute top-0 right-0 -mr-4 -mt-4 h-24 w-24 bg-current opacity-[0.03] rounded-full blur-2xl group-hover:opacity-[0.08] transition-opacity" />
+
+                                            <div className="relative z-10">
+                                                <div className="flex items-center justify-between mb-5">
+                                                    <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-500 animate-float">
+                                                        <training.icon className={`h-5 w-5 ${training.iconColor}`} />
+                                                    </div>
+                                                    <div className="bg-white/80 backdrop-blur-md px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.15em] leading-none border border-black/5 opacity-60">{training.tag}</div>
                                                 </div>
-                                                <h4 className="text-[15px] font-black text-slate-900 mb-2">{training.title}</h4>
-                                                <p className="text-xs font-bold text-slate-500 leading-relaxed">{training.desc}</p>
+                                                <h4 className="text-[17px] font-black leading-tight mb-2">{training.title}</h4>
+                                                <p className="text-[11px] font-bold leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity">{training.desc}</p>
                                             </div>
-                                            <div className="mt-6 flex items-center gap-2 text-blue-600 group-hover:text-blue-700">
-                                                <span className="text-[10px] font-black uppercase tracking-widest">Book Strategy Session</span>
-                                                <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                                            <div className="mt-6 flex items-center justify-between relative z-10">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest bg-slate-900 text-white px-3 py-1.5 rounded-full group-hover:bg-blue-600 transition-colors shadow-md shadow-slate-900/10 group-hover:shadow-blue-600/20">Book Strategy Session</span>
+                                                </div>
+                                                <div className="h-8 w-8 rounded-full border-2 border-slate-900/5 flex items-center justify-center text-slate-900 -rotate-45 group-hover:rotate-0 group-hover:border-blue-600 group-hover:text-blue-600 transition-all bg-white/50 backdrop-blur-sm">
+                                                    <ArrowRight className="h-4 w-4" />
+                                                </div>
                                             </div>
                                         </motion.div>
                                     ))}
