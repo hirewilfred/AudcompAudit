@@ -26,7 +26,7 @@ export default function AdminPage() {
         totalProfiles: 0,
         totalAudits: 0
     });
-    const [recentCompletions, setRecentCompletions] = useState<any[]>([]);
+    const [recentUsers, setRecentUsers] = useState<any[]>([]);
 
     const router = useRouter();
     const supabase = createClient();
@@ -70,12 +70,13 @@ export default function AdminPage() {
                                 organization,
                                 has_completed_audit,
                                 assigned_expert_id,
+                                created_at,
+                                updated_at,
                                 experts ( id, full_name, photo_url ),
                                 audit_scores ( created_at, overall_score )
                             `)
-                            .eq('has_completed_audit', true)
                             .order('updated_at', { ascending: false })
-                            .limit(10)
+                            .limit(50)
                     ]);
 
                     setStats({
@@ -85,7 +86,7 @@ export default function AdminPage() {
                     });
 
                     if (completionsRes.data) {
-                        setRecentCompletions(completionsRes.data);
+                        setRecentUsers(completionsRes.data);
                     }
 
                 }
@@ -195,9 +196,9 @@ export default function AdminPage() {
                         <div className="flex items-center justify-between mb-8">
                             <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
                                 <div className="h-10 w-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                                    <CheckCircle2 className="h-5 w-5" />
+                                    <Users className="h-5 w-5" />
                                 </div>
-                                Recent Completions
+                                Recent User Accounts
                             </h2>
                             <button
                                 onClick={() => router.push('/admin/users')}
@@ -214,35 +215,36 @@ export default function AdminPage() {
                                         <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400">User</th>
                                         <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400">Score</th>
                                         <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400">Assigned Expert</th>
-                                        <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Completion Date</th>
+                                        <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Account Created</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {recentCompletions.length === 0 ? (
+                                    {recentUsers.length === 0 ? (
                                         <tr>
                                             <td colSpan={4} className="py-8 text-center text-slate-400 font-bold">
-                                                No completed audits yet.
+                                                No users found.
                                             </td>
                                         </tr>
                                     ) : (
-                                        recentCompletions.map((completion, idx) => {
-                                            const scoreObj = Array.isArray(completion.audit_scores) ? completion.audit_scores[0] : completion.audit_scores;
-                                            const expertObj = Array.isArray(completion.experts) ? completion.experts[0] : completion.experts;
+                                        recentUsers.map((userRow, idx) => {
+                                            const scoreObj = Array.isArray(userRow.audit_scores) ? userRow.audit_scores[0] : userRow.audit_scores;
+                                            const expertObj = Array.isArray(userRow.experts) ? userRow.experts[0] : userRow.experts;
 
-                                            // Handle case where scoreObj might be undefined if no scores exist
-                                            const completionDate = scoreObj?.created_at
-                                                ? new Date(scoreObj.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                            // Fallback to the profile's original creation date if they haven't made a score yet
+                                            const rawDate = scoreObj?.created_at || userRow.created_at || userRow.updated_at;
+                                            const completionDate = rawDate
+                                                ? new Date(rawDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                                                 : 'Unknown';
 
                                             return (
-                                                <tr key={completion.id || idx} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
+                                                <tr key={userRow.id || idx} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
                                                     <td className="py-4 font-black flex items-center gap-3">
-                                                        <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                                                            {completion.full_name?.charAt(0) || 'U'}
+                                                        <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center uppercase">
+                                                            {userRow.full_name?.charAt(0) || 'U'}
                                                         </div>
                                                         <div className="flex flex-col">
-                                                            <span>{completion.full_name || 'Unknown User'}</span>
-                                                            <span className="text-xs font-bold text-slate-400">{completion.organization || 'No Organization'}</span>
+                                                            <span>{userRow.full_name || 'Unknown User'}</span>
+                                                            <span className="text-xs font-bold text-slate-400">{userRow.organization || 'No Organization'}</span>
                                                         </div>
                                                     </td>
                                                     <td className="py-4">
