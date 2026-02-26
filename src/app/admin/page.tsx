@@ -213,6 +213,7 @@ export default function AdminPage() {
                                 <thead>
                                     <tr className="border-b border-slate-100">
                                         <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400">User</th>
+                                        <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400">Status</th>
                                         <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400">Score</th>
                                         <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400">Assigned Expert</th>
                                         <th className="pb-4 pt-2 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Account Created</th>
@@ -246,6 +247,17 @@ export default function AdminPage() {
                                                             <span>{userRow.full_name || 'Unknown User'}</span>
                                                             <span className="text-xs font-bold text-slate-400">{userRow.organization || 'No Organization'}</span>
                                                         </div>
+                                                    </td>
+                                                    <td className="py-4">
+                                                        {userRow.has_completed_audit ? (
+                                                            <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-3 py-1 rounded-full flex items-center gap-1 w-max">
+                                                                <CheckCircle2 className="h-3 w-3" /> Audit Complete
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-[10px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-600 border border-amber-500/20 px-3 py-1 rounded-full flex items-center gap-1 w-max">
+                                                                Pending
+                                                            </span>
+                                                        )}
                                                     </td>
                                                     <td className="py-4">
                                                         {scoreObj?.overall_score ? (
