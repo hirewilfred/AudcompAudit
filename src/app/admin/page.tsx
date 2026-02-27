@@ -16,7 +16,8 @@ import {
     ShieldOff,
     LogOut
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FileText, X } from 'lucide-react';
 
 export default function AdminPage() {
     const [loading, setLoading] = useState(true);
@@ -28,6 +29,11 @@ export default function AdminPage() {
     });
     const [recentUsers, setRecentUsers] = useState<any[]>([]);
 
+    // Audit Modal State
+    const [selectedAudit, setSelectedAudit] = useState<any>(null);
+    const [auditDetails, setAuditDetails] = useState<any[]>([]);
+    const [loadingAudit, setLoadingAudit] = useState(false);
+
     const router = useRouter();
     const supabase = createClient();
 
@@ -35,6 +41,29 @@ export default function AdminPage() {
         setLoading(true);
         await supabase.auth.signOut();
         router.push('/auth');
+    };
+
+    const handleViewAudit = async (userRow: any) => {
+        const score = Array.isArray(userRow.audit_scores) ? userRow.audit_scores[0] : userRow.audit_scores;
+        if (!score) return;
+
+        setSelectedAudit({ user: userRow, score });
+        setLoadingAudit(true);
+
+        try {
+            const { data, error } = await supabase
+                .from('audit_responses')
+                .select('*')
+                .eq('user_id', userRow.id);
+
+            if (data) {
+                setAuditDetails(data);
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoadingAudit(false);
+        }
     };
 
     useEffect(() => {
@@ -304,7 +333,14 @@ export default function AdminPage() {
                                                         )}
                                                     </td>
                                                     <td className="py-4 text-right">
-                                                        <span className="font-bold text-slate-500 text-sm">{completionDate}</span>
+                                                        <div className="flex items-center justify-end gap-3">
+                                                            <span className="font-bold text-slate-500 text-sm hidden sm:inline-block">{completionDate}</span>
+                                                            {scoreObj && (
+                                                                <button onClick={() => handleViewAudit(userRow)} className="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest transition-colors flex items-center gap-1 shadow-sm border border-blue-100 shrink-0">
+                                                                    <Eye className="h-3 w-3" /> View
+                                                                </button>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             );
@@ -341,6 +377,107 @@ export default function AdminPage() {
                     </aside>
                 </div>
             </main>
+
+            {/* Audit Details Modal */}
+            <AnimatePresence>
+                {selectedAudit && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="bg-white rounded-[32px] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border border-slate-100"
+                        >
+                            {/* Modal Header */}
+                            <div className="p-6 sm:p-8 border-b border-slate-100 flex items-start justify-between bg-slate-50/50">
+                                <div>
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="h-12 w-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-black text-xl uppercase shrink-0">
+                                            {selectedAudit.user.full_name?.charAt(0) || 'U'}
+                                        </div>
+                                        <div>
+                                            <h2 className="text-2xl font-black text-slate-900">{selectedAudit.user.full_name}</h2>
+                                            <p className="text-sm font-bold text-slate-500">
+                                                {selectedAudit.user.email || 'No Email'} {selectedAudit.user.organization && `• ${selectedAudit.user.organization}`}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onClick={() => setSelectedAudit(null)} className="h-10 w-10 bg-white rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors shadow-sm border border-slate-200 shrink-0">
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+
+                            {/* Modal Body */}
+                            <div className="p-6 sm:p-8 overflow-y-auto flex-1 bg-[#F8FAFC]">
+                                {loadingAudit ? (
+                                    <div className="flex py-20 items-center justify-center">
+                                        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                                    </div>
+                                ) : (
+                                    <div className="space-y-8">
+                                        {/* Score Overview */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-6">
+                                                <div className="h-20 w-20 rounded-[20px] bg-gradient-to-br from-blue-500 to-indigo-600 p-[2px] shadow-lg shadow-blue-600/20 shrink-0">
+                                                    <div className="h-full w-full bg-white rounded-[18px] flex items-center justify-center flex-col">
+                                                        <span className="text-2xl font-black text-slate-900 leading-none">{selectedAudit.score.overall_score}%</span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Overall Readiness</p>
+                                                    <p className="text-lg font-black text-blue-600">{selectedAudit.score.overall_score >= 65 ? 'Advanced (Tier 1)' : 'Foundation (Tier 2)'}</p>
+                                                </div>
+                                            </div>
+                                            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                                                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Category Breakdown</h4>
+                                                <div className="space-y-3">
+                                                    {selectedAudit.score.category_scores.map((cat: any, i: number) => (
+                                                        <div key={i} className="flex items-center gap-3">
+                                                            <span className="text-xs font-bold text-slate-600 w-24 truncate">{cat.category}</span>
+                                                            <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                                                <div className="h-full bg-blue-500 rounded-full" style={{ width: `${cat.score}%` }} />
+                                                            </div>
+                                                            <span className="text-xs font-black text-slate-900 w-8">{cat.score}%</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                                            <div className="p-6 border-b border-slate-100 bg-slate-50">
+                                                <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                                                    <FileText className="h-5 w-5 text-blue-600" /> Audit Responses
+                                                </h3>
+                                            </div>
+                                            <div className="divide-y divide-slate-100">
+                                                {auditDetails.length > 0 ? auditDetails.map((resp, i) => (
+                                                    <div key={i} className="p-6 hover:bg-slate-50/50 transition-colors">
+                                                        <div className="flex items-start gap-4">
+                                                            <div className="h-8 w-8 rounded-full bg-blue-50 text-blue-600 font-black flex items-center justify-center shrink-0">
+                                                                {i + 1}
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-bold text-slate-900 mb-2 capitalize">{resp.question_id.replace(/_/g, ' ')}</p>
+                                                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-sm text-slate-600 font-medium">
+                                                                    {typeof resp.answer === 'string' ? resp.answer : JSON.stringify(resp.answer)}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )) : (
+                                                    <div className="p-8 text-center text-slate-400 font-bold">No detailed responses found.</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
