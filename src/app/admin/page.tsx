@@ -18,7 +18,7 @@ import {
     LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, X } from 'lucide-react';
+import { FileText, X, Printer } from 'lucide-react';
 
 export default function AdminPage() {
     const [loading, setLoading] = useState(true);
@@ -388,6 +388,7 @@ export default function AdminPage() {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
                             className="bg-white rounded-[32px] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border border-slate-100"
+                            id="audit-print-area"
                         >
                             {/* Modal Header */}
                             <div className="p-6 sm:p-8 border-b border-slate-100 flex items-start justify-between bg-slate-50/50">
@@ -404,9 +405,18 @@ export default function AdminPage() {
                                         </div>
                                     </div>
                                 </div>
-                                <button onClick={() => setSelectedAudit(null)} className="h-10 w-10 bg-white rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors shadow-sm border border-slate-200 shrink-0">
-                                    <X className="h-5 w-5" />
-                                </button>
+                                <div className="flex items-center gap-2 no-print">
+                                    <button
+                                        onClick={() => window.print()}
+                                        className="h-10 px-4 bg-blue-600 text-white rounded-full flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-sm shrink-0"
+                                    >
+                                        <Printer className="h-4 w-4" />
+                                        Print / PDF
+                                    </button>
+                                    <button onClick={() => setSelectedAudit(null)} className="h-10 w-10 bg-white rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors shadow-sm border border-slate-200 shrink-0">
+                                        <X className="h-5 w-5" />
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Modal Body */}
@@ -433,7 +443,7 @@ export default function AdminPage() {
                                             <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
                                                 <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Category Breakdown</h4>
                                                 <div className="space-y-3">
-                                                    {selectedAudit.score.category_scores.map((cat: any, i: number) => (
+                                                    {(selectedAudit.score.category_scores ?? []).map((cat: any, i: number) => (
                                                         <div key={i} className="flex items-center gap-3">
                                                             <span className="text-xs font-bold text-slate-600 w-24 truncate">{cat.category}</span>
                                                             <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">

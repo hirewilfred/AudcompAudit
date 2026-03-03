@@ -111,3 +111,34 @@
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
+
+@media print {
+
+  /* Hide everything on the page */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Show only the audit modal content */
+  #audit-print-area,
+  #audit-print-area * {
+    visibility: visible;
+  }
+
+  /* Position it to fill the page */
+  #audit-print-area {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-height: none !important;
+    overflow: visible !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Hide the print button and close button during print */
+  .no-print {
+    display: none !important;
+  }
+}
