@@ -18,7 +18,7 @@ import {
     LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, X, Printer } from 'lucide-react';
+import { FileText, X, Printer, Mail } from 'lucide-react';
 
 export default function AdminPage() {
     const [loading, setLoading] = useState(true);
@@ -34,6 +34,8 @@ export default function AdminPage() {
     const [selectedAudit, setSelectedAudit] = useState<any>(null);
     const [auditDetails, setAuditDetails] = useState<any[]>([]);
     const [loadingAudit, setLoadingAudit] = useState(false);
+    const [isSendingEmail, setIsSendingEmail] = useState(false);
+    const [emailSent, setEmailSent] = useState(false);
 
     const router = useRouter();
     const supabase = createClient();
@@ -64,6 +66,55 @@ export default function AdminPage() {
             console.error(err);
         } finally {
             setLoadingAudit(false);
+        }
+    };
+
+    const handleEmailExpert = async () => {
+        if (!selectedAudit) return;
+        const expertObj = Array.isArray(selectedAudit.user.experts) ? selectedAudit.user.experts[0] : selectedAudit.user.experts;
+
+        if (!expertObj?.email) {
+            alert('This expert does not have an email address on file. Please add one in the Experts section.');
+            return;
+        }
+
+        setIsSendingEmail(true);
+        setEmailSent(false);
+
+        // Build formatted answers from auditDetails
+        const formattedAnswers = auditDetails.map((resp: any) => ({
+            question: resp.question_id?.replace(/_/g, ' ') || 'Question',
+            answer: typeof resp.answer === 'object' ? JSON.stringify(resp.answer) : String(resp.answer),
+            category: resp.category || ''
+        }));
+
+        try {
+            const res = await fetch('/api/send-expert-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    expertEmail: expertObj.email,
+                    expertName: expertObj.full_name,
+                    userName: selectedAudit.user.full_name || 'Unknown User',
+                    userEmail: selectedAudit.user.email || '',
+                    userOrg: selectedAudit.user.organization || '',
+                    score: selectedAudit.score?.overall_score ?? 0,
+                    categoryScores: selectedAudit.score?.category_scores ?? [],
+                    answers: formattedAnswers,
+                })
+            });
+
+            const json = await res.json();
+            if (json.success) {
+                setEmailSent(true);
+                setTimeout(() => setEmailSent(false), 4000);
+            } else {
+                alert('Failed to send email: ' + (json.error || 'Unknown error'));
+            }
+        } catch (err) {
+            alert('Error sending email. Please try again.');
+        } finally {
+            setIsSendingEmail(false);
         }
     };
 
@@ -381,6 +432,22 @@ export default function AdminPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 no-print">
+                                    <button
+                                        onClick={handleEmailExpert}
+                                        disabled={isSendingEmail}
+                                        className={`h-10 px-4 rounded-full flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest transition-colors shadow-sm shrink-0 ${emailSent
+                                                ? 'bg-emerald-500 text-white'
+                                                : 'bg-slate-900 text-white hover:bg-slate-700'
+                                            } disabled:opacity-50`}
+                                    >
+                                        {isSendingEmail ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : emailSent ? (
+                                            <><CheckCircle2 className="h-4 w-4" /> Sent!</>
+                                        ) : (
+                                            <><Mail className="h-4 w-4" /> Email Expert</>
+                                        )}
+                                    </button>
                                     <button
                                         onClick={() => window.print()}
                                         className="h-10 px-4 bg-blue-600 text-white rounded-full flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-sm shrink-0"
