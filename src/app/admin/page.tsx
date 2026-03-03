@@ -148,7 +148,7 @@ export default function AdminPage() {
                             .select(`id, full_name, email, organization, has_completed_audit, assigned_expert_id, updated_at`)
                             .order('updated_at', { ascending: false })
                             .limit(50),
-                        supabase.from('experts').select('id, full_name, photo_url'),
+                        supabase.from('experts').select('id, full_name, photo_url, email'),
                         supabase.from('audit_scores').select('user_id, created_at, overall_score')
                     ]);
 
@@ -436,8 +436,8 @@ export default function AdminPage() {
                                         onClick={handleEmailExpert}
                                         disabled={isSendingEmail}
                                         className={`h-10 px-4 rounded-full flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest transition-colors shadow-sm shrink-0 ${emailSent
-                                                ? 'bg-emerald-500 text-white'
-                                                : 'bg-slate-900 text-white hover:bg-slate-700'
+                                            ? 'bg-emerald-500 text-white'
+                                            : 'bg-slate-900 text-white hover:bg-slate-700'
                                             } disabled:opacity-50`}
                                     >
                                         {isSendingEmail ? (
