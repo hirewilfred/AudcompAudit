@@ -63,7 +63,7 @@ export default function DashboardPage() {
     const [assignedExpert, setAssignedExpert] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [randomExperts, setRandomExperts] = useState<number[]>([]);
-    const [activeBookingUrl, setActiveBookingUrl] = useState<string>("https://calendly.com/vgreco-oo4/30min");
+    const [activeBookingUrl, setActiveBookingUrl] = useState<string>("");
     const [experts, setExperts] = useState<any[]>([]);
 
     // ROI Calculator State
@@ -219,8 +219,9 @@ export default function DashboardPage() {
     ];
 
     const handleBooking = (bookingUrl?: string) => {
-        // Use the expert's specific booking URL if provided, otherwise fallback to the global one
-        const finalUrl = bookingUrl || "https://calendly.com/vgreco-oo4/30min";
+        // Use passed URL, or fall back to the assigned expert's MS Bookings URL
+        const finalUrl = bookingUrl || assignedExpert?.bookings_url;
+        if (!finalUrl) return; // No booking URL configured — do nothing
         setActiveBookingUrl(finalUrl);
         setIsBookingOpen(true);
     };
