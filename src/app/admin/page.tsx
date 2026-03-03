@@ -351,31 +351,6 @@ export default function AdminPage() {
                             </table>
                         </div>
                     </section>
-
-                    <aside className="col-span-12 lg:col-span-4 space-y-8">
-                        <div className="bg-slate-900 rounded-[48px] p-10 text-white shadow-2xl shadow-slate-900/20 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-10 opacity-10">
-                                <TrendingUp className="h-32 w-32" />
-                            </div>
-                            <div className="relative z-10">
-                                <h3 className="text-xl font-black mb-4 tracking-tight">System Health</h3>
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10">
-                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Database</span>
-                                        <span className="text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full">Connected</span>
-                                    </div>
-                                    <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10">
-                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Storage</span>
-                                        <span className="text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full">Active</span>
-                                    </div>
-                                    <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10">
-                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Auth Service</span>
-                                        <span className="text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full">Synced</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </aside>
                 </div>
             </main>
 
