@@ -233,7 +233,7 @@ export default function AdminPage() {
 
                 {/* Main Content Area */}
                 <div className="grid grid-cols-12 gap-8">
-                    <section className="col-span-12 lg:col-span-8 bg-white rounded-[48px] p-10 shadow-sm border border-slate-100 flex flex-col relative overflow-hidden">
+                    <section className="col-span-12 bg-white rounded-[48px] p-10 shadow-sm border border-slate-100 flex flex-col relative overflow-hidden">
                         <div className="flex items-center justify-between mb-8">
                             <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
                                 <div className="h-10 w-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
