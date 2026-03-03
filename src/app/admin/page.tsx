@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { AUDIT_QUESTIONS } from '@/lib/audit-questions';
 import { useRouter } from 'next/navigation';
 import AdminNavbar from '@/components/AdminNavbar';
 import {
@@ -452,21 +453,44 @@ export default function AdminPage() {
                                                 </h3>
                                             </div>
                                             <div className="divide-y divide-slate-100">
-                                                {auditDetails.length > 0 ? auditDetails.map((resp, i) => (
-                                                    <div key={i} className="p-6 hover:bg-slate-50/50 transition-colors">
-                                                        <div className="flex items-start gap-4">
-                                                            <div className="h-8 w-8 rounded-full bg-blue-50 text-blue-600 font-black flex items-center justify-center shrink-0">
-                                                                {i + 1}
-                                                            </div>
-                                                            <div>
-                                                                <p className="font-bold text-slate-900 mb-2 capitalize">{resp.question_id.replace(/_/g, ' ')}</p>
-                                                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-sm text-slate-600 font-medium">
-                                                                    {typeof resp.answer === 'string' ? resp.answer : JSON.stringify(resp.answer)}
+                                                {auditDetails.length > 0 ? auditDetails.map((resp, i) => {
+                                                    const questionDef = AUDIT_QUESTIONS.find(q => q.id === resp.question_id);
+                                                    const questionText = questionDef ? questionDef.text : resp.question_id.replace(/_/g, ' ');
+                                                    const categoryLabel = questionDef ? questionDef.category.charAt(0).toUpperCase() + questionDef.category.slice(1) : null;
+
+                                                    // Resolve answer: if it's a number, find the matching option label
+                                                    let answerDisplay: string;
+                                                    const rawAnswer = resp.answer;
+                                                    if (questionDef && (typeof rawAnswer === 'number' || !isNaN(Number(rawAnswer)))) {
+                                                        const matchedOption = questionDef.options.find(o => o.value === Number(rawAnswer));
+                                                        answerDisplay = matchedOption ? matchedOption.label : String(rawAnswer);
+                                                    } else if (typeof rawAnswer === 'string') {
+                                                        answerDisplay = rawAnswer;
+                                                    } else {
+                                                        answerDisplay = JSON.stringify(rawAnswer);
+                                                    }
+
+                                                    return (
+                                                        <div key={i} className="p-6 hover:bg-slate-50/50 transition-colors">
+                                                            <div className="flex items-start gap-4">
+                                                                <div className="h-8 w-8 rounded-full bg-blue-50 text-blue-600 font-black flex items-center justify-center shrink-0 text-sm">
+                                                                    {i + 1}
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    {categoryLabel && (
+                                                                        <span className="inline-block text-[10px] font-black uppercase tracking-widest bg-indigo-50 text-indigo-500 border border-indigo-100 px-2 py-0.5 rounded-full mb-2">
+                                                                            {categoryLabel}
+                                                                        </span>
+                                                                    )}
+                                                                    <p className="font-bold text-slate-900 mb-2">{questionText}</p>
+                                                                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl text-sm text-blue-900 font-semibold">
+                                                                        {answerDisplay}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                )) : (
+                                                    );
+                                                }) : (
                                                     <div className="p-8 text-center text-slate-400 font-bold">No detailed responses found.</div>
                                                 )}
                                             </div>
