@@ -4,16 +4,16 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest) {
-    try {
-        const body = await req.json();
-        const { expertEmail, expertName, userName, userEmail, userOrg, score, categoryScores, answers } = body;
+  try {
+    const body = await req.json();
+    const { expertEmail, expertName, userName, userEmail, userOrg, score, categoryScores, answers } = body;
 
-        if (!expertEmail) {
-            return NextResponse.json({ error: 'No expert email provided' }, { status: 400 });
-        }
+    if (!expertEmail) {
+      return NextResponse.json({ error: 'No expert email provided' }, { status: 400 });
+    }
 
-        // Build category breakdown HTML
-        const categoryRows = (categoryScores ?? []).map((cat: any) => `
+    // Build category breakdown HTML
+    const categoryRows = (categoryScores ?? []).map((cat: any) => `
             <tr>
                 <td style="padding:8px 12px; font-size:13px; color:#475569; font-weight:600; border-bottom:1px solid #f1f5f9;">${cat.category}</td>
                 <td style="padding:8px 12px; border-bottom:1px solid #f1f5f9;">
@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
             </tr>
         `).join('');
 
-        // Build answers HTML
-        const answersHtml = (answers ?? []).map((a: any, i: number) => `
+    // Build answers HTML
+    const answersHtml = (answers ?? []).map((a: any, i: number) => `
             <div style="padding:16px 0; border-bottom:1px solid #f1f5f9;">
                 <p style="font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:0.1em; color:#94a3b8; margin:0 0 4px 0;">${a.category || 'General'}</p>
                 <p style="font-size:14px; font-weight:700; color:#1e293b; margin:0 0 6px 0;">${a.question}</p>
@@ -34,10 +34,10 @@ export async function POST(req: NextRequest) {
             </div>
         `).join('');
 
-        const tierLabel = score >= 65 ? 'Advanced (Tier 1)' : 'Foundation (Tier 2)';
-        const tierColor = score >= 65 ? '#10b981' : '#f59e0b';
+    const tierLabel = score >= 65 ? 'Advanced (Tier 1)' : 'Foundation (Tier 2)';
+    const tierColor = score >= 65 ? '#10b981' : '#f59e0b';
 
-        const html = `
+    const html = `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
@@ -86,21 +86,21 @@ export async function POST(req: NextRequest) {
 </body>
 </html>`;
 
-        const { data, error } = await resend.emails.send({
-            from: 'AudComp <onboarding@resend.dev>',
-            to: [expertEmail],
-            subject: `AI Audit Results — ${userName}${score ? ` (${score}%)` : ''}`,
-            html,
-        });
+    const { data, error } = await resend.emails.send({
+      from: 'AudComp <noreply@audcomp.com>',
+      to: [expertEmail],
+      subject: `AI Audit Results — ${userName}${score ? ` (${score}%)` : ''}`,
+      html,
+    });
 
-        if (error) {
-            console.error('Resend error:', error);
-            return NextResponse.json({ error: error.message }, { status: 400 });
-        }
-
-        return NextResponse.json({ success: true, id: data?.id });
-    } catch (err: any) {
-        console.error('Email route error:', err);
-        return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 });
+    if (error) {
+      console.error('Resend error:', error);
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    return NextResponse.json({ success: true, id: data?.id });
+  } catch (err: any) {
+    console.error('Email route error:', err);
+    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 });
+  }
 }
