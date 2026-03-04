@@ -220,8 +220,13 @@ export default function DashboardPage() {
 
     const handleBooking = (bookingUrl?: string) => {
         // MS Bookings blocks iframes — open directly in a new tab
-        const finalUrl = bookingUrl || assignedExpert?.bookings_url;
+        let finalUrl = bookingUrl || assignedExpert?.bookings_url;
         if (!finalUrl) return;
+        // Append anonymous=true so users don't need to sign into Microsoft
+        if (finalUrl.includes('microsoft.com') || finalUrl.includes('bookings')) {
+            const separator = finalUrl.includes('?') ? '&' : '?';
+            finalUrl = `${finalUrl}${separator}anonymous=true`;
+        }
         window.open(finalUrl, '_blank', 'noopener,noreferrer');
     };
 
