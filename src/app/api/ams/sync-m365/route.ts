@@ -17,38 +17,26 @@ const AMS_LICENSE_SKUS: Record<string, string> = {
 
 export async function POST(req: NextRequest) {
     try {
-        const { clientId } = await req.json();
-        if (!clientId) return NextResponse.json({ error: 'clientId required' }, { status: 400 });
+        // Credentials are passed directly from the client — no DB re-fetch needed
+        const { clientId, tenantId, m365ClientId, m365ClientSecret, authToken } = await req.json();
 
-        // Use the public env vars — RLS policies handle admin-only access
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
-
-        // Fetch client M365 credentials
-        const { data: client, error: clientError } = await supabase
-            .from('ams_clients')
-            .select('m365_tenant_id, m365_client_id, m365_client_secret')
-            .eq('id', clientId)
-            .single();
-
-        if (clientError || !client?.m365_tenant_id) {
-            return NextResponse.json({ error: 'Client not found or missing M365 credentials' }, { status: 404 });
+        if (!clientId || !tenantId || !m365ClientId || !m365ClientSecret) {
+            return NextResponse.json(
+                { error: 'Missing M365 credentials. Please fill in Tenant ID, Client ID, and Client Secret first.' },
+                { status: 400 }
+            );
         }
-
-        const { m365_tenant_id, m365_client_id, m365_client_secret } = client;
 
         // Step 1: Get access token from Microsoft
         const tokenRes = await fetch(
-            `https://login.microsoftonline.com/${m365_tenant_id}/oauth2/v2.0/token`,
+            `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({
                     grant_type: 'client_credentials',
-                    client_id: m365_client_id,
-                    client_secret: m365_client_secret,
+                    client_id: m365ClientId,
+                    client_secret: m365ClientSecret,
                     scope: 'https://graph.microsoft.com/.default',
                 }),
             }
@@ -56,7 +44,7 @@ export async function POST(req: NextRequest) {
 
         if (!tokenRes.ok) {
             const err = await tokenRes.text();
-            return NextResponse.json({ error: 'Failed to get M365 token', detail: err }, { status: 400 });
+            return NextResponse.json({ error: 'Failed to authenticate with Microsoft. Check your credentials.', detail: err }, { status: 400 });
         }
 
         const { access_token } = await tokenRes.json();
@@ -68,7 +56,7 @@ export async function POST(req: NextRequest) {
         );
 
         if (!skuRes.ok) {
-            return NextResponse.json({ error: 'Failed to fetch SKUs from Graph API' }, { status: 400 });
+            return NextResponse.json({ error: 'Failed to fetch licenses from Microsoft Graph API.' }, { status: 400 });
         }
 
         const { value: skus } = await skuRes.json();
@@ -88,7 +76,13 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // Step 4: Store snapshot in Supabase
+        // Step 4: Store snapshot using auth token from the browser session
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            authToken ? { global: { headers: { Authorization: `Bearer ${authToken}` } } } : {}
+        );
+
         await supabase.from('ams_user_snapshots').insert({
             client_id: clientId,
             snapshot_date: new Date().toISOString().split('T')[0],

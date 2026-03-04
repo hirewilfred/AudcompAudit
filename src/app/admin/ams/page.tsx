@@ -72,12 +72,19 @@ export default function AMSDashboardPage() {
 
     const handleSyncAll = async () => {
         setSyncing(true);
+        const { data: { session } } = await supabase.auth.getSession();
         for (const client of clients) {
             if (client.m365_tenant_id && client.m365_client_id && client.m365_client_secret) {
                 await fetch('/api/ams/sync-m365', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ clientId: client.id })
+                    body: JSON.stringify({
+                        clientId: client.id,
+                        tenantId: client.m365_tenant_id,
+                        m365ClientId: client.m365_client_id,
+                        m365ClientSecret: client.m365_client_secret,
+                        authToken: session?.access_token,
+                    })
                 });
             }
         }

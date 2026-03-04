@@ -94,10 +94,17 @@ export default function EditAMSClientPage() {
         setSyncing(true);
         setSyncResult(null);
         try {
+            const { data: { session } } = await supabase.auth.getSession();
             const res = await fetch('/api/ams/sync-m365', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ clientId })
+                body: JSON.stringify({
+                    clientId,
+                    tenantId: form.m365_tenant_id,
+                    m365ClientId: form.m365_client_id,
+                    m365ClientSecret: form.m365_client_secret,
+                    authToken: session?.access_token,
+                })
             });
             const result = await res.json();
             setSyncResult(result);
