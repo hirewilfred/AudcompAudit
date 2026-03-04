@@ -1046,9 +1046,8 @@ export default function DashboardPage() {
 
                             {/* Booking Embed Container */}
                             <div className="flex-1 w-full bg-slate-50/50">
-                                {/* Replace the URL below with your actual Cal.com or Calendly embed URL */}
                                 <iframe
-                                    src="https://calendly.com/vgreco-oo4/30min"
+                                    src={activeBookingUrl}
                                     className="w-full h-full border-0"
                                     title="Schedule Session"
                                 />
@@ -1056,7 +1055,7 @@ export default function DashboardPage() {
 
                             {/* Modal Footer */}
                             <div className="px-8 py-4 bg-white border-t border-slate-50 flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-300">
-                                <span>Powered by Calendly & Audcomp</span>
+                                <span>Powered by Microsoft Bookings & Audcomp</span>
                                 <span>Secure Strategy Booking</span>
                             </div>
                         </motion.div>
