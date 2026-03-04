@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AUDCOMP | AI Strategy & Readiness Audit",
-  description: "Assess your enterprise AI readiness and benchmark against industry standards.",
+  title: "AUDCOMP | AMS & AI Strategy Portal",
+  description: "Manage AMS clients and assess enterprise AI readiness.",
 };
 
 export default function RootLayout({
