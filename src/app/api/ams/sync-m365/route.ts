@@ -17,51 +17,32 @@ const AMS_LICENSE_SKUS: Record<string, string> = {
 
 export async function POST(req: NextRequest) {
     try {
-        // Credentials are passed directly from the client — no DB re-fetch needed
-        const { clientId, tenantId, m365ClientId, m365ClientSecret, authToken } = await req.json();
+        const { clientId, accessToken, authToken } = await req.json();
 
-        if (!clientId || !tenantId || !m365ClientId || !m365ClientSecret) {
+        if (!clientId) {
+            return NextResponse.json({ error: 'clientId is required.' }, { status: 400 });
+        }
+        if (!accessToken) {
+            return NextResponse.json({ error: 'No Microsoft access token. Please click "Connect Microsoft 365" first.' }, { status: 400 });
+        }
+
+        // Step 1: Fetch licensed SKUs from Microsoft Graph using the delegated token
+        const skuRes = await fetch('https://graph.microsoft.com/v1.0/subscribedSkus', {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+
+        if (!skuRes.ok) {
+            const errText = await skuRes.text();
+            console.error('Graph API error:', errText);
             return NextResponse.json(
-                { error: 'Missing M365 credentials. Please fill in Tenant ID, Client ID, and Client Secret first.' },
+                { error: 'Microsoft Graph API rejected the token. Please reconnect your Microsoft 365 account.' },
                 { status: 400 }
             );
         }
 
-        // Step 1: Get access token from Microsoft
-        const tokenRes = await fetch(
-            `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({
-                    grant_type: 'client_credentials',
-                    client_id: m365ClientId,
-                    client_secret: m365ClientSecret,
-                    scope: 'https://graph.microsoft.com/.default',
-                }),
-            }
-        );
-
-        if (!tokenRes.ok) {
-            const err = await tokenRes.text();
-            return NextResponse.json({ error: 'Failed to authenticate with Microsoft. Check your credentials.', detail: err }, { status: 400 });
-        }
-
-        const { access_token } = await tokenRes.json();
-
-        // Step 2: Get subscribed SKUs (license counts from tenant)
-        const skuRes = await fetch(
-            'https://graph.microsoft.com/v1.0/subscribedSkus',
-            { headers: { Authorization: `Bearer ${access_token}` } }
-        );
-
-        if (!skuRes.ok) {
-            return NextResponse.json({ error: 'Failed to fetch licenses from Microsoft Graph API.' }, { status: 400 });
-        }
-
         const { value: skus } = await skuRes.json();
 
-        // Step 3: Count AMS-relevant assigned licenses
+        // Step 2: Count AMS-relevant assigned licenses
         let totalLicensedUsers = 0;
         const licenseBreakdown: Record<string, number> = {};
 
@@ -76,7 +57,7 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // Step 4: Store snapshot using auth token from the browser session
+        // Step 3: Store snapshot using the user's Supabase session
         const supabase = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -90,11 +71,7 @@ export async function POST(req: NextRequest) {
             license_breakdown: licenseBreakdown,
         });
 
-        return NextResponse.json({
-            success: true,
-            totalLicensedUsers,
-            licenseBreakdown,
-        });
+        return NextResponse.json({ success: true, totalLicensedUsers, licenseBreakdown });
 
     } catch (err: any) {
         console.error('M365 sync error:', err);
