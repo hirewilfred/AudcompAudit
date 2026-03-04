@@ -20,10 +20,10 @@ export async function POST(req: NextRequest) {
         const { clientId } = await req.json();
         if (!clientId) return NextResponse.json({ error: 'clientId required' }, { status: 400 });
 
-        // Use service-role key for admin access
+        // Use the public env vars — RLS policies handle admin-only access
         const supabase = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
         );
 
         // Fetch client M365 credentials
