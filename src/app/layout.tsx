@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AUDCOMP | AMS & AI Strategy Portal",
+  title: "AUDCOMP | AI Strategy Portal",
   description: "Manage AMS clients and assess enterprise AI readiness.",
 };
 
