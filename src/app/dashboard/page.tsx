@@ -219,11 +219,10 @@ export default function DashboardPage() {
     ];
 
     const handleBooking = (bookingUrl?: string) => {
-        // Use passed URL, or fall back to the assigned expert's MS Bookings URL
+        // MS Bookings blocks iframes — open directly in a new tab
         const finalUrl = bookingUrl || assignedExpert?.bookings_url;
-        if (!finalUrl) return; // No booking URL configured — do nothing
-        setActiveBookingUrl(finalUrl);
-        setIsBookingOpen(true);
+        if (!finalUrl) return;
+        window.open(finalUrl, '_blank', 'noopener,noreferrer');
     };
 
     const handleSaveProfile = async (e: React.FormEvent) => {
