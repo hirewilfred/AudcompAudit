@@ -6,15 +6,21 @@ import { useRouter } from 'next/navigation';
 import AdminNavbar from '@/components/AdminNavbar';
 import Link from 'next/link';
 import {
-    Building2, Users, DollarSign, AlertTriangle, TrendingDown,
-    RefreshCw, Plus, Loader2, ArrowRight, CheckCircle2
+    Building2, DollarSign, AlertTriangle, Users,
+    RefreshCw, Plus, Loader2, ArrowRight, CheckCircle2, ShieldCheck,
+    TrendingUp, TrendingDown, Minus
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { signInAudcompAdmin, getGdapTokenForTenant, getCurrentAccount } from '@/lib/msal';
+import type { AccountInfo } from '@azure/msal-browser';
 
 export default function AMSDashboardPage() {
     const [loading, setLoading] = useState(true);
     const [clients, setClients] = useState<any[]>([]);
     const [syncing, setSyncing] = useState(false);
+    const [syncProgress, setSyncProgress] = useState('');
+    const [adminAccount, setAdminAccount] = useState<AccountInfo | null>(null);
+    const [signingIn, setSigningIn] = useState(false);
     const router = useRouter();
     const supabase = createClient();
 
@@ -31,10 +37,14 @@ export default function AMSDashboardPage() {
 
             if (!profileData?.is_admin) { router.push('/admin'); return; }
 
+            // Restore existing MSAL session if any
+            const account = await getCurrentAccount();
+            if (account) setAdminAccount(account);
+
             const { data } = await supabase
                 .from('ams_clients')
                 .select(`*, ams_user_snapshots(total_licensed_users, snapshot_date, synced_at)`)
-                .order('created_at', { ascending: false }) as any;
+                .order('company_name') as any;
 
             setClients(data || []);
             setLoading(false);
@@ -42,57 +52,60 @@ export default function AMSDashboardPage() {
         load();
     }, []);
 
-    // ── Derived Financial Metrics ──────────────────────────
+    // ── Derived Metrics ──────────────────────────
+    const now = new Date();
+    const in90Days = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+
+    const totalMRR = clients.reduce((sum, c) => sum + (parseFloat(c.monthly_amount) || 0), 0);
     const totalContractedSeats = clients.reduce((sum, c) => sum + (c.users_contracted || 0), 0);
-    const totalActualUsers = clients.reduce((sum, c) => {
-        const snap = c.ams_user_snapshots?.[0];
-        return sum + (snap?.total_licensed_users || 0);
-    }, 0);
-    const utilizationPct = totalContractedSeats > 0
-        ? Math.round((totalActualUsers / totalContractedSeats) * 100)
-        : 0;
+    const expiringSoon = clients.filter(c => {
+        if (!c.contract_end) return false;
+        const end = new Date(c.contract_end);
+        return end >= now && end <= in90Days;
+    }).length;
 
-    const potentialLostRevenue = clients.reduce((sum, c) => {
-        const snap = c.ams_user_snapshots?.[0];
-        const actual = snap?.total_licensed_users || 0;
-        const contracted = c.users_contracted || 0;
-        const ppu = parseFloat(c.price_per_user) || 0;
-        if (actual > contracted) return sum + ((actual - contracted) * ppu);
-        return sum;
-    }, 0);
+    // Clients where actual M365 users differ from contracted (synced clients only)
+    const syncedClients = clients.filter(c => c.ams_user_snapshots?.[0] != null);
+    const overContract = syncedClients.filter(c => {
+        const actual = c.ams_user_snapshots[0].total_licensed_users;
+        return actual > (c.users_contracted || 0);
+    }).length;
 
-    const revenueRisk = clients.reduce((sum, c) => {
-        const snap = c.ams_user_snapshots?.[0];
-        const actual = snap?.total_licensed_users || 0;
-        const contracted = c.users_contracted || 0;
-        const ppu = parseFloat(c.price_per_user) || 0;
-        if (actual < contracted) return sum + ((contracted - actual) * ppu);
-        return sum;
-    }, 0);
+    const handleSignIn = async () => {
+        setSigningIn(true);
+        try {
+            const { account } = await signInAudcompAdmin();
+            setAdminAccount(account);
+        } catch (err: any) {
+            if (!err.message?.includes('user_cancelled')) console.error('Sign-in failed', err);
+        } finally { setSigningIn(false); }
+    };
 
     const handleSyncAll = async () => {
         setSyncing(true);
         const { data: { session } } = await supabase.auth.getSession();
-        for (const client of clients) {
-            if (client.m365_tenant_id && client.m365_client_id && client.m365_client_secret) {
+        const clientsWithTenant = clients.filter(c => c.m365_tenant_id);
+
+        for (let i = 0; i < clientsWithTenant.length; i++) {
+            const client = clientsWithTenant[i];
+            setSyncProgress(`Syncing ${i + 1}/${clientsWithTenant.length}: ${client.company_name}`);
+            try {
+                const accessToken = await getGdapTokenForTenant(client.m365_tenant_id, adminAccount);
                 await fetch('/api/ams/sync-m365', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        clientId: client.id,
-                        tenantId: client.m365_tenant_id,
-                        m365ClientId: client.m365_client_id,
-                        m365ClientSecret: client.m365_client_secret,
-                        authToken: session?.access_token,
-                    })
+                    body: JSON.stringify({ clientId: client.id, accessToken, authToken: session?.access_token })
                 });
+            } catch (err) {
+                console.error(`Failed to sync ${client.company_name}:`, err);
             }
         }
-        // Reload
+
+        setSyncProgress('');
         const { data } = await supabase
             .from('ams_clients')
             .select(`*, ams_user_snapshots(total_licensed_users, snapshot_date, synced_at)`)
-            .order('created_at', { ascending: false }) as any;
+            .order('company_name') as any;
         setClients(data || []);
         setSyncing(false);
     };
@@ -120,18 +133,32 @@ export default function AMSDashboardPage() {
                         <p className="text-slate-400 font-medium mt-2 text-sm">Annual Managed Services — Client Overview</p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={handleSyncAll}
-                            disabled={syncing}
-                            className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-5 py-3 rounded-2xl font-black text-sm hover:bg-slate-50 transition-all shadow-sm disabled:opacity-50"
-                        >
+                        {/* GDAP Admin Sign-In */}
+                        {adminAccount ? (
+                            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 text-emerald-700 px-4 py-2.5 rounded-2xl font-black text-xs">
+                                <ShieldCheck className="h-4 w-4" />
+                                <span className="max-w-[140px] truncate">{adminAccount.username}</span>
+                            </div>
+                        ) : (
+                            <button onClick={handleSignIn} disabled={signingIn}
+                                className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-2xl font-black text-sm hover:bg-slate-50 transition-all shadow-sm">
+                                {signingIn ? <Loader2 className="h-4 w-4 animate-spin" /> :
+                                    <svg className="h-4 w-4" viewBox="0 0 23 23" fill="none">
+                                        <rect x="1" y="1" width="10" height="10" fill="#F35325" />
+                                        <rect x="12" y="1" width="10" height="10" fill="#81BC06" />
+                                        <rect x="1" y="12" width="10" height="10" fill="#05A6F0" />
+                                        <rect x="12" y="12" width="10" height="10" fill="#FFBA08" />
+                                    </svg>}
+                                {signingIn ? 'Signing in...' : 'Sign in for GDAP Sync'}
+                            </button>
+                        )}
+                        <button onClick={handleSyncAll} disabled={syncing || !adminAccount}
+                            className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-5 py-3 rounded-2xl font-black text-sm hover:bg-slate-50 transition-all shadow-sm disabled:opacity-40">
                             <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-                            {syncing ? 'Syncing...' : 'Sync All M365'}
+                            {syncing ? (syncProgress || 'Syncing...') : 'Sync All M365'}
                         </button>
-                        <Link
-                            href="/admin/ams/clients/new"
-                            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
-                        >
+                        <Link href="/admin/ams/clients/new"
+                            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20">
                             <Plus className="h-4 w-4" /> Add Client
                         </Link>
                     </div>
@@ -141,7 +168,7 @@ export default function AMSDashboardPage() {
                 <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8 mb-8">
                     <div className="flex items-center justify-between mb-6">
                         <div>
-                            <h2 className="text-lg font-black text-slate-900">Financial Overview</h2>
+                            <h2 className="text-lg font-black text-slate-900">Revenue Summary</h2>
                             <p className="text-xs text-slate-400 font-medium mt-0.5">Last updated: {lastUpdated}</p>
                         </div>
                         <button
@@ -155,61 +182,56 @@ export default function AMSDashboardPage() {
                     </div>
 
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        {/* Total Contracted Seats */}
+                        {/* Total MRR */}
                         <motion.div
                             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                            className="bg-slate-50 rounded-2xl p-5 border border-slate-100"
-                        >
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Contracted Seats</p>
-                            <p className="text-4xl font-black text-slate-900 tabular-nums">{totalContractedSeats.toLocaleString()}</p>
-                        </motion.div>
-
-                        {/* Actual Billable Usage */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-                            className="bg-slate-50 rounded-2xl p-5 border border-slate-100"
-                        >
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Actual Billable Usage</p>
-                            <div className="flex items-end gap-3">
-                                <p className="text-4xl font-black text-slate-900 tabular-nums">{totalActualUsers.toLocaleString()}</p>
-                                <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full mb-1 ${utilizationPct >= 90 ? 'bg-emerald-100 text-emerald-700' : utilizationPct >= 70 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
-                                    {utilizationPct}% Util
-                                </span>
-                            </div>
-                        </motion.div>
-
-                        {/* Potential Lost Revenue */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
                             className="bg-slate-50 rounded-2xl p-5 border border-slate-100 relative overflow-hidden"
                         >
                             <DollarSign className="absolute top-3 right-3 h-10 w-10 text-slate-100" />
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Potential Lost Revenue</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total MRR</p>
                             <p className="text-4xl font-black text-slate-900 tabular-nums">
-                                ${potentialLostRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                ${totalMRR.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                             </p>
+                            <p className="text-[10px] text-slate-400 font-bold mt-1">{clients.length} clients</p>
+                        </motion.div>
+
+                        {/* Total Contracted Seats */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+                            className="bg-slate-50 rounded-2xl p-5 border border-slate-100 relative overflow-hidden"
+                        >
+                            <Users className="absolute top-3 right-3 h-10 w-10 text-slate-100" />
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Contracted Seats</p>
+                            <p className="text-4xl font-black text-slate-900 tabular-nums">{totalContractedSeats.toLocaleString()}</p>
                             <p className="text-[10px] text-slate-400 font-bold mt-1">
-                                {clients.filter(c => {
-                                    const snap = c.ams_user_snapshots?.[0];
-                                    return (snap?.total_licensed_users || 0) > c.users_contracted;
-                                }).length} clients exceeding contract
+                                {totalContractedSeats > 0
+                                    ? `$${(totalMRR / totalContractedSeats).toFixed(2)} avg/seat`
+                                    : 'No seat data yet'}
                             </p>
                         </motion.div>
 
-                        {/* Revenue Risk */}
+                        {/* Over Contract */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                            className={`rounded-2xl p-5 border relative overflow-hidden ${overContract > 0 ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100'}`}
+                        >
+                            <TrendingUp className={`absolute top-3 right-3 h-10 w-10 ${overContract > 0 ? 'text-red-100' : 'text-slate-100'}`} />
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Over Contract</p>
+                            <p className={`text-4xl font-black tabular-nums ${overContract > 0 ? 'text-red-600' : 'text-slate-900'}`}>{overContract}</p>
+                            <p className="text-[10px] text-slate-400 font-bold mt-1">
+                                {syncedClients.length > 0 ? `of ${syncedClients.length} synced clients` : 'No M365 data synced yet'}
+                            </p>
+                        </motion.div>
+
+                        {/* Expiring Soon */}
                         <motion.div
                             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-                            className={`rounded-2xl p-5 border relative overflow-hidden ${revenueRisk > 0 ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100'}`}
+                            className={`rounded-2xl p-5 border relative overflow-hidden ${expiringSoon > 0 ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}
                         >
-                            <AlertTriangle className={`absolute top-3 right-3 h-10 w-10 ${revenueRisk > 0 ? 'text-red-100' : 'text-slate-100'}`} />
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Revenue Risk (Under-utilization)</p>
-                            <div className="flex items-center gap-2">
-                                {revenueRisk > 0 && <AlertTriangle className="h-5 w-5 text-red-500" />}
-                                <p className={`text-4xl font-black tabular-nums ${revenueRisk > 0 ? 'text-red-600' : 'text-slate-900'}`}>
-                                    ${revenueRisk.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                                </p>
-                            </div>
-                            <p className="text-[10px] text-slate-400 font-bold mt-1">Below minimum thresholds</p>
+                            <AlertTriangle className={`absolute top-3 right-3 h-10 w-10 ${expiringSoon > 0 ? 'text-amber-100' : 'text-slate-100'}`} />
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Expiring Soon</p>
+                            <p className={`text-4xl font-black tabular-nums ${expiringSoon > 0 ? 'text-amber-600' : 'text-slate-900'}`}>{expiringSoon}</p>
+                            <p className="text-[10px] text-slate-400 font-bold mt-1">Contracts ending within 90 days</p>
                         </motion.div>
                     </div>
                 </div>
@@ -235,8 +257,8 @@ export default function AMSDashboardPage() {
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="border-b border-slate-100">
-                                        {['Company', 'Contracted', 'Actual M365 Users', 'Price/User', 'Monthly Value', 'Status', ''].map(h => (
+                                    <tr className="border-b border-slate-100 bg-slate-50/50">
+                                        {['Company', 'Contract Value', 'Contracted', '$/Seat', 'Actual M365', 'Delta', 'Contract End', ''].map(h => (
                                             <th key={h} className="py-3 px-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-400">{h}</th>
                                         ))}
                                     </tr>
@@ -246,41 +268,73 @@ export default function AMSDashboardPage() {
                                         const snap = client.ams_user_snapshots?.[0];
                                         const actual = snap?.total_licensed_users ?? null;
                                         const contracted = client.users_contracted || 0;
+                                        const monthly = parseFloat(client.monthly_amount) || 0;
                                         const ppu = parseFloat(client.price_per_user) || 0;
-                                        const monthlyValue = contracted * ppu;
-                                        const isOver = actual !== null && actual > contracted;
-                                        const isUnder = actual !== null && actual < contracted;
+                                        // Derive effective rate: explicit price_per_user, or infer from monthly/contracted
+                                        const effectiveRate = ppu > 0 ? ppu : (contracted > 0 ? monthly / contracted : null);
+                                        const delta = actual !== null ? actual - contracted : null;
+                                        const contractEnd = client.contract_end ? new Date(client.contract_end) : null;
+                                        const isExpired = contractEnd && contractEnd < now;
+                                        const isExpiringSoon = contractEnd && !isExpired && contractEnd <= in90Days;
 
                                         return (
-                                            <tr key={client.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                                                <td className="py-4 px-3 font-bold text-slate-900">{client.company_name}</td>
-                                                <td className="py-4 px-3 font-bold text-slate-600">{contracted.toLocaleString()}</td>
+                                            <tr key={client.id} className={`border-b border-slate-50 hover:bg-slate-50/50 transition-colors ${delta !== null && delta > 0 ? 'bg-red-50/30' : ''}`}>
+                                                {/* Company */}
                                                 <td className="py-4 px-3">
-                                                    {actual !== null ? (
-                                                        <span className={`font-bold ${isOver ? 'text-red-600' : isUnder ? 'text-amber-600' : 'text-emerald-600'}`}>
-                                                            {actual.toLocaleString()}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-slate-300 font-bold">Not synced</span>
+                                                    <p className="font-bold text-slate-900 text-xs leading-tight">{client.company_name}</p>
+                                                    {client.billing_cycle && client.billing_cycle !== 'Monthly' && (
+                                                        <span className="text-[10px] font-black uppercase bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded-full">{client.billing_cycle}</span>
                                                     )}
                                                 </td>
-                                                <td className="py-4 px-3 font-bold text-slate-600">${ppu.toFixed(2)}</td>
-                                                <td className="py-4 px-3 font-black text-slate-900">${monthlyValue.toLocaleString()}/mo</td>
+                                                {/* Contract Value */}
+                                                <td className="py-4 px-3 font-black text-slate-900 tabular-nums">
+                                                    {monthly === 0
+                                                        ? <span className="text-slate-300">—</span>
+                                                        : `$${monthly.toLocaleString('en-CA', { minimumFractionDigits: 2 })}`}
+                                                </td>
+                                                {/* Contracted Seats */}
+                                                <td className="py-4 px-3 font-bold text-slate-600 tabular-nums">
+                                                    {contracted > 0 ? contracted.toLocaleString() : <span className="text-slate-300">—</span>}
+                                                </td>
+                                                {/* $/Seat */}
+                                                <td className="py-4 px-3 tabular-nums">
+                                                    {effectiveRate !== null
+                                                        ? <span className="font-bold text-slate-600">${effectiveRate.toFixed(2)}</span>
+                                                        : <span className="text-slate-300">—</span>}
+                                                </td>
+                                                {/* Actual M365 Users */}
+                                                <td className="py-4 px-3 tabular-nums">
+                                                    {actual !== null
+                                                        ? <span className="font-bold text-slate-700">{actual.toLocaleString()}</span>
+                                                        : <span className="text-slate-300 text-xs font-bold">No sync</span>}
+                                                </td>
+                                                {/* Delta */}
                                                 <td className="py-4 px-3">
-                                                    {actual === null ? (
-                                                        <span className="bg-slate-100 text-slate-500 text-[10px] font-black px-3 py-1 rounded-full uppercase">Pending Sync</span>
-                                                    ) : isOver ? (
-                                                        <span className="bg-red-100 text-red-700 text-[10px] font-black px-3 py-1 rounded-full uppercase flex items-center gap-1 w-max">
-                                                            <TrendingDown className="h-3 w-3" /> Over Contract
+                                                    {delta === null ? (
+                                                        <Minus className="h-3 w-3 text-slate-200" />
+                                                    ) : delta > 0 ? (
+                                                        <span className="flex items-center gap-1 text-red-600 font-black text-xs">
+                                                            <TrendingUp className="h-3.5 w-3.5" />+{delta}
                                                         </span>
-                                                    ) : isUnder ? (
-                                                        <span className="bg-amber-100 text-amber-700 text-[10px] font-black px-3 py-1 rounded-full uppercase w-max">Under-utilized</span>
+                                                    ) : delta < 0 ? (
+                                                        <span className="flex items-center gap-1 text-amber-500 font-black text-xs">
+                                                            <TrendingDown className="h-3.5 w-3.5" />{delta}
+                                                        </span>
                                                     ) : (
-                                                        <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-3 py-1 rounded-full uppercase flex items-center gap-1 w-max">
-                                                            <CheckCircle2 className="h-3 w-3" /> On Target
+                                                        <span className="flex items-center gap-1 text-emerald-600 font-black text-xs">
+                                                            <CheckCircle2 className="h-3.5 w-3.5" />0
                                                         </span>
                                                     )}
                                                 </td>
+                                                {/* Contract End */}
+                                                <td className="py-4 px-3">
+                                                    {contractEnd ? (
+                                                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isExpired ? 'bg-red-50 text-red-600' : isExpiringSoon ? 'bg-amber-50 text-amber-600' : 'text-slate-400'}`}>
+                                                            {contractEnd.toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                                        </span>
+                                                    ) : <span className="text-slate-300">—</span>}
+                                                </td>
+                                                {/* Edit */}
                                                 <td className="py-4 px-3">
                                                     <Link href={`/admin/ams/clients/${client.id}/edit`} className="text-blue-600 font-black text-xs hover:underline">
                                                         Edit

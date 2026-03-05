@@ -8,9 +8,20 @@ import Link from 'next/link';
 import {
     ArrowLeft, Building2, Users, DollarSign, Cloud,
     Loader2, CheckCircle2, AlertCircle, RefreshCw,
-    Trash2, LogIn, LogOut, ShieldCheck
+    Trash2, ShieldCheck, LogOut, User, Mail, Calendar, FileText
 } from 'lucide-react';
-import { signInWithM365, signOutM365, acquireM365Token } from '@/lib/msal';
+import { getGdapTokenForTenant, signInAudcompAdmin, getCurrentAccount, signOutMsal } from '@/lib/msal';
+import type { AccountInfo } from '@azure/msal-browser';
+
+const AGREEMENT_TYPES = [
+    'AMS - Essentials',
+    'AMS - Monitoring Only',
+    'AMS - Remote Support',
+    'AMS - Remote w/Monthly Maintenance',
+    'AMS - Remote/Onsite Support',
+];
+
+const BILLING_CYCLES = ['Monthly', 'Quarterly', 'Annual'];
 
 export default function EditAMSClientPage() {
     const params = useParams();
@@ -22,16 +33,22 @@ export default function EditAMSClientPage() {
     const [syncing, setSyncing] = useState(false);
     const [syncResult, setSyncResult] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
-
-    // M365 session state
-    const [m365Account, setM365Account] = useState<any>(null);
-    const [m365Token, setM365Token] = useState<string | null>(null);
-    const [m365Connecting, setM365Connecting] = useState(false);
+    const [adminAccount, setAdminAccount] = useState<AccountInfo | null>(null);
+    const [signingIn, setSigningIn] = useState(false);
 
     const [form, setForm] = useState({
         company_name: '',
+        agreement_type: '',
+        agreement_name: '',
+        contact_name: '',
+        contact_email: '',
+        monthly_amount: '',
+        billing_cycle: 'Monthly',
+        contract_start: '',
+        contract_end: '',
         users_contracted: '',
         price_per_user: '',
+        m365_tenant_id: '',
         notes: ''
     });
 
@@ -39,30 +56,36 @@ export default function EditAMSClientPage() {
     const supabase = createClient();
 
     useEffect(() => {
-        async function fetchClient() {
-            const { data, error } = await (supabase.from('ams_clients') as any)
-                .select('*')
-                .eq('id', clientId)
-                .single();
+        async function init() {
+            const account = await getCurrentAccount();
+            if (account) setAdminAccount(account);
 
-            if (error || !data) {
-                setError('Client not found.');
-                setLoading(false);
-                return;
-            }
+            const { data, error } = await (supabase.from('ams_clients') as any)
+                .select('*').eq('id', clientId).single();
+
+            if (error || !data) { setError('Client not found.'); setLoading(false); return; }
 
             setForm({
                 company_name: data.company_name || '',
+                agreement_type: data.agreement_type || '',
+                agreement_name: data.agreement_name || '',
+                contact_name: data.contact_name || '',
+                contact_email: data.contact_email || '',
+                monthly_amount: String(data.monthly_amount ?? ''),
+                billing_cycle: data.billing_cycle || 'Monthly',
+                contract_start: data.contract_start || '',
+                contract_end: data.contract_end || '',
                 users_contracted: String(data.users_contracted ?? ''),
                 price_per_user: String(data.price_per_user ?? ''),
+                m365_tenant_id: data.m365_tenant_id || '',
                 notes: data.notes || ''
             });
             setLoading(false);
         }
-        fetchClient();
+        init();
     }, [clientId]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
@@ -74,78 +97,64 @@ export default function EditAMSClientPage() {
         const { error: updateError } = await (supabase.from('ams_clients') as any)
             .update({
                 company_name: form.company_name,
+                agreement_type: form.agreement_type || null,
+                agreement_name: form.agreement_name || null,
+                contact_name: form.contact_name || null,
+                contact_email: form.contact_email || null,
+                monthly_amount: parseFloat(form.monthly_amount) || 0,
+                billing_cycle: form.billing_cycle || 'Monthly',
+                contract_start: form.contract_start || null,
+                contract_end: form.contract_end || null,
                 users_contracted: parseInt(form.users_contracted) || 0,
                 price_per_user: parseFloat(form.price_per_user) || 0,
+                m365_tenant_id: form.m365_tenant_id || null,
                 notes: form.notes || null,
-                updated_at: new Date().toISOString()
             })
             .eq('id', clientId);
 
-        if (updateError) {
-            setError(updateError.message);
-            setSaving(false);
-            return;
-        }
-
+        if (updateError) { setError(updateError.message); setSaving(false); return; }
         setSaved(true);
         setTimeout(() => router.push('/admin/ams/clients'), 1200);
     };
 
-    const handleConnectM365 = async () => {
-        setM365Connecting(true);
+    const handleSignIn = async () => {
+        setSigningIn(true);
         setError(null);
         try {
-            const { accessToken, account } = await signInWithM365();
-            setM365Token(accessToken);
-            setM365Account(account);
+            const { account } = await signInAudcompAdmin();
+            setAdminAccount(account);
         } catch (err: any) {
-            if (!err.message?.includes('user_cancelled')) {
-                setError('Microsoft sign-in failed. Please try again.');
-            }
-        } finally {
-            setM365Connecting(false);
-        }
+            if (!err.message?.includes('user_cancelled')) setError('Sign-in failed. Please try again.');
+        } finally { setSigningIn(false); }
     };
 
-    const handleDisconnectM365 = async () => {
-        try {
-            await signOutM365();
-        } catch { /* ignore */ }
-        setM365Token(null);
-        setM365Account(null);
+    const handleDisconnect = async () => {
+        try { await signOutMsal(); } catch { /* ignore */ }
+        setAdminAccount(null);
         setSyncResult(null);
     };
 
     const handleSync = async () => {
-        if (!m365Token) {
-            setError('Please connect Microsoft 365 first.');
-            return;
-        }
+        if (!form.m365_tenant_id) { setError("Enter this client's Microsoft Tenant ID first."); return; }
         setSyncing(true);
         setSyncResult(null);
         try {
-            // Try to get a fresh token silently first
-            let token = m365Token;
-            try { token = (await acquireM365Token()) || m365Token; } catch { /* use existing */ }
-
+            const accessToken = await getGdapTokenForTenant(form.m365_tenant_id, adminAccount);
             const { data: { session } } = await supabase.auth.getSession();
             const res = await fetch('/api/ams/sync-m365', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    clientId,
-                    accessToken: token,
-                    authToken: session?.access_token,
-                })
+                body: JSON.stringify({ clientId, accessToken, authToken: session?.access_token })
             });
             const result = await res.json();
             setSyncResult(result);
-            if (result.success) setM365Token(token); // refresh stored token
-        } catch {
-            setSyncResult({ error: 'Sync failed. Please reconnect Microsoft 365.' });
-        } finally {
-            setSyncing(false);
-        }
+        } catch (err: any) {
+            if (err.message?.includes('user_cancelled')) {
+                setSyncResult({ error: 'Sign-in cancelled.' });
+            } else {
+                setSyncResult({ error: `GDAP sync failed: ${err.message || 'Verify AUDCOMP has GDAP access to this tenant.'}` });
+            }
+        } finally { setSyncing(false); }
     };
 
     const handleDelete = async () => {
@@ -165,16 +174,13 @@ export default function EditAMSClientPage() {
             <AdminNavbar />
             <main className="pl-64 pr-10 pt-10 pb-20">
 
-                {/* Header */}
                 <header className="flex items-center justify-between mb-10">
                     <div className="flex items-center gap-4">
                         <Link href="/admin/ams/clients" className="h-10 w-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 shadow-sm transition-colors">
                             <ArrowLeft className="h-5 w-5" />
                         </Link>
                         <div>
-                            <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-                                {form.company_name || 'Edit Client'}
-                            </h1>
+                            <h1 className="text-3xl font-black text-slate-900 tracking-tight">{form.company_name || 'Edit Client'}</h1>
                             <p className="text-slate-400 font-medium text-sm mt-0.5">AMS Client Profile</p>
                         </div>
                     </div>
@@ -187,10 +193,7 @@ export default function EditAMSClientPage() {
                 <div className="grid grid-cols-12 gap-8">
                     {/* Edit Form */}
                     <div className="col-span-12 lg:col-span-7">
-                        <form onSubmit={handleSubmit} className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8 space-y-6">
-                            <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
-                                <Building2 className="h-5 w-5 text-blue-600" /> Client Details
-                            </h2>
+                        <form onSubmit={handleSubmit} className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8 space-y-8">
 
                             {error && (
                                 <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-2xl p-4 text-red-700 font-bold text-sm">
@@ -198,32 +201,143 @@ export default function EditAMSClientPage() {
                                 </div>
                             )}
 
-                            {[
-                                { label: 'Company Name', name: 'company_name', type: 'text', placeholder: 'Acme Corp', icon: Building2, required: true },
-                                { label: 'Contracted Users', name: 'users_contracted', type: 'number', placeholder: '50', icon: Users, required: true },
-                                { label: 'Price Per User ($/mo)', name: 'price_per_user', type: 'number', placeholder: '12.50', icon: DollarSign, required: true },
-                            ].map(({ label, name, type, placeholder, icon: Icon, required }) => (
-                                <div key={name} className="space-y-1.5">
-                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">{label}</label>
+                            {/* Company Info */}
+                            <div className="space-y-4">
+                                <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                                    <Building2 className="h-4 w-4 text-blue-600" /> Company Info
+                                </h2>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Company Name *</label>
                                     <div className="relative">
-                                        <Icon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                        <input
-                                            name={name} type={type} required={required}
-                                            value={(form as any)[name]} onChange={handleChange}
-                                            placeholder={placeholder}
-                                            step={name === 'price_per_user' ? '0.01' : '1'}
-                                            className="w-full pl-10 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all"
-                                        />
+                                        <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                        <input name="company_name" type="text" required value={form.company_name} onChange={handleChange}
+                                            placeholder="Acme Corp"
+                                            className="w-full pl-10 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all" />
                                     </div>
                                 </div>
-                            ))}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Agreement Type</label>
+                                        <select name="agreement_type" value={form.agreement_type} onChange={handleChange}
+                                            className="w-full px-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all">
+                                            <option value="">Select type...</option>
+                                            {AGREEMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Agreement Name</label>
+                                        <input name="agreement_name" type="text" value={form.agreement_name} onChange={handleChange}
+                                            placeholder="Audcomp Managed Services - Silver"
+                                            className="w-full px-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all" />
+                                    </div>
+                                </div>
+                            </div>
 
+                            {/* Contact */}
+                            <div className="space-y-4">
+                                <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                                    <User className="h-4 w-4 text-blue-600" /> Primary Contact
+                                </h2>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Contact Name</label>
+                                        <div className="relative">
+                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                            <input name="contact_name" type="text" value={form.contact_name} onChange={handleChange}
+                                                placeholder="Jane Smith"
+                                                className="w-full pl-10 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Contact Email</label>
+                                        <div className="relative">
+                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                            <input name="contact_email" type="email" value={form.contact_email} onChange={handleChange}
+                                                placeholder="jane@acme.com"
+                                                className="w-full pl-10 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Billing */}
+                            <div className="space-y-4">
+                                <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                                    <DollarSign className="h-4 w-4 text-blue-600" /> Billing & Contract
+                                </h2>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Monthly Amount ($)</label>
+                                        <div className="relative">
+                                            <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                            <input name="monthly_amount" type="number" step="0.01" value={form.monthly_amount} onChange={handleChange}
+                                                placeholder="1500.00"
+                                                className="w-full pl-10 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Billing Cycle</label>
+                                        <select name="billing_cycle" value={form.billing_cycle} onChange={handleChange}
+                                            className="w-full px-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all">
+                                            {BILLING_CYCLES.map(c => <option key={c} value={c}>{c}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Contract Start</label>
+                                        <div className="relative">
+                                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                            <input name="contract_start" type="date" value={form.contract_start} onChange={handleChange}
+                                                className="w-full pl-10 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Contract End</label>
+                                        <div className="relative">
+                                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                            <input name="contract_end" type="date" value={form.contract_end} onChange={handleChange}
+                                                className="w-full pl-10 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* User Counts */}
+                            <div className="space-y-4">
+                                <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                                    <Users className="h-4 w-4 text-blue-600" /> User Counts <span className="text-slate-300 font-medium normal-case">(optional)</span>
+                                </h2>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Contracted Users</label>
+                                        <div className="relative">
+                                            <Users className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                            <input name="users_contracted" type="number" value={form.users_contracted} onChange={handleChange}
+                                                placeholder="50"
+                                                className="w-full pl-10 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Price Per User ($/mo)</label>
+                                        <div className="relative">
+                                            <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                            <input name="price_per_user" type="number" step="0.01" value={form.price_per_user} onChange={handleChange}
+                                                placeholder="12.50"
+                                                className="w-full pl-10 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Notes */}
                             <div className="space-y-1.5">
-                                <label className="text-xs font-black uppercase tracking-widest text-slate-400">Notes</label>
+                                <label className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                    <FileText className="h-3.5 w-3.5" /> Notes
+                                </label>
                                 <textarea name="notes" value={form.notes} onChange={handleChange} rows={3}
                                     placeholder="Any additional notes..."
-                                    className="w-full px-4 py-3 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all text-sm resize-none"
-                                />
+                                    className="w-full px-4 py-3 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all text-sm resize-none" />
                             </div>
 
                             <button type="submit" disabled={saving || saved}
@@ -234,72 +348,73 @@ export default function EditAMSClientPage() {
                         </form>
                     </div>
 
-                    {/* M365 Connection Panel */}
-                    <div className="col-span-12 lg:col-span-5 space-y-6">
+                    {/* GDAP Sync Panel */}
+                    <div className="col-span-12 lg:col-span-5">
                         <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8">
                             <h2 className="text-lg font-black text-slate-900 flex items-center gap-2 mb-2">
-                                <Cloud className="h-5 w-5 text-blue-600" /> Microsoft 365 Sync
+                                <Cloud className="h-5 w-5 text-blue-600" /> M365 License Sync
                             </h2>
                             <p className="text-sm text-slate-400 font-medium mb-6">
-                                Sign in with the client's Global Admin account to pull their licensed user count.
+                                Uses AUDCOMP's GDAP access. Sign in once as the AUDCOMP admin — no client involvement required.
                             </p>
 
-                            {!m365Account ? (
-                                // Not connected
-                                <button onClick={handleConnectM365} disabled={m365Connecting}
-                                    className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-sm border-2 border-slate-200 hover:border-blue-400 bg-white hover:bg-blue-50/50 text-slate-700 transition-all disabled:opacity-50">
-                                    {m365Connecting ? (
-                                        <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-                                    ) : (
+                            {/* Tenant ID field */}
+                            <div className="space-y-1.5 mb-5">
+                                <label className="text-xs font-black uppercase tracking-widest text-slate-400">Client's Tenant ID</label>
+                                <div className="relative">
+                                    <Cloud className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                    <input name="m365_tenant_id" type="text"
+                                        value={form.m365_tenant_id} onChange={handleChange}
+                                        placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                                        className="w-full pl-10 pr-4 py-3.5 rounded-2xl border border-blue-100 bg-blue-50/30 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all font-mono text-sm"
+                                    />
+                                </div>
+                                <p className="text-[10px] text-slate-400 font-bold pl-1">From Partner Center → Customers → {form.company_name || 'this client'}</p>
+                            </div>
+
+                            {/* Admin session */}
+                            {adminAccount ? (
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                                        <ShieldCheck className="h-5 w-5 text-emerald-600 shrink-0" />
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-black text-emerald-800">GDAP Admin Signed In</p>
+                                            <p className="text-xs font-medium text-emerald-600 truncate">{adminAccount.username}</p>
+                                        </div>
+                                        <button onClick={handleDisconnect} className="ml-auto text-slate-400 hover:text-red-500 transition-colors">
+                                            <LogOut className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                    <button onClick={handleSync} disabled={syncing || !form.m365_tenant_id}
+                                        className={`w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-sm transition-all ${!form.m365_tenant_id ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20'}`}>
+                                        <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+                                        {syncing ? 'Syncing via GDAP...' : !form.m365_tenant_id ? 'Enter Tenant ID above' : 'Sync License Count'}
+                                    </button>
+                                </div>
+                            ) : (
+                                <button onClick={handleSignIn} disabled={signingIn}
+                                    className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-sm border-2 border-slate-200 hover:border-blue-400 bg-white hover:bg-blue-50/50 text-slate-700 transition-all">
+                                    {signingIn ? <Loader2 className="h-5 w-5 animate-spin text-blue-600" /> :
                                         <svg className="h-5 w-5" viewBox="0 0 23 23" fill="none">
                                             <rect x="1" y="1" width="10" height="10" fill="#F35325" />
                                             <rect x="12" y="1" width="10" height="10" fill="#81BC06" />
                                             <rect x="1" y="12" width="10" height="10" fill="#05A6F0" />
                                             <rect x="12" y="12" width="10" height="10" fill="#FFBA08" />
-                                        </svg>
-                                    )}
-                                    {m365Connecting ? 'Opening Microsoft sign-in...' : 'Connect Microsoft 365'}
+                                        </svg>}
+                                    {signingIn ? 'Opening Microsoft sign-in...' : 'Sign in as AUDCOMP Admin'}
                                 </button>
-                            ) : (
-                                // Connected
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
-                                        <ShieldCheck className="h-5 w-5 text-emerald-600 shrink-0" />
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-black text-emerald-800">Connected</p>
-                                            <p className="text-xs font-medium text-emerald-600 truncate">{m365Account.username}</p>
-                                            <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">{m365Account.tenantId}</p>
-                                        </div>
-                                    </div>
-
-                                    <button onClick={handleSync} disabled={syncing}
-                                        className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-sm bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all disabled:opacity-50">
-                                        <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-                                        {syncing ? 'Syncing...' : 'Sync License Counts Now'}
-                                    </button>
-
-                                    <button onClick={handleDisconnectM365}
-                                        className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-black text-xs text-slate-400 hover:text-red-500 transition-colors border border-slate-100 hover:border-red-100">
-                                        <LogOut className="h-3.5 w-3.5" /> Disconnect Account
-                                    </button>
-                                </div>
                             )}
 
-                            {/* Sync Result */}
                             {syncResult && (
                                 <div className={`mt-4 p-4 rounded-2xl border text-sm font-bold ${syncResult.error ? 'bg-red-50 border-red-100 text-red-700' : 'bg-emerald-50 border-emerald-100 text-emerald-700'}`}>
                                     {syncResult.error ? (
-                                        <div className="flex items-center gap-2"><AlertCircle className="h-4 w-4" /> {syncResult.error}</div>
+                                        <div className="flex items-start gap-2"><AlertCircle className="h-4 w-4 shrink-0 mt-0.5" /> {syncResult.error}</div>
                                     ) : (
                                         <div>
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <CheckCircle2 className="h-4 w-4" />
-                                                <span>{syncResult.totalLicensedUsers} AMS licensed users found</span>
-                                            </div>
+                                            <div className="flex items-center gap-2 mb-3"><CheckCircle2 className="h-4 w-4" /> {syncResult.totalLicensedUsers} AMS users found</div>
                                             {syncResult.licenseBreakdown && Object.entries(syncResult.licenseBreakdown).map(([sku, count]) => (
                                                 <div key={sku} className="flex justify-between text-xs font-bold text-emerald-600 py-0.5 border-t border-emerald-100/50">
-                                                    <span>{sku}</span>
-                                                    <span>{count as number}</span>
+                                                    <span>{sku}</span><span>{count as number}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -307,22 +422,19 @@ export default function EditAMSClientPage() {
                                 </div>
                             )}
 
-                            {/* Info box */}
                             <div className="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">How it works</p>
-                                <div className="space-y-1.5">
-                                    {[
-                                        'Click Connect and sign in with the client\'s Global Admin account',
-                                        'A one-time consent screen will appear — click Accept',
-                                        'Click Sync to pull F1, F3, Business, E3, E5 license counts',
-                                        'No changes are made to the client\'s tenant',
-                                    ].map((step, i) => (
-                                        <div key={i} className="flex items-start gap-2">
-                                            <span className="h-4 w-4 rounded-full bg-blue-100 text-blue-600 text-[9px] font-black flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
-                                            <span className="text-xs text-slate-500 font-medium">{step}</span>
-                                        </div>
-                                    ))}
-                                </div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">GDAP Flow</p>
+                                {[
+                                    'Sign in once as AUDCOMP admin (works for all clients)',
+                                    "Enter the client's Tenant ID from Partner Center",
+                                    'Click Sync — GDAP handles cross-tenant access',
+                                    "No changes to client's tenant. No client involvement.",
+                                ].map((s, i) => (
+                                    <div key={i} className="flex items-start gap-2 py-1">
+                                        <span className="h-4 w-4 rounded-full bg-blue-100 text-blue-600 text-[9px] font-black flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                                        <span className="text-xs text-slate-500 font-medium">{s}</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
