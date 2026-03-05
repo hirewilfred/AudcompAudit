@@ -29,7 +29,6 @@ export default function NewAMSClientPage() {
         agreement_name: '',
         contact_name: '',
         contact_email: '',
-        monthly_amount: '',
         billing_cycle: 'Monthly',
         contract_start: '',
         contract_end: '',
@@ -65,7 +64,7 @@ export default function NewAMSClientPage() {
             agreement_name: form.agreement_name || null,
             contact_name: form.contact_name || null,
             contact_email: form.contact_email || null,
-            monthly_amount: parseFloat(form.monthly_amount) || 0,
+            monthly_amount: (parseInt(form.users_contracted) || 0) * (parseFloat(form.price_per_user) || 0),
             billing_cycle: form.billing_cycle || 'Monthly',
             contract_start: form.contract_start || null,
             contract_end: form.contract_end || null,
@@ -231,12 +230,17 @@ export default function NewAMSClientPage() {
                                 </h2>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
-                                        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Monthly Amount ($)</label>
-                                        <div className="relative">
-                                            <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                            <input name="monthly_amount" type="number" step="0.01" value={form.monthly_amount} onChange={handleChange}
-                                                placeholder="1500.00"
-                                                className="w-full pl-10 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all" />
+                                        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Monthly Amount</label>
+                                        <div className="flex items-center gap-2 px-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-100 text-slate-500 text-sm font-bold">
+                                            <DollarSign className="h-4 w-4 text-slate-400 shrink-0" />
+                                            {(() => {
+                                                const u = parseInt(form.users_contracted) || 0;
+                                                const p = parseFloat(form.price_per_user) || 0;
+                                                const total = u * p;
+                                                return total > 0
+                                                    ? <span className="text-slate-900 font-black">${total.toLocaleString('en-CA', { minimumFractionDigits: 2 })} <span className="text-slate-400 font-medium text-xs">({u} × ${p.toFixed(2)})</span></span>
+                                                    : <span className="text-slate-400 font-medium">Enter users & rate below</span>;
+                                            })()}
                                         </div>
                                     </div>
                                     <div className="space-y-1.5">

@@ -239,7 +239,10 @@ export default function AMSDashboardPage() {
                 {/* Client Table */}
                 <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-black text-slate-900">AMS Clients</h2>
+                        <div>
+                                <h2 className="text-xl font-black text-slate-900">Contract Reconciliation</h2>
+                                <p className="text-xs text-slate-400 font-medium mt-0.5">Contract value · contracted seats · $/seat · actual M365 users · delta</p>
+                            </div>
                         <Link href="/admin/ams/clients/new" className="text-blue-600 font-black text-sm flex items-center gap-1 hover:gap-2 transition-all">
                             Add Client <ArrowRight className="h-4 w-4" />
                         </Link>
@@ -258,8 +261,8 @@ export default function AMSDashboardPage() {
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b border-slate-100 bg-slate-50/50">
-                                        {['Company', 'Contract Value', 'Contracted', '$/Seat', 'Actual M365', 'Delta', 'Contract End', ''].map(h => (
-                                            <th key={h} className="py-3 px-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-400">{h}</th>
+                                        {['Company', 'Agreement', 'Contact', 'Contract Value', 'Contracted', '$/Seat', 'Actual M365', 'Delta', 'Contract End', ''].map(h => (
+                                            <th key={h} className="py-3 px-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">{h}</th>
                                         ))}
                                     </tr>
                                 </thead>
@@ -270,7 +273,6 @@ export default function AMSDashboardPage() {
                                         const contracted = client.users_contracted || 0;
                                         const monthly = parseFloat(client.monthly_amount) || 0;
                                         const ppu = parseFloat(client.price_per_user) || 0;
-                                        // Derive effective rate: explicit price_per_user, or infer from monthly/contracted
                                         const effectiveRate = ppu > 0 ? ppu : (contracted > 0 ? monthly / contracted : null);
                                         const delta = actual !== null ? actual - contracted : null;
                                         const contractEnd = client.contract_end ? new Date(client.contract_end) : null;
@@ -278,22 +280,33 @@ export default function AMSDashboardPage() {
                                         const isExpiringSoon = contractEnd && !isExpired && contractEnd <= in90Days;
 
                                         return (
-                                            <tr key={client.id} className={`border-b border-slate-50 hover:bg-slate-50/50 transition-colors ${delta !== null && delta > 0 ? 'bg-red-50/30' : ''}`}>
+                                            <tr key={client.id} className={`border-b border-slate-50 hover:bg-slate-50/50 transition-colors ${delta !== null && delta > 0 ? 'bg-red-50/20' : ''}`}>
                                                 {/* Company */}
                                                 <td className="py-4 px-3">
-                                                    <p className="font-bold text-slate-900 text-xs leading-tight">{client.company_name}</p>
+                                                    <p className="font-bold text-slate-900 text-xs leading-tight whitespace-nowrap">{client.company_name}</p>
                                                     {client.billing_cycle && client.billing_cycle !== 'Monthly' && (
                                                         <span className="text-[10px] font-black uppercase bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded-full">{client.billing_cycle}</span>
                                                     )}
                                                 </td>
+                                                {/* Agreement */}
+                                                <td className="py-4 px-3">
+                                                    <p className="text-xs font-bold text-slate-500 max-w-[120px] leading-tight">{client.agreement_type || '—'}</p>
+                                                </td>
+                                                {/* Contact */}
+                                                <td className="py-4 px-3">
+                                                    <p className="text-xs font-medium text-slate-700 whitespace-nowrap">{client.contact_name || '—'}</p>
+                                                    {client.contact_email && (
+                                                        <a href={`mailto:${client.contact_email}`} className="text-[11px] text-blue-400 hover:underline">{client.contact_email}</a>
+                                                    )}
+                                                </td>
                                                 {/* Contract Value */}
-                                                <td className="py-4 px-3 font-black text-slate-900 tabular-nums">
+                                                <td className="py-4 px-3 font-black text-slate-900 tabular-nums whitespace-nowrap">
                                                     {monthly === 0
                                                         ? <span className="text-slate-300">—</span>
                                                         : `$${monthly.toLocaleString('en-CA', { minimumFractionDigits: 2 })}`}
                                                 </td>
                                                 {/* Contracted Seats */}
-                                                <td className="py-4 px-3 font-bold text-slate-600 tabular-nums">
+                                                <td className="py-4 px-3 font-bold text-slate-600 tabular-nums text-center">
                                                     {contracted > 0 ? contracted.toLocaleString() : <span className="text-slate-300">—</span>}
                                                 </td>
                                                 {/* $/Seat */}
@@ -302,22 +315,22 @@ export default function AMSDashboardPage() {
                                                         ? <span className="font-bold text-slate-600">${effectiveRate.toFixed(2)}</span>
                                                         : <span className="text-slate-300">—</span>}
                                                 </td>
-                                                {/* Actual M365 Users */}
-                                                <td className="py-4 px-3 tabular-nums">
+                                                {/* Actual M365 */}
+                                                <td className="py-4 px-3 tabular-nums text-center">
                                                     {actual !== null
                                                         ? <span className="font-bold text-slate-700">{actual.toLocaleString()}</span>
-                                                        : <span className="text-slate-300 text-xs font-bold">No sync</span>}
+                                                        : <span className="text-slate-300 text-xs font-bold">—</span>}
                                                 </td>
                                                 {/* Delta */}
                                                 <td className="py-4 px-3">
                                                     {delta === null ? (
                                                         <Minus className="h-3 w-3 text-slate-200" />
                                                     ) : delta > 0 ? (
-                                                        <span className="flex items-center gap-1 text-red-600 font-black text-xs">
+                                                        <span className="flex items-center gap-1 text-red-600 font-black text-xs whitespace-nowrap">
                                                             <TrendingUp className="h-3.5 w-3.5" />+{delta}
                                                         </span>
                                                     ) : delta < 0 ? (
-                                                        <span className="flex items-center gap-1 text-amber-500 font-black text-xs">
+                                                        <span className="flex items-center gap-1 text-amber-500 font-black text-xs whitespace-nowrap">
                                                             <TrendingDown className="h-3.5 w-3.5" />{delta}
                                                         </span>
                                                     ) : (
@@ -327,7 +340,7 @@ export default function AMSDashboardPage() {
                                                     )}
                                                 </td>
                                                 {/* Contract End */}
-                                                <td className="py-4 px-3">
+                                                <td className="py-4 px-3 whitespace-nowrap">
                                                     {contractEnd ? (
                                                         <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isExpired ? 'bg-red-50 text-red-600' : isExpiringSoon ? 'bg-amber-50 text-amber-600' : 'text-slate-400'}`}>
                                                             {contractEnd.toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' })}
