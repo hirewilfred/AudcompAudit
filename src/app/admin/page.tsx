@@ -18,7 +18,7 @@ import {
     LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, X, Printer, Mail } from 'lucide-react';
+import { FileText, X, Printer, Mail, AlertTriangle, Lightbulb, Phone } from 'lucide-react';
 
 export default function AdminPage() {
     const [loading, setLoading] = useState(true);
@@ -497,6 +497,146 @@ export default function AdminPage() {
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* Expert Call Prep */}
+                                        {(() => {
+                                            const categoryInsights: Record<string, { label: string; talking: string[]; quickWin: string }> = {
+                                                strategy: {
+                                                    label: 'AI Strategy',
+                                                    talking: [
+                                                        'Ask: "Where do you see your business in 3 years?" — tie AI to those goals.',
+                                                        'Discuss ROI: time saved per week → annualized dollar value.',
+                                                        'Offer to build a 90-day AI roadmap with 2–3 concrete use cases.',
+                                                    ],
+                                                    quickWin: 'Help them articulate a single AI use case to their leadership team.'
+                                                },
+                                                data: {
+                                                    label: 'Data Readiness',
+                                                    talking: [
+                                                        'Ask: "Where does your team go to find information today?" — map the chaos.',
+                                                        'No AI tool works well on messy data — frame this as foundational.',
+                                                        'SharePoint / M365 consolidation is a natural first step for AUDCOMP clients.',
+                                                    ],
+                                                    quickWin: 'Audit their top 3 data sources and propose a consolidation plan.'
+                                                },
+                                                technical: {
+                                                    label: 'AI Tool Adoption',
+                                                    talking: [
+                                                        'Show a live demo of Copilot for M365 — let them see the time savings directly.',
+                                                        'Start with email drafting and meeting summaries — lowest friction entry point.',
+                                                        'Ask: "Which team member would champion AI internally?" — find the champion.',
+                                                    ],
+                                                    quickWin: 'Set up a 30-day Copilot pilot for 2–5 users in their most manual department.'
+                                                },
+                                                governance: {
+                                                    label: 'AI Governance',
+                                                    talking: [
+                                                        'Without a policy, employees are already using AI on company data — frame as risk.',
+                                                        'Offer an AI acceptable use policy template they can adopt in a day.',
+                                                        'Cover the big three: confidential data, client data, and hallucinations.',
+                                                    ],
+                                                    quickWin: 'Provide a one-page AI policy template to remove their biggest blocker.'
+                                                },
+                                                operational: {
+                                                    label: 'Operations & Automation',
+                                                    talking: [
+                                                        'Ask: "What does your team do manually every single day?" — list the top 3.',
+                                                        'AI can automate 60%+ of data entry, email sorting, and scheduling tasks.',
+                                                        'Calculate: if AI saves 1 hour/day per employee, what is that worth annually?',
+                                                    ],
+                                                    quickWin: 'Identify and automate the single most time-consuming manual workflow first.'
+                                                },
+                                            };
+
+                                            const cats: any[] = selectedAudit.score.category_scores ?? [];
+                                            const weakCats = [...cats].sort((a, b) => a.score - b.score).filter(c => c.score < 65);
+
+                                            const lowResponses = auditDetails
+                                                .map(resp => {
+                                                    const q = AUDIT_QUESTIONS.find(q => q.id === resp.question_id);
+                                                    const val = Number(resp.answer);
+                                                    return { q, resp, val };
+                                                })
+                                                .filter(({ val }) => val <= 3)
+                                                .sort((a, b) => a.val - b.val);
+
+                                            if (weakCats.length === 0 && lowResponses.length === 0) return null;
+
+                                            return (
+                                                <div className="bg-amber-50 border border-amber-200 rounded-3xl overflow-hidden">
+                                                    <div className="px-6 py-4 bg-amber-100 border-b border-amber-200 flex items-center gap-2">
+                                                        <Phone className="h-4 w-4 text-amber-700" />
+                                                        <h3 className="text-sm font-black text-amber-900 uppercase tracking-widest">Expert Call Prep</h3>
+                                                        <span className="ml-auto text-[10px] font-black text-amber-600 uppercase tracking-widest bg-amber-200 px-2 py-0.5 rounded-full">For Your Eyes Only</span>
+                                                    </div>
+                                                    <div className="p-6 space-y-6">
+                                                        {/* Weak categories */}
+                                                        {weakCats.length > 0 && (
+                                                            <div>
+                                                                <p className="text-xs font-black text-amber-800 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                                                    <AlertTriangle className="h-3.5 w-3.5" /> Priority Focus Areas
+                                                                </p>
+                                                                <div className="space-y-4">
+                                                                    {weakCats.slice(0, 3).map((cat, i) => {
+                                                                        const key = cat.category?.toLowerCase();
+                                                                        const insight = categoryInsights[key];
+                                                                        if (!insight) return null;
+                                                                        return (
+                                                                            <div key={i} className="bg-white rounded-2xl border border-amber-100 p-4">
+                                                                                <div className="flex items-center justify-between mb-3">
+                                                                                    <span className="font-black text-slate-900 text-sm">{insight.label}</span>
+                                                                                    <span className={`text-xs font-black px-2 py-0.5 rounded-full ${cat.score < 40 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                                                                                        {cat.score}% — {cat.score < 40 ? 'Critical Gap' : 'Needs Work'}
+                                                                                    </span>
+                                                                                </div>
+                                                                                <ul className="space-y-1.5 mb-3">
+                                                                                    {insight.talking.map((tip, j) => (
+                                                                                        <li key={j} className="flex items-start gap-2 text-xs text-slate-700 font-medium">
+                                                                                            <span className="text-amber-500 font-black shrink-0 mt-0.5">→</span>
+                                                                                            {tip}
+                                                                                        </li>
+                                                                                    ))}
+                                                                                </ul>
+                                                                                <div className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-xl p-2.5">
+                                                                                    <Lightbulb className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
+                                                                                    <span className="text-[11px] font-bold text-amber-800">{insight.quickWin}</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Low-scoring individual responses */}
+                                                        {lowResponses.length > 0 && (
+                                                            <div>
+                                                                <p className="text-xs font-black text-amber-800 uppercase tracking-widest mb-3">Specific Pain Points They Admitted</p>
+                                                                <div className="space-y-2">
+                                                                    {lowResponses.map(({ q, resp, val }, i) => {
+                                                                        const matchedOption = q?.options.find(o => o.value === val);
+                                                                        return (
+                                                                            <div key={i} className="bg-white border border-amber-100 rounded-2xl p-3 flex items-start gap-3">
+                                                                                <span className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5 ${val === 0 ? 'bg-red-500 text-white' : 'bg-orange-400 text-white'}`}>
+                                                                                    {val}
+                                                                                </span>
+                                                                                <div className="min-w-0">
+                                                                                    <p className="text-xs font-bold text-slate-700 leading-tight">{q?.text}</p>
+                                                                                    <p className="text-[11px] text-slate-500 mt-1">"{matchedOption?.label || resp.answer}"</p>
+                                                                                    {matchedOption?.feedback && (
+                                                                                        <p className="text-[11px] font-bold text-amber-700 mt-1">{matchedOption.feedback}</p>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
 
                                         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                                             <div className="p-6 border-b border-slate-100 bg-slate-50">

@@ -263,28 +263,12 @@ export default function EditAMSClientPage() {
                                 <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
                                     <DollarSign className="h-4 w-4 text-blue-600" /> Billing & Contract
                                 </h2>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Monthly Amount</label>
-                                        <div className="flex items-center gap-2 px-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-100 text-slate-500 text-sm font-bold">
-                                            <DollarSign className="h-4 w-4 text-slate-400 shrink-0" />
-                                            {(() => {
-                                                const u = parseInt(form.users_contracted) || 0;
-                                                const p = parseFloat(form.price_per_user) || 0;
-                                                const total = u * p;
-                                                return total > 0
-                                                    ? <span className="text-slate-900 font-black">${total.toLocaleString('en-CA', { minimumFractionDigits: 2 })} <span className="text-slate-400 font-medium text-xs">({u} × ${p.toFixed(2)})</span></span>
-                                                    : <span className="text-slate-400 font-medium">Enter users & rate below</span>;
-                                            })()}
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Billing Cycle</label>
-                                        <select name="billing_cycle" value={form.billing_cycle} onChange={handleChange}
-                                            className="w-full px-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all">
-                                            {BILLING_CYCLES.map(c => <option key={c} value={c}>{c}</option>)}
-                                        </select>
-                                    </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Billing Cycle</label>
+                                    <select name="billing_cycle" value={form.billing_cycle} onChange={handleChange}
+                                        className="w-full px-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all">
+                                        {BILLING_CYCLES.map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1.5">

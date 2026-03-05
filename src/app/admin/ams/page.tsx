@@ -261,7 +261,7 @@ export default function AMSDashboardPage() {
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b border-slate-100 bg-slate-50/50">
-                                        {['Company', 'Agreement', 'Contact', 'Contract Value', 'Contracted', '$/Seat', 'Actual M365', 'Delta', 'Contract End', ''].map(h => (
+                                        {['Company', 'Agreement', 'Contact', 'Contract Value', 'Contracted', '$/Seat', 'Actual M365', 'Delta', 'Contract End'].map(h => (
                                             <th key={h} className="py-3 px-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">{h}</th>
                                         ))}
                                     </tr>
@@ -346,12 +346,6 @@ export default function AMSDashboardPage() {
                                                             {contractEnd.toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' })}
                                                         </span>
                                                     ) : <span className="text-slate-300">—</span>}
-                                                </td>
-                                                {/* Edit */}
-                                                <td className="py-4 px-3">
-                                                    <Link href={`/admin/ams/clients/${client.id}/edit`} className="text-blue-600 font-black text-xs hover:underline">
-                                                        Edit
-                                                    </Link>
                                                 </td>
                                             </tr>
                                         );
