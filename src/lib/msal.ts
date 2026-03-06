@@ -16,7 +16,7 @@ function buildMsalConfig(tenantId: string = 'common'): Configuration {
             // Use customer tenant ID for GDAP cross-tenant access,
             // or 'common' for the initial AUDCOMP admin sign-in
             authority: `https://login.microsoftonline.com/${tenantId}`,
-            redirectUri: typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000',
+            redirectUri: 'https://aiaudit.audcomp.ai',
         },
         cache: {
             cacheLocation: 'sessionStorage',
