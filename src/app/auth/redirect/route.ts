@@ -7,9 +7,9 @@ import { NextResponse } from 'next/server';
  * to the parent window, then closes the popup automatically.
  */
 export async function GET() {
-    const clientId = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID ?? '';
+  const clientId = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID ?? '';
 
-    const html = `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -21,7 +21,7 @@ export async function GET() {
 </head>
 <body>
   <p>Signing in…</p>
-  <script src="https://alcdn.msauth.net/browser/3.28.0/js/msal-browser.min.js"></script>
+  <script src="https://unpkg.com/@azure/msal-browser@5.4.0/lib/msal-browser.min.js"></script>
   <script>
     (async function () {
       try {
@@ -45,7 +45,7 @@ export async function GET() {
 </body>
 </html>`;
 
-    return new NextResponse(html, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' },
-    });
+  return new NextResponse(html, {
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  });
 }

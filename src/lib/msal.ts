@@ -1,8 +1,8 @@
 import { PublicClientApplication, Configuration, AccountInfo } from '@azure/msal-browser';
 
 const AZURE_CLIENT_ID = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID || '';
+const REDIRECT_URI = 'https://aiaudit.audcomp.ai/auth/redirect';
 
-// Graph API scopes for reading M365 license data
 const GRAPH_SCOPES = [
     'https://graph.microsoft.com/Directory.Read.All',
     'https://graph.microsoft.com/User.Read.All',
@@ -13,10 +13,8 @@ function buildMsalConfig(tenantId: string = 'common'): Configuration {
     return {
         auth: {
             clientId: AZURE_CLIENT_ID,
-            // Use customer tenant ID for GDAP cross-tenant access,
-            // or 'common' for the initial AUDCOMP admin sign-in
             authority: `https://login.microsoftonline.com/${tenantId}`,
-            redirectUri: 'https://aiaudit.audcomp.ai/auth/redirect',
+            redirectUri: REDIRECT_URI,
         },
         cache: {
             cacheLocation: 'sessionStorage',
@@ -25,42 +23,54 @@ function buildMsalConfig(tenantId: string = 'common'): Configuration {
 }
 
 let msalInstance: PublicClientApplication | null = null;
+let msalInitPromise: Promise<PublicClientApplication> | null = null;
 
 async function getMsalInstance(tenantId = 'common'): Promise<PublicClientApplication> {
-    // Create a new instance if tenant changes
-    if (!msalInstance) {
-        msalInstance = new PublicClientApplication(buildMsalConfig(tenantId));
-        await msalInstance.initialize();
+    if (!msalInitPromise) {
+        const instance = new PublicClientApplication(buildMsalConfig(tenantId));
+        msalInitPromise = instance.initialize().then(() => {
+            msalInstance = instance;
+            return instance;
+        });
     }
-    return msalInstance;
+    return msalInitPromise;
 }
 
-// ─────────────────────────────────────────────
-// Sign in AUDCOMP admin (used once per session)
-// ─────────────────────────────────────────────
-export async function signInAudcompAdmin(): Promise<{ accessToken: string; account: AccountInfo }> {
+// ─────────────────────────────────────────────────────────────
+// Call this on component mount so loginPopup() can be called
+// synchronously from the click handler (avoids popup blocking).
+// ─────────────────────────────────────────────────────────────
+export async function preInitMsal(): Promise<AccountInfo | null> {
     const msal = await getMsalInstance('common');
-    const result = await msal.loginPopup({
-        scopes: GRAPH_SCOPES,
-        prompt: 'select_account',
-    });
-    return { accessToken: result.accessToken, account: result.account };
+    const accounts = msal.getAllAccounts();
+    return accounts[0] || null;
 }
 
-// ─────────────────────────────────────────────
-// GDAP: Get token scoped to a specific customer
-// tenant using AUDCOMP admin's existing session
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// Call this SYNCHRONOUSLY from a click handler (no await before
+// loginPopup). Returns a Promise so caller can .then()/.catch().
+// ─────────────────────────────────────────────────────────────
+export function signInPopupSync(): Promise<AccountInfo> {
+    if (!msalInstance) {
+        return Promise.reject(new Error('Please wait — Microsoft sign-in is still initializing.'));
+    }
+    return msalInstance
+        .loginPopup({ scopes: GRAPH_SCOPES, prompt: 'select_account' })
+        .then(result => result.account);
+}
+
+// ─────────────────────────────────────────────────────────────
+// GDAP: Get token scoped to a specific customer tenant.
+// Creates a fresh MSAL instance for the customer's authority.
+// ─────────────────────────────────────────────────────────────
 export async function getGdapTokenForTenant(
     customerTenantId: string,
     adminAccount?: AccountInfo | null
 ): Promise<string> {
-    // Use a fresh MSAL instance scoped to the customer's tenant
     const customerMsal = new PublicClientApplication(buildMsalConfig(customerTenantId));
     await customerMsal.initialize();
 
     try {
-        // Try silent first if we have an account
         if (adminAccount) {
             const silent = await customerMsal.acquireTokenSilent({
                 scopes: GRAPH_SCOPES,
@@ -73,8 +83,6 @@ export async function getGdapTokenForTenant(
         // Fall through to interactive
     }
 
-    // Interactive: AUDCOMP admin signs in scoped to this customer tenant
-    // GDAP allows cross-tenant access — admin uses their own credentials
     const result = await customerMsal.loginPopup({
         scopes: GRAPH_SCOPES,
         authority: `https://login.microsoftonline.com/${customerTenantId}`,
@@ -83,9 +91,6 @@ export async function getGdapTokenForTenant(
     return result.accessToken;
 }
 
-// ─────────────────────────────────────────────
-// Sign out
-// ─────────────────────────────────────────────
 export async function signOutMsal(): Promise<void> {
     const msal = await getMsalInstance();
     const accounts = msal.getAllAccounts();
@@ -93,10 +98,5 @@ export async function signOutMsal(): Promise<void> {
         await msal.logoutPopup({ account: accounts[0] });
     }
     msalInstance = null;
-}
-
-export async function getCurrentAccount(): Promise<AccountInfo | null> {
-    const msal = await getMsalInstance();
-    const accounts = msal.getAllAccounts();
-    return accounts[0] || null;
+    msalInitPromise = null;
 }

@@ -11,7 +11,7 @@ import {
     TrendingUp, TrendingDown, Minus, ChevronUp, ChevronDown
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { signInAudcompAdmin, getGdapTokenForTenant, getCurrentAccount } from '@/lib/msal';
+import { preInitMsal, signInPopupSync, getGdapTokenForTenant } from '@/lib/msal';
 import type { AccountInfo } from '@azure/msal-browser';
 
 export default function AMSDashboardPage() {
@@ -22,6 +22,7 @@ export default function AMSDashboardPage() {
     const [syncResult, setSyncResult] = useState<{ synced: number; errors: string[] } | null>(null);
     const [adminAccount, setAdminAccount] = useState<AccountInfo | null>(null);
     const [signingIn, setSigningIn] = useState(false);
+    const [signInError, setSignInError] = useState('');
     const [sortCol, setSortCol] = useState<string>('company_name');
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
     const router = useRouter();
@@ -40,9 +41,10 @@ export default function AMSDashboardPage() {
 
             if (!profileData?.is_admin) { router.push('/admin'); return; }
 
-            // Restore existing MSAL session if any
-            const account = await getCurrentAccount();
-            if (account) setAdminAccount(account);
+            // Pre-initialize MSAL so loginPopup() can be called
+            // synchronously from the button click (avoids popup blocking).
+            const existingAccount = await preInitMsal();
+            if (existingAccount) setAdminAccount(existingAccount);
 
             const { data } = await supabase
                 .from('ams_clients')
@@ -96,14 +98,20 @@ export default function AMSDashboardPage() {
         return 0;
     });
 
-    const handleSignIn = async () => {
+    // ── Sign-in: called synchronously from onClick so the browser
+    // doesn't block the popup as a non-user-gesture invocation.
+    const handleSignIn = () => {
+        if (signingIn) return;
         setSigningIn(true);
-        try {
-            const { account } = await signInAudcompAdmin();
-            setAdminAccount(account);
-        } catch (err: any) {
-            if (!err.message?.includes('user_cancelled')) console.error('Sign-in failed', err);
-        } finally { setSigningIn(false); }
+        setSignInError('');
+        signInPopupSync()
+            .then((account) => { setAdminAccount(account); })
+            .catch((err: any) => {
+                if (!err.message?.includes('user_cancelled')) {
+                    setSignInError(err.message || 'Sign-in failed. Make sure popups are allowed for this site.');
+                }
+            })
+            .finally(() => setSigningIn(false));
     };
 
     const handleSyncAll = async () => {
@@ -163,10 +171,10 @@ export default function AMSDashboardPage() {
     // Sync result banner
     const SyncBanner = syncResult && (
         <div className={`mb-6 flex items-start gap-3 px-5 py-4 rounded-2xl border text-sm font-bold ${syncResult.errors.length === 0
-                ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
-                : syncResult.synced > 0
-                    ? 'bg-amber-50 border-amber-100 text-amber-700'
-                    : 'bg-red-50 border-red-100 text-red-700'
+            ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+            : syncResult.synced > 0
+                ? 'bg-amber-50 border-amber-100 text-amber-700'
+                : 'bg-red-50 border-red-100 text-red-700'
             }`}>
             <div className="flex-1">
                 {syncResult.synced > 0 && <p>✓ Synced {syncResult.synced} client{syncResult.synced !== 1 ? 's' : ''} successfully.</p>}
@@ -193,6 +201,11 @@ export default function AMSDashboardPage() {
                     </div>
                     <div className="flex items-center gap-3">
                         {/* GDAP Admin Sign-In */}
+                        {signInError && (
+                            <div className="text-xs text-red-600 bg-red-50 border border-red-100 px-3 py-2 rounded-xl max-w-xs">
+                                {signInError}
+                            </div>
+                        )}
                         {adminAccount ? (
                             <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 text-emerald-700 px-4 py-2.5 rounded-2xl font-black text-xs">
                                 <ShieldCheck className="h-4 w-4" />
