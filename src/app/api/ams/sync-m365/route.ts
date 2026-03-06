@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// AMS-relevant M365 license SKUs
+// All AMS-relevant M365 license SKUs
 const AMS_LICENSE_SKUS: Record<string, string> = {
     'f30db892-07e9-47e9-837c-80727f46fd3d': 'Microsoft 365 F1',
     '66b55226-6b4f-492c-910c-a3b7a3c9d993': 'Microsoft 365 F3',
@@ -15,6 +15,16 @@ const AMS_LICENSE_SKUS: Record<string, string> = {
     'c7df2760-2c81-4ef7-b578-5b5392b571df': 'Office 365 E5',
 };
 
+// "Basic" = entry-level plans that represent the standard per-seat user baseline.
+// These are the licenses you'd bill against for AMS seat reconciliation.
+const BASIC_LICENSE_SKUS = new Set([
+    'f30db892-07e9-47e9-837c-80727f46fd3d', // Microsoft 365 F1
+    '66b55226-6b4f-492c-910c-a3b7a3c9d993', // Microsoft 365 F3
+    'b05e124f-c7cc-45a0-a6aa-8cf78c946968', // Microsoft 365 Business Basic
+    'f245ecc8-75af-4f8e-b61f-27d8114de5f3', // Microsoft 365 Business Standard
+    '18181a46-0d4e-45cd-891e-60aabd171b4e', // Office 365 E1
+]);
+
 export async function POST(req: NextRequest) {
     try {
         const { clientId, accessToken, authToken } = await req.json();
@@ -23,10 +33,10 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'clientId is required.' }, { status: 400 });
         }
         if (!accessToken) {
-            return NextResponse.json({ error: 'No Microsoft access token. Please click "Connect Microsoft 365" first.' }, { status: 400 });
+            return NextResponse.json({ error: 'No Microsoft access token. Please click "Sign in for GDAP Sync" first.' }, { status: 400 });
         }
 
-        // Step 1: Fetch licensed SKUs from Microsoft Graph using the delegated token
+        // Fetch all subscribed SKUs from Microsoft Graph
         const skuRes = await fetch('https://graph.microsoft.com/v1.0/subscribedSkus', {
             headers: { Authorization: `Bearer ${accessToken}` }
         });
@@ -42,8 +52,9 @@ export async function POST(req: NextRequest) {
 
         const { value: skus } = await skuRes.json();
 
-        // Step 2: Count AMS-relevant assigned licenses
+        // Count licensed users — total (all AMS SKUs) and basic (entry-level only)
         let totalLicensedUsers = 0;
+        let basicLicensedUsers = 0;
         const licenseBreakdown: Record<string, number> = {};
 
         for (const sku of skus) {
@@ -53,25 +64,34 @@ export async function POST(req: NextRequest) {
                 if (count > 0) {
                     licenseBreakdown[skuName] = count;
                     totalLicensedUsers += count;
+                    if (BASIC_LICENSE_SKUS.has(sku.skuId)) {
+                        basicLicensedUsers += count;
+                    }
                 }
             }
         }
 
-        // Step 3: Store snapshot using the user's Supabase session
+        // Store snapshot
         const supabase = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
             authToken ? { global: { headers: { Authorization: `Bearer ${authToken}` } } } : {}
         );
 
-        await supabase.from('ams_user_snapshots').insert({
+        const { error: insertError } = await supabase.from('ams_user_snapshots').insert({
             client_id: clientId,
             snapshot_date: new Date().toISOString().split('T')[0],
             total_licensed_users: totalLicensedUsers,
+            basic_licensed_users: basicLicensedUsers,
             license_breakdown: licenseBreakdown,
         });
 
-        return NextResponse.json({ success: true, totalLicensedUsers, licenseBreakdown });
+        if (insertError) {
+            console.error('Supabase insert error:', insertError);
+            return NextResponse.json({ error: insertError.message }, { status: 500 });
+        }
+
+        return NextResponse.json({ success: true, totalLicensedUsers, basicLicensedUsers, licenseBreakdown });
 
     } catch (err: any) {
         console.error('M365 sync error:', err);

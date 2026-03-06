@@ -19,6 +19,7 @@ export default function AMSDashboardPage() {
     const [clients, setClients] = useState<any[]>([]);
     const [syncing, setSyncing] = useState(false);
     const [syncProgress, setSyncProgress] = useState('');
+    const [syncResult, setSyncResult] = useState<{ synced: number; errors: string[] } | null>(null);
     const [adminAccount, setAdminAccount] = useState<AccountInfo | null>(null);
     const [signingIn, setSigningIn] = useState(false);
     const [sortCol, setSortCol] = useState<string>('company_name');
@@ -45,7 +46,7 @@ export default function AMSDashboardPage() {
 
             const { data } = await supabase
                 .from('ams_clients')
-                .select(`*, ams_user_snapshots(total_licensed_users, snapshot_date, synced_at)`)
+                .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, license_breakdown, snapshot_date, synced_at)`)
                 .order('company_name') as any;
 
             setClients(data || []);
@@ -81,13 +82,13 @@ export default function AMSDashboardPage() {
     const sortedClients = [...clients].sort((a, b) => {
         let av: any, bv: any;
         switch (sortCol) {
-            case 'company_name':   av = a.company_name || ''; bv = b.company_name || ''; break;
+            case 'company_name': av = a.company_name || ''; bv = b.company_name || ''; break;
             case 'agreement_type': av = a.agreement_type || ''; bv = b.agreement_type || ''; break;
-            case 'contact_name':   av = a.contact_name || ''; bv = b.contact_name || ''; break;
+            case 'contact_name': av = a.contact_name || ''; bv = b.contact_name || ''; break;
             case 'monthly_amount': av = parseFloat(a.monthly_amount) || 0; bv = parseFloat(b.monthly_amount) || 0; break;
             case 'users_contracted': av = a.users_contracted || 0; bv = b.users_contracted || 0; break;
             case 'price_per_user': av = parseFloat(a.price_per_user) || 0; bv = parseFloat(b.price_per_user) || 0; break;
-            case 'contract_end':   av = a.contract_end || ''; bv = b.contract_end || ''; break;
+            case 'contract_end': av = a.contract_end || ''; bv = b.contract_end || ''; break;
             default: av = ''; bv = '';
         }
         if (av < bv) return sortDir === 'asc' ? -1 : 1;
@@ -107,28 +108,45 @@ export default function AMSDashboardPage() {
 
     const handleSyncAll = async () => {
         setSyncing(true);
+        setSyncResult(null);
         const { data: { session } } = await supabase.auth.getSession();
         const clientsWithTenant = clients.filter(c => c.m365_tenant_id);
+
+        if (clientsWithTenant.length === 0) {
+            setSyncResult({ synced: 0, errors: ['No clients have a Microsoft 365 Tenant ID configured. Edit a client record to add one.'] });
+            setSyncing(false);
+            return;
+        }
+
+        let synced = 0;
+        const errors: string[] = [];
 
         for (let i = 0; i < clientsWithTenant.length; i++) {
             const client = clientsWithTenant[i];
             setSyncProgress(`Syncing ${i + 1}/${clientsWithTenant.length}: ${client.company_name}`);
             try {
                 const accessToken = await getGdapTokenForTenant(client.m365_tenant_id, adminAccount);
-                await fetch('/api/ams/sync-m365', {
+                const res = await fetch('/api/ams/sync-m365', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ clientId: client.id, accessToken, authToken: session?.access_token })
                 });
-            } catch (err) {
-                console.error(`Failed to sync ${client.company_name}:`, err);
+                const json = await res.json();
+                if (res.ok) {
+                    synced++;
+                } else {
+                    errors.push(`${client.company_name}: ${json.error || 'Unknown error'}`);
+                }
+            } catch (err: any) {
+                errors.push(`${client.company_name}: ${err.message || 'Failed'}`);
             }
         }
 
         setSyncProgress('');
+        setSyncResult({ synced, errors });
         const { data } = await supabase
             .from('ams_clients')
-            .select(`*, ams_user_snapshots(total_licensed_users, snapshot_date, synced_at)`)
+            .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, license_breakdown, snapshot_date, synced_at)`)
             .order('company_name') as any;
         setClients(data || []);
         setSyncing(false);
@@ -142,10 +160,27 @@ export default function AMSDashboardPage() {
         </div>
     );
 
+    // Sync result banner
+    const SyncBanner = syncResult && (
+        <div className={`mb-6 flex items-start gap-3 px-5 py-4 rounded-2xl border text-sm font-bold ${syncResult.errors.length === 0
+                ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                : syncResult.synced > 0
+                    ? 'bg-amber-50 border-amber-100 text-amber-700'
+                    : 'bg-red-50 border-red-100 text-red-700'
+            }`}>
+            <div className="flex-1">
+                {syncResult.synced > 0 && <p>✓ Synced {syncResult.synced} client{syncResult.synced !== 1 ? 's' : ''} successfully.</p>}
+                {syncResult.errors.map((e, i) => <p key={i} className="mt-1 font-medium">⚠ {e}</p>)}
+            </div>
+            <button onClick={() => setSyncResult(null)} className="opacity-50 hover:opacity-100 text-lg leading-none">×</button>
+        </div>
+    );
+
     return (
         <div className="min-h-screen bg-[#F8FAFC]">
             <AdminNavbar />
             <main className="pl-64 pr-10 pt-10 pb-20">
+                {SyncBanner}
 
                 {/* Header */}
                 <header className="flex items-end justify-between mb-10">
@@ -264,9 +299,9 @@ export default function AMSDashboardPage() {
                 <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8">
                     <div className="flex items-center justify-between mb-6">
                         <div>
-                                <h2 className="text-xl font-black text-slate-900">Contract Reconciliation</h2>
-                                <p className="text-xs text-slate-400 font-medium mt-0.5">Contract value · contracted seats · $/seat · actual M365 users · delta</p>
-                            </div>
+                            <h2 className="text-xl font-black text-slate-900">Contract Reconciliation</h2>
+                            <p className="text-xs text-slate-400 font-medium mt-0.5">Contract value · contracted seats · $/seat · actual M365 users · delta</p>
+                        </div>
                         <Link href="/admin/ams/clients/new" className="text-blue-600 font-black text-sm flex items-center gap-1 hover:gap-2 transition-all">
                             Add Client <ArrowRight className="h-4 w-4" />
                         </Link>
@@ -292,7 +327,8 @@ export default function AMSDashboardPage() {
                                             ['Contract Value', 'monthly_amount'],
                                             ['Contracted', 'users_contracted'],
                                             ['$/Seat', 'price_per_user'],
-                                            ['Actual M365', null],
+                                            ['Total M365', null],
+                                            ['Basic Licenses', null],
                                             ['Delta', null],
                                             ['Contract End', 'contract_end'],
                                         ] as [string, string | null][]).map(([label, col]) => (
@@ -315,6 +351,7 @@ export default function AMSDashboardPage() {
                                     {sortedClients.map((client) => {
                                         const snap = client.ams_user_snapshots?.[0];
                                         const actual = snap?.total_licensed_users ?? null;
+                                        const basic = snap?.basic_licensed_users ?? null;
                                         const contracted = client.users_contracted || 0;
                                         const monthly = parseFloat(client.monthly_amount) || 0;
                                         const ppu = parseFloat(client.price_per_user) || 0;
@@ -360,10 +397,16 @@ export default function AMSDashboardPage() {
                                                         ? <span className="font-bold text-slate-600">${effectiveRate.toFixed(2)}</span>
                                                         : <span className="text-slate-300">—</span>}
                                                 </td>
-                                                {/* Actual M365 */}
+                                                {/* Total M365 */}
                                                 <td className="py-4 px-3 tabular-nums text-center">
                                                     {actual !== null
                                                         ? <span className="font-bold text-slate-700">{actual.toLocaleString()}</span>
+                                                        : <span className="text-slate-300 text-xs font-bold">—</span>}
+                                                </td>
+                                                {/* Basic Licenses */}
+                                                <td className="py-4 px-3 tabular-nums text-center">
+                                                    {basic !== null
+                                                        ? <span className="font-bold text-blue-600">{basic.toLocaleString()}</span>
                                                         : <span className="text-slate-300 text-xs font-bold">—</span>}
                                                 </td>
                                                 {/* Delta */}
