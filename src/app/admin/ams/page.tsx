@@ -107,8 +107,10 @@ export default function AMSDashboardPage() {
         signInPopupSync()
             .then((account) => { setAdminAccount(account); })
             .catch((err: any) => {
+                console.error('MSAL sign-in error:', err);
                 if (!err.message?.includes('user_cancelled')) {
-                    setSignInError(err.message || 'Sign-in failed. Make sure popups are allowed for this site.');
+                    const code = err.errorCode ? ` [${err.errorCode}]` : '';
+                    setSignInError((err.errorMessage || err.message || 'Unknown error') + code);
                 }
             })
             .finally(() => setSigningIn(false));
