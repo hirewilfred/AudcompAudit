@@ -15,7 +15,8 @@ export async function GET(
 ) {
     const { clientId } = await params;
 
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/ams/m365-callback`;
+    const baseUrl = req.nextUrl.origin;
+    const redirectUri = `${baseUrl}/api/ams/m365-callback`;
 
     const authUrl = new URL('https://login.microsoftonline.com/common/oauth2/v2.0/authorize');
     authUrl.searchParams.set('client_id', AZURE_CLIENT_ID);
