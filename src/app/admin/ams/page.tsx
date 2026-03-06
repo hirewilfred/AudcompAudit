@@ -8,7 +8,7 @@ import Link from 'next/link';
 import {
     Building2, DollarSign, AlertTriangle, Users,
     RefreshCw, Plus, Loader2, ArrowRight, CheckCircle2, ShieldCheck,
-    TrendingUp, TrendingDown, Minus
+    TrendingUp, TrendingDown, Minus, ChevronUp, ChevronDown
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { signInAudcompAdmin, getGdapTokenForTenant, getCurrentAccount } from '@/lib/msal';
@@ -21,6 +21,8 @@ export default function AMSDashboardPage() {
     const [syncProgress, setSyncProgress] = useState('');
     const [adminAccount, setAdminAccount] = useState<AccountInfo | null>(null);
     const [signingIn, setSigningIn] = useState(false);
+    const [sortCol, setSortCol] = useState<string>('company_name');
+    const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
     const router = useRouter();
     const supabase = createClient();
 
@@ -70,6 +72,28 @@ export default function AMSDashboardPage() {
         const actual = c.ams_user_snapshots[0].total_licensed_users;
         return actual > (c.users_contracted || 0);
     }).length;
+
+    const handleSort = (col: string) => {
+        if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+        else { setSortCol(col); setSortDir('asc'); }
+    };
+
+    const sortedClients = [...clients].sort((a, b) => {
+        let av: any, bv: any;
+        switch (sortCol) {
+            case 'company_name':   av = a.company_name || ''; bv = b.company_name || ''; break;
+            case 'agreement_type': av = a.agreement_type || ''; bv = b.agreement_type || ''; break;
+            case 'contact_name':   av = a.contact_name || ''; bv = b.contact_name || ''; break;
+            case 'monthly_amount': av = parseFloat(a.monthly_amount) || 0; bv = parseFloat(b.monthly_amount) || 0; break;
+            case 'users_contracted': av = a.users_contracted || 0; bv = b.users_contracted || 0; break;
+            case 'price_per_user': av = parseFloat(a.price_per_user) || 0; bv = parseFloat(b.price_per_user) || 0; break;
+            case 'contract_end':   av = a.contract_end || ''; bv = b.contract_end || ''; break;
+            default: av = ''; bv = '';
+        }
+        if (av < bv) return sortDir === 'asc' ? -1 : 1;
+        if (av > bv) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+    });
 
     const handleSignIn = async () => {
         setSigningIn(true);
@@ -261,13 +285,34 @@ export default function AMSDashboardPage() {
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b border-slate-100 bg-slate-50/50">
-                                        {['Company', 'Agreement', 'Contact', 'Contract Value', 'Contracted', '$/Seat', 'Actual M365', 'Delta', 'Contract End'].map(h => (
-                                            <th key={h} className="py-3 px-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">{h}</th>
+                                        {([
+                                            ['Company', 'company_name'],
+                                            ['Agreement', 'agreement_type'],
+                                            ['Contact', 'contact_name'],
+                                            ['Contract Value', 'monthly_amount'],
+                                            ['Contracted', 'users_contracted'],
+                                            ['$/Seat', 'price_per_user'],
+                                            ['Actual M365', null],
+                                            ['Delta', null],
+                                            ['Contract End', 'contract_end'],
+                                        ] as [string, string | null][]).map(([label, col]) => (
+                                            <th key={label}
+                                                onClick={col ? () => handleSort(col) : undefined}
+                                                className={`py-3 px-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap ${col ? 'cursor-pointer hover:text-slate-600 select-none' : ''}`}>
+                                                <span className="inline-flex items-center gap-1">
+                                                    {label}
+                                                    {col && sortCol === col && (
+                                                        sortDir === 'asc'
+                                                            ? <ChevronUp className="h-3 w-3 text-blue-500" />
+                                                            : <ChevronDown className="h-3 w-3 text-blue-500" />
+                                                    )}
+                                                </span>
+                                            </th>
                                         ))}
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {clients.map((client) => {
+                                    {sortedClients.map((client) => {
                                         const snap = client.ams_user_snapshots?.[0];
                                         const actual = snap?.total_licensed_users ?? null;
                                         const contracted = client.users_contracted || 0;
