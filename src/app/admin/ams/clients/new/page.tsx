@@ -34,9 +34,6 @@ export default function NewAMSClientPage() {
         contract_end: '',
         users_contracted: '',
         price_per_user: '',
-        m365_tenant_id: '',
-        m365_client_id: '',
-        m365_client_secret: '',
         notes: ''
     });
     const [saving, setSaving] = useState(false);
@@ -70,9 +67,6 @@ export default function NewAMSClientPage() {
             contract_end: form.contract_end || null,
             users_contracted: parseInt(form.users_contracted) || 0,
             price_per_user: parseFloat(form.price_per_user) || 0,
-            m365_tenant_id: form.m365_tenant_id || null,
-            m365_client_id: form.m365_client_id || null,
-            m365_client_secret: form.m365_client_secret || null,
             notes: form.notes || null,
             status: 'active',
         });
@@ -112,9 +106,6 @@ export default function NewAMSClientPage() {
                     contract_end: row['Contract End'] || row['contract_end'] || null,
                     users_contracted: parseInt(row['Users'] || row['users_contracted'] || row['Licensed Users'] || 0),
                     price_per_user: parseFloat(row['Price Per User'] || row['price_per_user'] || row['PPU'] || 0),
-                    m365_tenant_id: row['Tenant ID'] || row['m365_tenant_id'] || null,
-                    m365_client_id: row['Client ID'] || row['m365_client_id'] || null,
-                    m365_client_secret: row['Client Secret'] || row['m365_client_secret'] || null,
                     notes: row['Notes'] || null,
                     status: 'active',
                 })).filter(r => r.company_name);
@@ -296,23 +287,6 @@ export default function NewAMSClientPage() {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="space-y-4 bg-blue-50/50 rounded-2xl p-5 border border-blue-100">
-                                    <h3 className="text-xs font-black text-slate-500 flex items-center gap-2">
-                                        <Cloud className="h-3.5 w-3.5 text-blue-500" /> Microsoft 365 Connection
-                                    </h3>
-                                    {[
-                                        { label: 'Tenant ID', name: 'm365_tenant_id', placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' },
-                                        { label: 'Client ID', name: 'm365_client_id', placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' },
-                                        { label: 'Client Secret', name: 'm365_client_secret', placeholder: 'your-client-secret-value' },
-                                    ].map(({ label, name, placeholder }) => (
-                                        <div key={name} className="space-y-1.5">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</label>
-                                            <input name={name} type={name === 'm365_client_secret' ? 'password' : 'text'}
-                                                value={(form as any)[name]} onChange={handleChange} placeholder={placeholder}
-                                                className="w-full px-4 py-3 rounded-xl border border-blue-100 bg-white font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all text-sm" />
-                                        </div>
-                                    ))}
-                                </div>
                             </div>
 
                             {/* Notes */}
@@ -361,7 +335,7 @@ export default function NewAMSClientPage() {
                                     'Monthly Amount', 'Billing Cycle',
                                     'Contract Start', 'Contract End',
                                     'Users (or Licensed Users)', 'Price Per User (or PPU)',
-                                    'Tenant ID', 'Client ID', 'Client Secret', 'Notes'
+                                    'Notes'
                                 ].map(col => (
                                     <div key={col} className="flex items-center gap-2 py-1">
                                         <div className="h-1.5 w-1.5 rounded-full bg-blue-400" />

@@ -11,8 +11,6 @@ import {
     TrendingUp, TrendingDown, Minus, ChevronUp, ChevronDown
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { preInitMsal, signInPopupSync, getGdapTokenForTenant } from '@/lib/msal';
-import type { AccountInfo } from '@azure/msal-browser';
 
 export default function AMSDashboardPage() {
     const [loading, setLoading] = useState(true);
@@ -20,9 +18,6 @@ export default function AMSDashboardPage() {
     const [syncing, setSyncing] = useState(false);
     const [syncProgress, setSyncProgress] = useState('');
     const [syncResult, setSyncResult] = useState<{ synced: number; errors: string[] } | null>(null);
-    const [adminAccount, setAdminAccount] = useState<AccountInfo | null>(null);
-    const [signingIn, setSigningIn] = useState(false);
-    const [signInError, setSignInError] = useState('');
     const [sortCol, setSortCol] = useState<string>('company_name');
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
     const router = useRouter();
@@ -41,10 +36,7 @@ export default function AMSDashboardPage() {
 
             if (!profileData?.is_admin) { router.push('/admin'); return; }
 
-            // Pre-initialize MSAL so loginPopup() can be called
-            // synchronously from the button click (avoids popup blocking).
-            const existingAccount = await preInitMsal();
-            if (existingAccount) setAdminAccount(existingAccount);
+            if (!profileData?.is_admin) { router.push('/admin'); return; }
 
             const { data } = await supabase
                 .from('ams_clients')
@@ -98,32 +90,14 @@ export default function AMSDashboardPage() {
         return 0;
     });
 
-    // ── Sign-in: called synchronously from onClick so the browser
-    // doesn't block the popup as a non-user-gesture invocation.
-    const handleSignIn = () => {
-        if (signingIn) return;
-        setSigningIn(true);
-        setSignInError('');
-        signInPopupSync()
-            .then((account) => { setAdminAccount(account); })
-            .catch((err: any) => {
-                console.error('MSAL sign-in error:', err);
-                if (!err.message?.includes('user_cancelled')) {
-                    const code = err.errorCode ? ` [${err.errorCode}]` : '';
-                    setSignInError((err.errorMessage || err.message || 'Unknown error') + code);
-                }
-            })
-            .finally(() => setSigningIn(false));
-    };
-
     const handleSyncAll = async () => {
         setSyncing(true);
         setSyncResult(null);
-        const { data: { session } } = await supabase.auth.getSession();
-        const clientsWithTenant = clients.filter(c => c.m365_tenant_id);
+        
+        const connectedClients = clients.filter(c => c.m365_connected);
 
-        if (clientsWithTenant.length === 0) {
-            setSyncResult({ synced: 0, errors: ['No clients have a Microsoft 365 Tenant ID configured. Edit a client record to add one.'] });
+        if (connectedClients.length === 0) {
+            setSyncResult({ synced: 0, errors: ['No clients have connected their Microsoft 365 accounts yet.'] });
             setSyncing(false);
             return;
         }
@@ -131,15 +105,14 @@ export default function AMSDashboardPage() {
         let synced = 0;
         const errors: string[] = [];
 
-        for (let i = 0; i < clientsWithTenant.length; i++) {
-            const client = clientsWithTenant[i];
-            setSyncProgress(`Syncing ${i + 1}/${clientsWithTenant.length}: ${client.company_name}`);
+        for (let i = 0; i < connectedClients.length; i++) {
+            const client = connectedClients[i];
+            setSyncProgress(`Syncing ${i + 1}/${connectedClients.length}: ${client.company_name}`);
             try {
-                const accessToken = await getGdapTokenForTenant(client.m365_tenant_id, adminAccount);
                 const res = await fetch('/api/ams/sync-m365', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ clientId: client.id, accessToken, authToken: session?.access_token })
+                    body: JSON.stringify({ clientId: client.id })
                 });
                 const json = await res.json();
                 if (res.ok) {
@@ -202,31 +175,7 @@ export default function AMSDashboardPage() {
                         <p className="text-slate-400 font-medium mt-2 text-sm">Annual Managed Services — Client Overview</p>
                     </div>
                     <div className="flex items-center gap-3">
-                        {/* GDAP Admin Sign-In */}
-                        {signInError && (
-                            <div className="text-xs text-red-600 bg-red-50 border border-red-100 px-3 py-2 rounded-xl max-w-xs">
-                                {signInError}
-                            </div>
-                        )}
-                        {adminAccount ? (
-                            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 text-emerald-700 px-4 py-2.5 rounded-2xl font-black text-xs">
-                                <ShieldCheck className="h-4 w-4" />
-                                <span className="max-w-[140px] truncate">{adminAccount.username}</span>
-                            </div>
-                        ) : (
-                            <button onClick={handleSignIn} disabled={signingIn}
-                                className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-2xl font-black text-sm hover:bg-slate-50 transition-all shadow-sm">
-                                {signingIn ? <Loader2 className="h-4 w-4 animate-spin" /> :
-                                    <svg className="h-4 w-4" viewBox="0 0 23 23" fill="none">
-                                        <rect x="1" y="1" width="10" height="10" fill="#F35325" />
-                                        <rect x="12" y="1" width="10" height="10" fill="#81BC06" />
-                                        <rect x="1" y="12" width="10" height="10" fill="#05A6F0" />
-                                        <rect x="12" y="12" width="10" height="10" fill="#FFBA08" />
-                                    </svg>}
-                                {signingIn ? 'Signing in...' : 'Sign in for GDAP Sync'}
-                            </button>
-                        )}
-                        <button onClick={handleSyncAll} disabled={syncing || !adminAccount}
+                        <button onClick={handleSyncAll} disabled={syncing || clients.filter(c => c.m365_connected).length === 0}
                             className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-5 py-3 rounded-2xl font-black text-sm hover:bg-slate-50 transition-all shadow-sm disabled:opacity-40">
                             <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
                             {syncing ? (syncProgress || 'Syncing...') : 'Sync All M365'}

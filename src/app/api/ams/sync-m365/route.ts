@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+const AZURE_CLIENT_ID = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID!;
+const AZURE_CLIENT_SECRET = process.env.AZURE_CLIENT_SECRET!;
+
 // All AMS-relevant M365 license SKUs
 const AMS_LICENSE_SKUS: Record<string, string> = {
     'f30db892-07e9-47e9-837c-80727f46fd3d': 'Microsoft 365 F1',
@@ -16,7 +19,6 @@ const AMS_LICENSE_SKUS: Record<string, string> = {
 };
 
 // "Basic" = entry-level plans that represent the standard per-seat user baseline.
-// These are the licenses you'd bill against for AMS seat reconciliation.
 const BASIC_LICENSE_SKUS = new Set([
     'f30db892-07e9-47e9-837c-80727f46fd3d', // Microsoft 365 F1
     '66b55226-6b4f-492c-910c-a3b7a3c9d993', // Microsoft 365 F3
@@ -25,15 +27,82 @@ const BASIC_LICENSE_SKUS = new Set([
     '18181a46-0d4e-45cd-891e-60aabd171b4e', // Office 365 E1
 ]);
 
+async function refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; newRefreshToken: string; expiresAt: string }> {
+    const res = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            client_id: AZURE_CLIENT_ID,
+            client_secret: AZURE_CLIENT_SECRET,
+            refresh_token: refreshToken,
+            grant_type: 'refresh_token',
+            scope: 'https://graph.microsoft.com/Directory.Read.All https://graph.microsoft.com/Organization.Read.All offline_access',
+        }),
+    });
+
+    if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Token refresh failed: ${errText}`);
+    }
+
+    const data = await res.json();
+    return {
+        accessToken: data.access_token,
+        newRefreshToken: data.refresh_token || refreshToken,
+        expiresAt: new Date(Date.now() + data.expires_in * 1000).toISOString(),
+    };
+}
+
 export async function POST(req: NextRequest) {
     try {
-        const { clientId, accessToken, authToken } = await req.json();
+        const { clientId } = await req.json();
 
         if (!clientId) {
             return NextResponse.json({ error: 'clientId is required.' }, { status: 400 });
         }
-        if (!accessToken) {
-            return NextResponse.json({ error: 'No Microsoft access token. Please click "Sign in for GDAP Sync" first.' }, { status: 400 });
+
+        // Use service role to read tokens (bypasses RLS for server-side read)
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+
+        // Fetch client with stored tokens
+        const { data: client, error: fetchError } = await supabase
+            .from('ams_clients')
+            .select('id, company_name, m365_connected, m365_refresh_token, m365_access_token, m365_token_expires_at')
+            .eq('id', clientId)
+            .single();
+
+        if (fetchError || !client) {
+            return NextResponse.json({ error: 'Client not found.' }, { status: 404 });
+        }
+
+        if (!client.m365_connected || !client.m365_refresh_token) {
+            return NextResponse.json({ error: 'This client has not connected their Microsoft 365 account yet. Go to the client detail page and click "Connect M365".' }, { status: 400 });
+        }
+
+        // Refresh the access token
+        let accessToken = client.m365_access_token;
+        try {
+            const refreshed = await refreshAccessToken(client.m365_refresh_token);
+            accessToken = refreshed.accessToken;
+
+            // Update stored tokens
+            await supabase.from('ams_clients').update({
+                m365_access_token: refreshed.accessToken,
+                m365_refresh_token: refreshed.newRefreshToken,
+                m365_token_expires_at: refreshed.expiresAt,
+            }).eq('id', clientId);
+        } catch (refreshErr: any) {
+            console.error('Token refresh error:', refreshErr);
+            // Mark as disconnected so user knows to reconnect
+            await supabase.from('ams_clients').update({
+                m365_connected: false,
+            }).eq('id', clientId);
+            return NextResponse.json({
+                error: 'Microsoft 365 token expired. Please go to the client detail page and re-connect their account.',
+            }, { status: 401 });
         }
 
         // Fetch all subscribed SKUs from Microsoft Graph
@@ -45,7 +114,7 @@ export async function POST(req: NextRequest) {
             const errText = await skuRes.text();
             console.error('Graph API error:', errText);
             return NextResponse.json(
-                { error: 'Microsoft Graph API rejected the token. Please reconnect your Microsoft 365 account.' },
+                { error: 'Microsoft Graph API error. The token may have been revoked — please reconnect this client.' },
                 { status: 400 }
             );
         }
@@ -72,12 +141,6 @@ export async function POST(req: NextRequest) {
         }
 
         // Store snapshot
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            authToken ? { global: { headers: { Authorization: `Bearer ${authToken}` } } } : {}
-        );
-
         const { error: insertError } = await supabase.from('ams_user_snapshots').insert({
             client_id: clientId,
             snapshot_date: new Date().toISOString().split('T')[0],
@@ -90,6 +153,11 @@ export async function POST(req: NextRequest) {
             console.error('Supabase insert error:', insertError);
             return NextResponse.json({ error: insertError.message }, { status: 500 });
         }
+
+        // Update last synced timestamp on client
+        await supabase.from('ams_clients').update({
+            m365_last_synced_at: new Date().toISOString(),
+        }).eq('id', clientId);
 
         return NextResponse.json({ success: true, totalLicensedUsers, basicLicensedUsers, licenseBreakdown });
 
