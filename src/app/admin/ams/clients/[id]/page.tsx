@@ -19,6 +19,7 @@ export default function ClientDetailPage() {
 
     const [loading, setLoading] = useState(true);
     const [client, setClient] = useState<any>(null);
+    const [fetchError, setFetchError] = useState<string | null>(null);
     const [syncing, setSyncing] = useState(false);
     const [syncResult, setSyncResult] = useState<{ success?: boolean; error?: string } | null>(null);
 
@@ -27,11 +28,16 @@ export default function ClientDetailPage() {
     const m365Error = searchParams.get('m365_error');
 
     const fetchClient = async () => {
-        const { data } = await (supabase
+        const { data, error } = await (supabase
             .from('ams_clients') as any)
             .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, license_breakdown, snapshot_date, synced_at)`)
             .eq('id', id)
             .single();
+
+        if (error) {
+            console.error("Supabase error fetching client:", error);
+            setFetchError(error.message);
+        }
 
         setClient(data);
         setLoading(false);
@@ -93,9 +99,20 @@ export default function ClientDetailPage() {
     );
 
     if (!client) return (
-        <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50">
-            <h1 className="text-2xl font-black text-slate-800">Client Not Found</h1>
-            <Link href="/admin/ams/clients" className="mt-4 text-blue-600 hover:underline">Return to Clients</Link>
+        <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6 text-center">
+            <h1 className="text-2xl font-black text-slate-800 mb-2">Client Not Found</h1>
+            {fetchError && (
+                <div className="bg-red-50 text-red-700 border border-red-200 p-4 rounded-xl max-w-lg mb-4 text-sm font-medium">
+                    <p className="font-bold mb-1">Database Error:</p>
+                    <code className="text-xs bg-red-100 p-1 rounded">{fetchError}</code>
+                    {fetchError.includes('basic_licensed_users') && (
+                        <p className="mt-3 text-xs bg-white/50 p-2 rounded border border-red-100/50 text-left">
+                            <strong>Note:</strong> It looks like the M365 migration script hasn't been run on your Supabase database yet. Please run the SQL from the <b>add_m365_columns.sql</b> file in your Supabase SQL editor to add the missing columns.
+                        </p>
+                    )}
+                </div>
+            )}
+            <Link href="/admin/ams/clients" className="mt-4 text-blue-600 font-bold hover:underline">Return to Clients</Link>
         </div>
     );
 
