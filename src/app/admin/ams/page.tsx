@@ -294,6 +294,7 @@ export default function AMSDashboardPage() {
                                             ['Total M365', null],
                                             ['Basic Licenses', null],
                                             ['Delta', null],
+                                            ['M365 Status', 'm365_connected'],
                                             ['Contract End', 'contract_end'],
                                         ] as [string, string | null][]).map(([label, col]) => (
                                             <th key={label}
@@ -388,6 +389,18 @@ export default function AMSDashboardPage() {
                                                     ) : (
                                                         <span className="flex items-center gap-1 text-emerald-600 font-black text-xs">
                                                             <CheckCircle2 className="h-3.5 w-3.5" />0
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                {/* M365 Status */}
+                                                <td className="py-4 px-3">
+                                                    {client.m365_connected ? (
+                                                        <span className="bg-blue-50 text-blue-600 border border-blue-100 text-[10px] font-black px-2.5 py-1 rounded-full uppercase flex items-center gap-1 w-max">
+                                                            <CheckCircle2 className="h-3 w-3 shrink-0" /> <span className="hidden sm:inline">Connected</span>
+                                                        </span>
+                                                    ) : (
+                                                        <span className="bg-slate-100 text-slate-400 border border-slate-200 text-[10px] font-black px-2.5 py-1 rounded-full uppercase whitespace-nowrap w-max">
+                                                            Not Connected
                                                         </span>
                                                     )}
                                                 </td>
