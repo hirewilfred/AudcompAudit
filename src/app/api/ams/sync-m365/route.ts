@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 
 const AZURE_CLIENT_ID = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID!;
 const AZURE_CLIENT_SECRET = process.env.AZURE_CLIENT_SECRET!;
@@ -61,15 +61,12 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'clientId is required.' }, { status: 400 });
         }
 
-        // Use service role to read tokens (bypasses RLS for server-side read)
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
+        // Use server client to include auth cookies for RLS
+        const supabase = await createClient();
 
         // Fetch client with stored tokens
-        const { data: client, error: fetchError } = await supabase
-            .from('ams_clients')
+        const { data: client, error: fetchError } = await (supabase
+            .from('ams_clients') as any)
             .select('id, company_name, m365_connected, m365_refresh_token, m365_access_token, m365_token_expires_at')
             .eq('id', clientId)
             .single();
@@ -89,7 +86,7 @@ export async function POST(req: NextRequest) {
             accessToken = refreshed.accessToken;
 
             // Update stored tokens
-            await supabase.from('ams_clients').update({
+            await (supabase.from('ams_clients') as any).update({
                 m365_access_token: refreshed.accessToken,
                 m365_refresh_token: refreshed.newRefreshToken,
                 m365_token_expires_at: refreshed.expiresAt,
@@ -97,7 +94,7 @@ export async function POST(req: NextRequest) {
         } catch (refreshErr: any) {
             console.error('Token refresh error:', refreshErr);
             // Mark as disconnected so user knows to reconnect
-            await supabase.from('ams_clients').update({
+            await (supabase.from('ams_clients') as any).update({
                 m365_connected: false,
             }).eq('id', clientId);
             return NextResponse.json({
@@ -141,7 +138,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Store snapshot
-        const { error: insertError } = await supabase.from('ams_user_snapshots').insert({
+        const { error: insertError } = await (supabase.from('ams_user_snapshots') as any).insert({
             client_id: clientId,
             snapshot_date: new Date().toISOString().split('T')[0],
             total_licensed_users: totalLicensedUsers,
@@ -155,7 +152,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Update last synced timestamp on client
-        await supabase.from('ams_clients').update({
+        await (supabase.from('ams_clients') as any).update({
             m365_last_synced_at: new Date().toISOString(),
         }).eq('id', clientId);
 
