@@ -1059,6 +1059,30 @@ export default function DashboardPage() {
                             </div>
                         </section>
 
+                        {/* Redo AI Adoption Advisor Card */}
+                        <section className="bg-white rounded-[48px] p-8 shadow-sm border border-slate-100/50 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none group-hover:scale-110 group-hover:rotate-12 transition-transform duration-700">
+                                <BrainCircuit className="h-32 w-32" />
+                            </div>
+                            <div className="relative z-10 text-center">
+                                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-[24px] bg-blue-600/10 text-blue-600 shadow-inner">
+                                    <BrainCircuit className="h-8 w-8" />
+                                </div>
+                                <h3 className="text-xl font-black text-slate-900 mb-3 tracking-tight">Redo AI Advisor</h3>
+                                <p className="text-sm font-medium text-slate-400 leading-relaxed mb-8 px-4">
+                                    Need to update your requirements or re-evaluate your business processes? 
+                                    Relaunch the advisor to generate a fresh roadmap.
+                                </p>
+                                <Link
+                                    href="/ai-advisor"
+                                    className="group flex w-full items-center justify-center gap-3 rounded-[24px] bg-slate-50 border border-slate-100 px-6 py-5 text-sm font-black text-slate-900 transition-all hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:scale-[1.02] shadow-sm hover:shadow-xl hover:shadow-blue-600/20 active:scale-95"
+                                >
+                                    Relaunch Advisor
+                                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                                </Link>
+                                <p className="mt-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">Resets Current Progress</p>
+                            </div>
+                        </section>
 
                     </div>
                 </div>
