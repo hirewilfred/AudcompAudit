@@ -1059,28 +1059,7 @@ export default function DashboardPage() {
                             </div>
                         </section>
 
-                        {/* AI Adoption Advisor Card */}
-                        <section className="bg-white rounded-[48px] p-8 shadow-sm border border-slate-100/50 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-8 opacity-[0.04]">
-                                <BrainCircuit className="h-28 w-28" />
-                            </div>
-                            <div className="relative z-10">
-                                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600/10">
-                                    <BrainCircuit className="h-6 w-6 text-blue-600" />
-                                </div>
-                                <h3 className="text-xl font-black text-slate-900 mb-2 tracking-tight">AI Adoption Advisor</h3>
-                                <p className="text-sm font-medium text-slate-400 leading-relaxed mb-6">
-                                    Discover which AI tools fit your Microsoft licensing, business processes, and budget — with a custom roadmap and ROI projection.
-                                </p>
-                                <Link
-                                    href="/ai-advisor"
-                                    className="group flex w-full items-center justify-center gap-2 rounded-[20px] bg-blue-600 px-6 py-4 text-sm font-black text-white transition-all hover:bg-blue-700 hover:scale-[1.02] shadow-lg shadow-blue-600/20"
-                                >
-                                    Launch Advisor
-                                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                                </Link>
-                            </div>
-                        </section>
+
                     </div>
                 </div>
             </main>

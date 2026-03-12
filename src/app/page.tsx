@@ -57,13 +57,7 @@ export default function Home() {
               Start Free AI Audit
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>
-            <Link
-              href="/ai-advisor"
-              className="group flex items-center justify-center gap-2 rounded-2xl border border-blue-500/30 bg-blue-500/10 px-8 py-5 text-lg font-black text-blue-400 transition-all hover:bg-blue-500/20 hover:scale-105"
-            >
-              <BrainCircuit className="h-5 w-5" />
-              AI Adoption Advisor
-            </Link>
+
             <Link
               href="/how-it-works"
               className="rounded-xl border border-white/10 bg-white/5 px-8 py-4 text-lg font-semibold backdrop-blur-sm transition-all hover:bg-white/10"
@@ -92,11 +86,10 @@ export default function Home() {
               desc: "No corporate jargon. Practical, actionable advice tailored for small to mid-sized businesses."
             },
             {
-              icon: BrainCircuit,
-              title: "AI Adoption Advisor",
-              desc: "Find the right AI tools, costs, and roadmap based on your Microsoft licensing and business processes.",
-              href: "/ai-advisor"
-            },
+              icon: TrendingUp,
+              title: "Instant ROI Analysis",
+              desc: "Get an immediate breakdown of potential savings and ROI for every proposed AI implementation."
+            }
           ].map((feature, i) => {
             const card = (
               <motion.div
