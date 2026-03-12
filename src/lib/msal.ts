@@ -91,6 +91,20 @@ export async function getGdapTokenForTenant(
     return result.accessToken;
 }
 
+// ─────────────────────────────────────────────────────────────
+// Advisor-specific login: only requests User.Read so no admin
+// consent is required. Returns the access token for Graph API.
+// Call SYNCHRONOUSLY from a click handler.
+// ─────────────────────────────────────────────────────────────
+export function loginForAdvisorSync(): Promise<{ account: AccountInfo; accessToken: string }> {
+    if (!msalInstance) {
+        return Promise.reject(new Error('Please wait — Microsoft sign-in is still initializing.'));
+    }
+    return msalInstance
+        .loginPopup({ scopes: ['User.Read'] })
+        .then(result => ({ account: result.account, accessToken: result.accessToken }));
+}
+
 export async function signOutMsal(): Promise<void> {
     const msal = await getMsalInstance();
     const accounts = msal.getAllAccounts();

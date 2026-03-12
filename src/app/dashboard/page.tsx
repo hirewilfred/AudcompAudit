@@ -47,7 +47,8 @@ import {
     Linkedin,
     BookOpen,
     Bot,
-    Users
+    Users,
+    BrainCircuit
 } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -431,6 +432,58 @@ export default function DashboardPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Expert Review Summary Card */}
+                <motion.section 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="mb-12 bg-white rounded-[48px] p-8 md:p-12 shadow-sm border border-slate-100/50 flex flex-col lg:flex-row items-center justify-between gap-10 relative overflow-hidden"
+                >
+                    <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none">
+                        <ShieldCheck className="h-64 w-64" />
+                    </div>
+                    
+                    <div className="relative z-10 flex-1">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="flex items-center gap-2 bg-blue-600 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-blue-600/20">
+                                <Activity className="h-3 w-3" />
+                                Action Required
+                            </div>
+                            <div className="bg-slate-100 text-slate-500 text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">
+                                Expert Review Preview
+                            </div>
+                        </div>
+                        
+                        <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-4 tracking-tight">Audit Results Ready for Expert Review</h2>
+                        <p className="text-lg font-medium text-slate-500 max-w-2xl leading-relaxed mb-8">
+                            Your <span className="text-blue-600 font-black">{displayData.overall_score}%</span> readiness score is prepared for deep-dive validation. Book your session to review these metrics and capture the identified <span className="text-slate-900 font-black">${Math.round(annualSavings).toLocaleString()}</span> in annual savings.
+                        </p>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                            {displayData.category_scores.map((cat: any, i: number) => (
+                                <div key={i} className="bg-slate-50/50 rounded-3xl p-4 border border-slate-100 hover:bg-white hover:shadow-md transition-all duration-300">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{cat.category}</p>
+                                    <p className="text-2xl font-black text-slate-900">{cat.score}%</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="relative z-10 w-full lg:w-auto">
+                        <button
+                            onClick={() => handleBooking()}
+                            className="w-full lg:w-auto bg-slate-900 text-white font-black py-6 px-12 rounded-[32px] shadow-2xl shadow-slate-900/20 hover:bg-blue-600 focus:ring-4 focus:ring-blue-100 transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center justify-center gap-1 group"
+                        >
+                            <div className="flex items-center gap-3">
+                                <Zap className="h-6 w-6 text-yellow-400 fill-yellow-400 group-hover:scale-110 transition-transform" />
+                                <span className="text-xl">Capture These Savings</span>
+                                <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-2" />
+                            </div>
+                            <span className="text-[10px] opacity-60 font-black uppercase tracking-widest">Instant Strategic session</span>
+                        </button>
+                    </div>
+                </motion.section>
 
                 {/* Bento Grid */}
                 <div className="grid grid-cols-12 gap-8">
@@ -1003,13 +1056,29 @@ export default function DashboardPage() {
                                     </p>
                                 </motion.div>
 
-                                <button
-                                    onClick={() => handleBooking()}
-                                    className="w-full bg-white text-slate-900 font-black py-5 rounded-[24px] transition-all hover:bg-blue-50 flex items-center justify-center gap-3 shadow-xl active:scale-95 group"
+                            </div>
+                        </section>
+
+                        {/* AI Adoption Advisor Card */}
+                        <section className="bg-white rounded-[48px] p-8 shadow-sm border border-slate-100/50 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-8 opacity-[0.04]">
+                                <BrainCircuit className="h-28 w-28" />
+                            </div>
+                            <div className="relative z-10">
+                                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600/10">
+                                    <BrainCircuit className="h-6 w-6 text-blue-600" />
+                                </div>
+                                <h3 className="text-xl font-black text-slate-900 mb-2 tracking-tight">AI Adoption Advisor</h3>
+                                <p className="text-sm font-medium text-slate-400 leading-relaxed mb-6">
+                                    Discover which AI tools fit your Microsoft licensing, business processes, and budget — with a custom roadmap and ROI projection.
+                                </p>
+                                <Link
+                                    href="/ai-advisor"
+                                    className="group flex w-full items-center justify-center gap-2 rounded-[20px] bg-blue-600 px-6 py-4 text-sm font-black text-white transition-all hover:bg-blue-700 hover:scale-[1.02] shadow-lg shadow-blue-600/20"
                                 >
-                                    Capture These Savings
-                                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-                                </button>
+                                    Launch Advisor
+                                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                                </Link>
                             </div>
                         </section>
                     </div>

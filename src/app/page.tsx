@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Shield, BarChart3, Zap, ArrowRight, BrainCircuit, Users, Clock, TrendingUp } from 'lucide-react';
+import { Shield, BarChart3, Zap, ArrowRight, BrainCircuit, Users, Clock, TrendingUp, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Home() {
@@ -58,6 +58,13 @@ export default function Home() {
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>
             <Link
+              href="/ai-advisor"
+              className="group flex items-center justify-center gap-2 rounded-2xl border border-blue-500/30 bg-blue-500/10 px-8 py-5 text-lg font-black text-blue-400 transition-all hover:bg-blue-500/20 hover:scale-105"
+            >
+              <BrainCircuit className="h-5 w-5" />
+              AI Adoption Advisor
+            </Link>
+            <Link
               href="/how-it-works"
               className="rounded-xl border border-white/10 bg-white/5 px-8 py-4 text-lg font-semibold backdrop-blur-sm transition-all hover:bg-white/10"
             >
@@ -67,7 +74,7 @@ export default function Home() {
         </motion.div>
 
         {/* Feature Grid for SMBs */}
-        <div className="mt-32 grid gap-8 sm:grid-cols-3">
+        <div className="mt-32 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {[
             {
               icon: Clock,
@@ -84,21 +91,37 @@ export default function Home() {
               title: "SMB Focused",
               desc: "No corporate jargon. Practical, actionable advice tailored for small to mid-sized businesses."
             },
-          ].map((feature, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}
-              className="glass rounded-2xl p-8 border border-white/5 bg-slate-900/40 hover:border-blue-500/30 transition-all group"
-            >
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600/10 group-hover:bg-blue-600/20 transition-colors">
-                <feature.icon className="h-6 w-6 text-blue-500" />
-              </div>
-              <h3 className="mb-2 text-xl font-bold">{feature.title}</h3>
-              <p className="text-slate-400">{feature.desc}</p>
-            </motion.div>
-          ))}
+            {
+              icon: BrainCircuit,
+              title: "AI Adoption Advisor",
+              desc: "Find the right AI tools, costs, and roadmap based on your Microsoft licensing and business processes.",
+              href: "/ai-advisor"
+            },
+          ].map((feature, i) => {
+            const card = (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}
+                className={`glass rounded-2xl p-8 border border-white/5 bg-slate-900/40 hover:border-blue-500/30 transition-all group ${'href' in feature ? 'cursor-pointer hover:bg-blue-600/5' : ''}`}
+              >
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600/10 group-hover:bg-blue-600/20 transition-colors">
+                  <feature.icon className="h-6 w-6 text-blue-500" />
+                </div>
+                <h3 className="mb-2 text-xl font-bold">{feature.title}</h3>
+                <p className="text-slate-400">{feature.desc}</p>
+                {'href' in feature && (
+                  <div className="mt-4 flex items-center gap-1 text-sm font-bold text-blue-400">
+                    Try it free <ArrowRight className="h-3.5 w-3.5" />
+                  </div>
+                )}
+              </motion.div>
+            );
+            return 'href' in feature ? (
+              <Link key={i} href={(feature as any).href}>{card}</Link>
+            ) : card;
+          })}
         </div>
       </main>
 
