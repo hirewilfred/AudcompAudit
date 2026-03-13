@@ -34,7 +34,8 @@ export default function NewAMSClientPage() {
         contract_end: '',
         users_contracted: '',
         price_per_user: '',
-        notes: ''
+        notes: '',
+        m365_tenant_id: '',
     });
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -68,6 +69,7 @@ export default function NewAMSClientPage() {
             users_contracted: parseInt(form.users_contracted) || 0,
             price_per_user: parseFloat(form.price_per_user) || 0,
             notes: form.notes || null,
+            m365_tenant_id: form.m365_tenant_id || null,
             status: 'active',
         });
 
@@ -286,6 +288,12 @@ export default function NewAMSClientPage() {
                                                 className="w-full pl-10 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all" />
                                         </div>
                                     </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">M365 Tenant ID <span className="font-medium normal-case text-slate-300">(optional)</span></label>
+                                    <input name="m365_tenant_id" type="text" value={form.m365_tenant_id} onChange={handleChange}
+                                        placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                                        className="w-full px-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-mono text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all" />
                                 </div>
                             </div>
 

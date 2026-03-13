@@ -30,8 +30,9 @@ export default function ClientDetailPage() {
     const fetchClient = async () => {
         const { data, error } = await (supabase
             .from('ams_clients') as any)
-            .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, license_breakdown, snapshot_date, synced_at)`)
+            .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, license_breakdown, snapshot_date)`)
             .eq('id', id)
+            .order('snapshot_date', { referencedTable: 'ams_user_snapshots', ascending: false })
             .single();
 
         if (error) {
@@ -216,23 +217,23 @@ export default function ClientDetailPage() {
                                 )}
                             </div>
 
+                            {/* Tenant ID — always visible so it can be verified */}
+                            {client.m365_tenant_id && (
+                                <div className="flex items-center gap-2 mb-4 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                    <span className="text-xs text-slate-400 font-bold shrink-0">Tenant ID:</span>
+                                    <code className="text-xs font-mono text-slate-600 select-all truncate">
+                                        {client.m365_tenant_id}
+                                    </code>
+                                </div>
+                            )}
+
                             {client.m365_connected ? (
                                 <div>
                                     <p className="text-sm text-slate-600 font-medium mb-4">
                                         Microsoft 365 is connected. The background token is managed safely and allows for on-demand syncing without requiring sign-ins.
                                     </p>
-                                    <div className="space-y-2 mb-6">
-                                        <div className="text-xs text-slate-400 font-medium">
-                                            Connected on: {client.m365_connected_at ? new Date(client.m365_connected_at).toLocaleString() : 'Unknown'}
-                                        </div>
-                                        {client.m365_tenant_id && (
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs text-slate-400 font-medium">Tenant ID:</span>
-                                                <code className="text-xs font-mono bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-lg text-slate-600 select-all">
-                                                    {client.m365_tenant_id}
-                                                </code>
-                                            </div>
-                                        )}
+                                    <div className="text-xs text-slate-400 font-medium mb-6">
+                                        Connected on: {client.m365_connected_at ? new Date(client.m365_connected_at).toLocaleString() : 'Unknown'}
                                     </div>
                                     <button onClick={handleDisconnectM365}
                                         className="w-full text-center text-xs font-bold text-slate-400 hover:text-red-500 transition-colors">
@@ -242,7 +243,7 @@ export default function ClientDetailPage() {
                             ) : (
                                 <div>
                                     <p className="text-sm text-slate-600 font-medium mb-6">
-                                        Connect to Microsoft 365 to automatically track Office licenses. 
+                                        Connect to Microsoft 365 to automatically track Office licenses.
                                         You only need to do this once. Click below, and sign in with the client's <span className="text-slate-900 font-bold">Global Admin</span> account.
                                     </p>
                                     <button onClick={handleConnectM365}

@@ -8,7 +8,7 @@ import Link from 'next/link';
 import {
     ArrowLeft, Building2, Users, DollarSign,
     Loader2, CheckCircle2, AlertCircle,
-    Trash2, User, Mail, Calendar, FileText
+    Trash2, User, Mail, Calendar, FileText, Cloud
 } from 'lucide-react';
 
 const AGREEMENT_TYPES = [
@@ -41,7 +41,8 @@ export default function EditAMSClientPage() {
         contract_end: '',
         users_contracted: '',
         price_per_user: '',
-        notes: ''
+        notes: '',
+        m365_tenant_id: '',
     });
 
     const router = useRouter();
@@ -66,7 +67,8 @@ export default function EditAMSClientPage() {
                 contract_end: data.contract_end || '',
                 users_contracted: String(data.users_contracted ?? ''),
                 price_per_user: String(data.price_per_user ?? ''),
-                notes: data.notes || ''
+                notes: data.notes || '',
+                m365_tenant_id: data.m365_tenant_id || '',
             });
             setLoading(false);
         }
@@ -96,6 +98,7 @@ export default function EditAMSClientPage() {
                 users_contracted: parseInt(form.users_contracted) || 0,
                 price_per_user: parseFloat(form.price_per_user) || 0,
                 notes: form.notes || null,
+                m365_tenant_id: form.m365_tenant_id || null,
             })
             .eq('id', clientId);
 
@@ -265,6 +268,20 @@ export default function EditAMSClientPage() {
                                                 className="w-full pl-10 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all" />
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* Microsoft 365 */}
+                            <div className="space-y-4">
+                                <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                                    <Cloud className="h-4 w-4 text-blue-600" /> Microsoft 365 <span className="text-slate-300 font-medium normal-case">(optional)</span>
+                                </h2>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">Tenant ID</label>
+                                    <p className="text-xs text-slate-400 font-medium">The client's Azure AD Tenant ID (GUID). This is auto-populated when M365 is connected via OAuth, but can be set manually here for testing.</p>
+                                    <input name="m365_tenant_id" type="text" value={form.m365_tenant_id} onChange={handleChange}
+                                        placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                                        className="w-full px-4 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 font-mono text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all" />
                                 </div>
                             </div>
 

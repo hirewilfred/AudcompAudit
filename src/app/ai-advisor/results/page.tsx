@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -37,7 +38,7 @@ const PRIORITY_COLORS: Record<string, string> = {
     low: 'bg-slate-50 text-slate-500 border border-slate-100',
 };
 
-export default function AdvisorResultsPage() {
+function AdvisorResultsContent() {
     const [responses, setResponses] = useState<AdvisorResponses | null>(null);
     const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
     const [roadmap, setRoadmap] = useState<RoadmapPhase[]>([]);
@@ -467,5 +468,17 @@ export default function AdvisorResultsPage() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function AdvisorResultsPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center bg-[#F4F7FE]">
+                <Loader2 className="h-10 w-10 text-blue-600 animate-spin" />
+            </div>
+        }>
+            <AdvisorResultsContent />
+        </Suspense>
     );
 }
