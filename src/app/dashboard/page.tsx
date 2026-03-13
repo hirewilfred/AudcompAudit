@@ -518,7 +518,6 @@ export default function DashboardPage() {
                             ))}
                         </div>
                     </div>
-
                     <div className="relative z-10 w-full lg:w-auto flex flex-col gap-4">
                         <button
                             onClick={() => handleBooking()}
@@ -531,14 +530,6 @@ export default function DashboardPage() {
                             </div>
                             <span className="text-[10px] opacity-60 font-black uppercase tracking-widest">Instant Strategic session</span>
                         </button>
-
-                        <Link 
-                            href="/ai-advisor/results"
-                            className="w-full lg:w-auto bg-white border-2 border-slate-100 text-slate-900 font-black py-5 px-12 rounded-[32px] shadow-sm hover:border-purple-200 hover:text-purple-600 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 group"
-                        >
-                            <BrainCircuit className="h-6 w-6 text-purple-600 group-hover:scale-110 transition-transform" />
-                            <span className="text-lg">View Strategic AI Roadmap</span>
-                        </Link>
                     </div>
                 </motion.section>
 
@@ -1116,28 +1107,38 @@ export default function DashboardPage() {
                             </div>
                         </section>
 
-                        {/* Redo AI Adoption Advisor Card */}
+                        {/* AI Strategic Advisor Card */}
                         <section className="bg-white rounded-[48px] p-8 shadow-sm border border-slate-100/50 relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none group-hover:scale-110 group-hover:rotate-12 transition-transform duration-700">
                                 <BrainCircuit className="h-32 w-32" />
                             </div>
-                            <div className="relative z-10 text-center">
-                                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-[24px] bg-blue-600/10 text-blue-600 shadow-inner">
-                                    <BrainCircuit className="h-8 w-8" />
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-600/10 text-purple-600 shadow-inner">
+                                        <BrainCircuit className="h-6 w-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-black text-slate-900 tracking-tight leading-none">AI Strategic Advisor</h3>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">Custom Roadmap Ready</p>
+                                    </div>
                                 </div>
-                                <h3 className="text-xl font-black text-slate-900 mb-3 tracking-tight">Redo AI Advisor</h3>
-                                <p className="text-sm font-medium text-slate-400 leading-relaxed mb-8 px-4">
-                                    Need to update your requirements or re-evaluate your business processes? 
-                                    Relaunch the advisor to generate a fresh roadmap.
+                                <p className="text-xs font-bold text-slate-500 leading-relaxed mb-8">
+                                    Your business requirements have been analyzed. You can view your current roadmap or re-run the assessment.
                                 </p>
-                                <Link
-                                    href="/ai-advisor"
-                                    className="group flex w-full items-center justify-center gap-3 rounded-[24px] bg-slate-50 border border-slate-100 px-6 py-5 text-sm font-black text-slate-900 transition-all hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:scale-[1.02] shadow-sm hover:shadow-xl hover:shadow-blue-600/20 active:scale-95"
-                                >
-                                    Relaunch Advisor
-                                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-                                </Link>
-                                <p className="mt-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">Resets Current Progress</p>
+                                <div className="flex flex-col gap-3">
+                                    <Link
+                                        href="/ai-advisor/results"
+                                        className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-purple-600 px-6 py-4 text-sm font-black text-white transition-all hover:bg-purple-700 hover:scale-[1.02] shadow-lg shadow-purple-600/20 active:scale-95"
+                                    >
+                                        View Strategy Results
+                                    </Link>
+                                    <Link
+                                        href="/ai-advisor"
+                                        className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-50 border border-slate-100 px-6 py-4 text-xs font-black text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900 active:scale-95"
+                                    >
+                                        Relaunch Advisor
+                                    </Link>
+                                </div>
                             </div>
                         </section>
 

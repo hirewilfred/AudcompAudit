@@ -75,13 +75,26 @@ function AdvisorResultsContent() {
             let loadedNarrative = '';
 
             // If we have a userId, we are in admin mode or loading a saved report
+            const searchOrg = searchParams.get('search');
             const userIdToLoad = adminUserId || session.user.id;
 
             try {
                 // Try to fetch from DB first
-                const dbRes = await fetch(`/api/ai-advisor/save?userId=${userIdToLoad}`);
-                if (dbRes.ok) {
-                    const dbData = await dbRes.json();
+                // Try to fetch from DB first
+                let query = supabase.from('ai_advisor_reports').select('*') as any;
+                
+                if (adminUserId) {
+                    query = query.eq('user_id', adminUserId);
+                } else if (searchOrg) {
+                    // Search by organization name (case-insensitive-ish or exact)
+                    query = query.eq('organization', searchOrg);
+                } else {
+                    query = query.eq('user_id', session.user.id);
+                }
+
+                const { data: dbData } = await query.maybeSingle();
+
+                if (dbData) {
                     parsed = dbData.responses;
                     loadedNarrative = dbData.narrative;
                     setNarrative(loadedNarrative);
@@ -92,7 +105,7 @@ function AdvisorResultsContent() {
                     const defaults = generateRoiDefaults(parsed!);
                     setRoiDefaults(defaults);
                     
-                    // Use saved ROI parameters if they exist (from new table), else use engine defaults
+                    // Use saved ROI parameters if they exist
                     setNumUsers(dbData.roi_parameters?.numUsers ?? defaults.numUsers);
                     setHourlyRate(dbData.roi_parameters?.hourlyRate ?? defaults.hourlyRate);
                     setTimeSaved(dbData.roi_parameters?.timeSaved ?? defaults.timeSavedPerMonth);

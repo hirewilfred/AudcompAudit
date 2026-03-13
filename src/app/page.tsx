@@ -36,7 +36,7 @@ export default function Home() {
         >
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/5 px-4 py-1.5 text-sm font-medium text-blue-400 backdrop-blur-xl">
             <TrendingUp className="h-4 w-4" />
-            Empowering SMBs with Smarter AI Solutions
+            Empowering Organizations with Smarter AI Solutions
           </div>
 
           <h1 className="mb-8 text-5xl font-bold tracking-tight sm:text-7xl">
@@ -67,7 +67,7 @@ export default function Home() {
           </div>
         </motion.div>
 
-        {/* Feature Grid for SMBs */}
+        {/* Feature Grid */}
         <div className="mt-32 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {[
             {
@@ -82,8 +82,8 @@ export default function Home() {
             },
             {
               icon: Users,
-              title: "SMB Focused",
-              desc: "No corporate jargon. Practical, actionable advice tailored for small to mid-sized businesses."
+              title: "Business Focused",
+              desc: "No corporate jargon. Practical, actionable advice tailored for small to mid-sized organizations."
             },
             {
               icon: TrendingUp,
@@ -119,7 +119,7 @@ export default function Home() {
       </main>
 
       <footer className="mt-20 border-t border-white/5 py-12 text-center text-sm text-slate-500 bg-black/20">
-        © 2026 AUDCOMP Information Technology Solutions. Supporting SMB Excellence.
+        © 2026 AUDCOMP Information Technology Solutions. Supporting Business Excellence.
       </footer>
     </div>
   );
