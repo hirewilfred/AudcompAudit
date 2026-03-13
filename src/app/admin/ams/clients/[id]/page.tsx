@@ -30,7 +30,7 @@ export default function ClientDetailPage() {
     const fetchClient = async () => {
         const { data, error } = await (supabase
             .from('ams_clients') as any)
-            .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, license_breakdown, snapshot_date)`)
+            .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, premium_licensed_users, license_breakdown, snapshot_date)`)
             .eq('id', id)
             .order('snapshot_date', { referencedTable: 'ams_user_snapshots', ascending: false })
             .single();
@@ -120,6 +120,7 @@ export default function ClientDetailPage() {
     const snap = client.ams_user_snapshots?.[0];
     const actual = snap?.total_licensed_users ?? null;
     const basic = snap?.basic_licensed_users ?? null;
+    const premium = snap?.premium_licensed_users ?? null;
     const contracted = client.users_contracted || 0;
     const monthly = parseFloat(client.monthly_amount) || 0;
     const ppu = parseFloat(client.price_per_user) || 0;
@@ -304,14 +305,20 @@ export default function ClientDetailPage() {
                                 </div>
                             ) : (
                                 <div>
-                                    <div className="grid grid-cols-3 gap-4 mb-8">
+                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                                         <div className="p-5 rounded-2xl border border-slate-100 bg-slate-50">
                                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Contracted Baseline</p>
                                             <p className="text-3xl font-black text-slate-800 tabular-nums">{contracted}</p>
                                         </div>
                                         <div className="p-5 rounded-2xl border border-slate-100 bg-slate-50">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Basic M365 Licenses</p>
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Basic Licenses</p>
                                             <p className="text-3xl font-black text-blue-600 tabular-nums">{basic !== null ? basic : '—'}</p>
+                                            <p className="text-[9px] text-slate-400 font-medium mt-1">F1, F3, Basic, Standard, E1</p>
+                                        </div>
+                                        <div className="p-5 rounded-2xl border border-indigo-100 bg-indigo-50">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-1">Premium Licenses</p>
+                                            <p className="text-3xl font-black text-indigo-600 tabular-nums">{premium !== null ? premium : '—'}</p>
+                                            <p className="text-[9px] text-indigo-400 font-medium mt-1">Premium, E3, E5</p>
                                         </div>
                                         <div className={`p-5 rounded-2xl border relative overflow-hidden ${delta !== null && delta > 0 ? 'bg-red-50 border-red-100' : delta !== null && delta < 0 ? 'bg-amber-50 border-amber-100' : 'bg-emerald-50 border-emerald-100'}`}>
                                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 z-10 relative">Delta (Needs Billing)</p>
