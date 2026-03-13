@@ -123,8 +123,9 @@ export default function ClientDetailPage() {
     const premium = snap?.premium_licensed_users ?? null;
     const contracted = client.users_contracted || 0;
     const monthly = parseFloat(client.monthly_amount) || 0;
-    const ppu = parseFloat(client.price_per_user) || 0;
-    
+    // Derive per-seat price from stored field, or fall back to monthly ÷ contracted
+    const ppu = parseFloat(client.price_per_user) || (contracted > 0 && monthly > 0 ? monthly / contracted : 0);
+
     const isOver = actual !== null && contracted > 0 && actual > contracted;
     const isUnder = actual !== null && contracted > 0 && actual < contracted;
     const delta = actual !== null ? actual - contracted : null;
@@ -336,9 +337,12 @@ export default function ClientDetailPage() {
                                                 {delta !== null && delta > 0 ? `+${delta}` : delta}
                                             </p>
                                             {missingRevenue !== null && (
-                                                <p className="text-xs font-black text-red-500 mt-1 z-10 relative">
-                                                    +${missingRevenue.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mo missing
-                                                </p>
+                                                <div className="mt-2 z-10 relative">
+                                                    <span className="inline-block bg-red-600 text-white text-xs font-black px-2.5 py-1 rounded-lg">
+                                                        +${missingRevenue.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mo
+                                                    </span>
+                                                    <p className="text-[9px] text-red-400 font-bold mt-0.5">{delta} seat{delta !== 1 ? 's' : ''} × ${ppu.toFixed(2)}</p>
+                                                </div>
                                             )}
                                             {delta !== null && delta > 0 && <TrendingDown className="absolute right-4 top-1/2 -translate-y-1/2 h-16 w-16 text-red-100 opacity-50 z-0" />}
                                             {delta === 0 && <CheckCircle2 className="absolute right-4 top-1/2 -translate-y-1/2 h-16 w-16 text-emerald-100 opacity-50 z-0" />}
