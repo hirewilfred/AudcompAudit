@@ -40,7 +40,7 @@ export default function AMSDashboardPage() {
 
             const { data } = await supabase
                 .from('ams_clients')
-                .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, license_breakdown, snapshot_date, synced_at)`)
+                .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, premium_licensed_users, license_breakdown, snapshot_date, synced_at)`)
                 .order('company_name') as any;
 
             setClients(data || []);
@@ -67,6 +67,16 @@ export default function AMSDashboardPage() {
         const actual = c.ams_user_snapshots[0].total_licensed_users;
         return actual > (c.users_contracted || 0);
     }).length;
+
+    // Total missing MRR across all synced clients (delta × $/seat)
+    const totalMissingMRR = syncedClients.reduce((sum, c) => {
+        const actual = c.ams_user_snapshots[0].total_licensed_users;
+        const contracted = c.users_contracted || 0;
+        const monthly = parseFloat(c.monthly_amount) || 0;
+        const ppu = parseFloat(c.price_per_user) || (contracted > 0 && monthly > 0 ? monthly / contracted : 0);
+        const delta = actual - contracted;
+        return delta > 0 && ppu > 0 ? sum + delta * ppu : sum;
+    }, 0);
 
     const handleSort = (col: string) => {
         if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -129,7 +139,7 @@ export default function AMSDashboardPage() {
         setSyncResult({ synced, errors });
         const { data } = await supabase
             .from('ams_clients')
-            .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, license_breakdown, snapshot_date, synced_at)`)
+            .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, premium_licensed_users, license_breakdown, snapshot_date, synced_at)`)
             .order('company_name') as any;
         setClients(data || []);
         setSyncing(false);
@@ -233,16 +243,20 @@ export default function AMSDashboardPage() {
                             </p>
                         </motion.div>
 
-                        {/* Over Contract */}
+                        {/* Missing MRR */}
                         <motion.div
                             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                            className={`rounded-2xl p-5 border relative overflow-hidden ${overContract > 0 ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100'}`}
+                            className={`rounded-2xl p-5 border relative overflow-hidden ${totalMissingMRR > 0 ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100'}`}
                         >
-                            <TrendingUp className={`absolute top-3 right-3 h-10 w-10 ${overContract > 0 ? 'text-red-100' : 'text-slate-100'}`} />
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Over Contract</p>
-                            <p className={`text-4xl font-black tabular-nums ${overContract > 0 ? 'text-red-600' : 'text-slate-900'}`}>{overContract}</p>
+                            <TrendingUp className={`absolute top-3 right-3 h-10 w-10 ${totalMissingMRR > 0 ? 'text-red-100' : 'text-slate-100'}`} />
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Missing MRR</p>
+                            <p className={`text-3xl font-black tabular-nums ${totalMissingMRR > 0 ? 'text-red-600' : 'text-slate-900'}`}>
+                                ${totalMissingMRR.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                            </p>
                             <p className="text-[10px] text-slate-400 font-bold mt-1">
-                                {syncedClients.length > 0 ? `of ${syncedClients.length} synced clients` : 'No M365 data synced yet'}
+                                {overContract > 0
+                                    ? `${overContract} client${overContract !== 1 ? 's' : ''} over contract`
+                                    : syncedClients.length > 0 ? 'All clients within contract' : 'No M365 data synced yet'}
                             </p>
                         </motion.div>
 
@@ -264,7 +278,7 @@ export default function AMSDashboardPage() {
                     <div className="flex items-center justify-between mb-6">
                         <div>
                             <h2 className="text-xl font-black text-slate-900">Contract Reconciliation</h2>
-                            <p className="text-xs text-slate-400 font-medium mt-0.5">Contract value · contracted seats · $/seat · actual M365 users · delta</p>
+                            <p className="text-xs text-slate-400 font-medium mt-0.5">Contract value · contracted seats · $/seat · actual M365 users · missing revenue</p>
                         </div>
                         <Link href="/admin/ams/clients/new" className="text-blue-600 font-black text-sm flex items-center gap-1 hover:gap-2 transition-all">
                             Add Client <ArrowRight className="h-4 w-4" />
@@ -293,7 +307,7 @@ export default function AMSDashboardPage() {
                                             ['$/Seat', 'price_per_user'],
                                             ['Total M365', null],
                                             ['Basic Licenses', null],
-                                            ['Delta', null],
+                                            ['Missing Rev.', null],
                                             ['M365 Status', 'm365_connected'],
                                             ['Contract End', 'contract_end'],
                                         ] as [string, string | null][]).map(([label, col]) => (
@@ -320,8 +334,9 @@ export default function AMSDashboardPage() {
                                         const contracted = client.users_contracted || 0;
                                         const monthly = parseFloat(client.monthly_amount) || 0;
                                         const ppu = parseFloat(client.price_per_user) || 0;
-                                        const effectiveRate = ppu > 0 ? ppu : (contracted > 0 ? monthly / contracted : null);
+                                        const effectiveRate = ppu > 0 ? ppu : (contracted > 0 && monthly > 0 ? monthly / contracted : null);
                                         const delta = actual !== null ? actual - contracted : null;
+                                        const missingRev = delta !== null && delta > 0 && effectiveRate ? delta * effectiveRate : null;
                                         const contractEnd = client.contract_end ? new Date(client.contract_end) : null;
                                         const isExpired = contractEnd && contractEnd < now;
                                         const isExpiringSoon = contractEnd && !isExpired && contractEnd <= in90Days;
@@ -374,13 +389,22 @@ export default function AMSDashboardPage() {
                                                         ? <span className="font-bold text-blue-600">{basic.toLocaleString()}</span>
                                                         : <span className="text-slate-300 text-xs font-bold">—</span>}
                                                 </td>
-                                                {/* Delta */}
+                                                {/* Missing Revenue */}
                                                 <td className="py-4 px-3">
                                                     {delta === null ? (
                                                         <Minus className="h-3 w-3 text-slate-200" />
+                                                    ) : missingRev !== null ? (
+                                                        <div>
+                                                            <p className="text-red-600 font-black text-xs whitespace-nowrap">
+                                                                +${missingRev.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mo
+                                                            </p>
+                                                            <p className="text-[10px] text-red-400 font-bold mt-0.5">
+                                                                {delta} seats × ${effectiveRate!.toFixed(2)}
+                                                            </p>
+                                                        </div>
                                                     ) : delta > 0 ? (
-                                                        <span className="flex items-center gap-1 text-red-600 font-black text-xs whitespace-nowrap">
-                                                            <TrendingUp className="h-3.5 w-3.5" />+{delta}
+                                                        <span className="flex items-center gap-1 text-red-500 font-black text-xs whitespace-nowrap">
+                                                            <TrendingUp className="h-3.5 w-3.5" />+{delta} seats
                                                         </span>
                                                     ) : delta < 0 ? (
                                                         <span className="flex items-center gap-1 text-amber-500 font-black text-xs whitespace-nowrap">
@@ -388,7 +412,7 @@ export default function AMSDashboardPage() {
                                                         </span>
                                                     ) : (
                                                         <span className="flex items-center gap-1 text-emerald-600 font-black text-xs">
-                                                            <CheckCircle2 className="h-3.5 w-3.5" />0
+                                                            <CheckCircle2 className="h-3.5 w-3.5" />On contract
                                                         </span>
                                                     )}
                                                 </td>
