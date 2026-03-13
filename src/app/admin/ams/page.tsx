@@ -63,18 +63,19 @@ export default function AMSDashboardPage() {
 
     // Clients where actual M365 users differ from contracted (synced clients only)
     const syncedClients = clients.filter(c => c.ams_user_snapshots?.[0] != null);
+    // Delta uses basic_licensed_users — basic tier is what AMS covers
     const overContract = syncedClients.filter(c => {
-        const actual = c.ams_user_snapshots[0].total_licensed_users;
-        return actual > (c.users_contracted || 0);
+        const basic = c.ams_user_snapshots[0].basic_licensed_users ?? 0;
+        return basic > (c.users_contracted || 0);
     }).length;
 
-    // Total missing MRR across all synced clients (delta × $/seat)
+    // Total missing MRR across all synced clients (delta × $/seat, using basic licenses)
     const totalMissingMRR = syncedClients.reduce((sum, c) => {
-        const actual = c.ams_user_snapshots[0].total_licensed_users;
+        const basic = c.ams_user_snapshots[0].basic_licensed_users ?? 0;
         const contracted = c.users_contracted || 0;
         const monthly = parseFloat(c.monthly_amount) || 0;
         const ppu = parseFloat(c.price_per_user) || (contracted > 0 && monthly > 0 ? monthly / contracted : 0);
-        const delta = actual - contracted;
+        const delta = basic - contracted;
         return delta > 0 && ppu > 0 ? sum + delta * ppu : sum;
     }, 0);
 
@@ -335,7 +336,8 @@ export default function AMSDashboardPage() {
                                         const monthly = parseFloat(client.monthly_amount) || 0;
                                         const ppu = parseFloat(client.price_per_user) || 0;
                                         const effectiveRate = ppu > 0 ? ppu : (contracted > 0 && monthly > 0 ? monthly / contracted : null);
-                                        const delta = actual !== null ? actual - contracted : null;
+                                        // Delta uses basic licenses — basic tier is what AMS contracted seats cover
+                                        const delta = basic !== null ? basic - contracted : null;
                                         const missingRev = delta !== null && delta > 0 && effectiveRate ? delta * effectiveRate : null;
                                         const contractEnd = client.contract_end ? new Date(client.contract_end) : null;
                                         const isExpired = contractEnd && contractEnd < now;

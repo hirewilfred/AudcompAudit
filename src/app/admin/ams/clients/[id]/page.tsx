@@ -126,9 +126,10 @@ export default function ClientDetailPage() {
     // Derive per-seat price from stored field, or fall back to monthly ÷ contracted
     const ppu = parseFloat(client.price_per_user) || (contracted > 0 && monthly > 0 ? monthly / contracted : 0);
 
-    const isOver = actual !== null && contracted > 0 && actual > contracted;
-    const isUnder = actual !== null && contracted > 0 && actual < contracted;
-    const delta = actual !== null ? actual - contracted : null;
+    // Delta is based on basic licenses vs contracted — basic tier is what AMS covers
+    const isOver = basic !== null && contracted > 0 && basic > contracted;
+    const isUnder = basic !== null && contracted > 0 && basic < contracted;
+    const delta = basic !== null ? basic - contracted : null;
     const missingRevenue = delta !== null && delta > 0 && ppu > 0 ? delta * ppu : null;
 
     return (
