@@ -221,8 +221,18 @@ export default function ClientDetailPage() {
                                     <p className="text-sm text-slate-600 font-medium mb-4">
                                         Microsoft 365 is connected. The background token is managed safely and allows for on-demand syncing without requiring sign-ins.
                                     </p>
-                                    <div className="text-xs text-slate-400 font-medium mb-6">
-                                        Connected on: {client.m365_connected_at ? new Date(client.m365_connected_at).toLocaleString() : 'Unknown'}
+                                    <div className="space-y-2 mb-6">
+                                        <div className="text-xs text-slate-400 font-medium">
+                                            Connected on: {client.m365_connected_at ? new Date(client.m365_connected_at).toLocaleString() : 'Unknown'}
+                                        </div>
+                                        {client.m365_tenant_id && (
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs text-slate-400 font-medium">Tenant ID:</span>
+                                                <code className="text-xs font-mono bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-lg text-slate-600 select-all">
+                                                    {client.m365_tenant_id}
+                                                </code>
+                                            </div>
+                                        )}
                                     </div>
                                     <button onClick={handleDisconnectM365}
                                         className="w-full text-center text-xs font-bold text-slate-400 hover:text-red-500 transition-colors">

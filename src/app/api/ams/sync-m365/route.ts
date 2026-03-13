@@ -27,8 +27,14 @@ const BASIC_LICENSE_SKUS = new Set([
     '18181a46-0d4e-45cd-891e-60aabd171b4e', // Office 365 E1
 ]);
 
-async function refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; newRefreshToken: string; expiresAt: string }> {
-    const res = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
+async function refreshAccessToken(refreshToken: string, tenantId?: string | null): Promise<{ accessToken: string; newRefreshToken: string; expiresAt: string }> {
+    // Use the client's specific tenant for token refresh — avoids token errors
+    // caused by tenant-specific conditional access policies when using 'common'.
+    const authority = tenantId
+        ? `https://login.microsoftonline.com/${tenantId}`
+        : 'https://login.microsoftonline.com/common';
+
+    const res = await fetch(`${authority}/oauth2/v2.0/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
@@ -67,7 +73,7 @@ export async function POST(req: NextRequest) {
         // Fetch client with stored tokens
         const { data: client, error: fetchError } = await (supabase
             .from('ams_clients') as any)
-            .select('id, company_name, m365_connected, m365_refresh_token, m365_access_token, m365_token_expires_at')
+            .select('id, company_name, m365_connected, m365_refresh_token, m365_access_token, m365_token_expires_at, m365_tenant_id')
             .eq('id', clientId)
             .single();
 
@@ -82,7 +88,7 @@ export async function POST(req: NextRequest) {
         // Refresh the access token
         let accessToken = client.m365_access_token;
         try {
-            const refreshed = await refreshAccessToken(client.m365_refresh_token);
+            const refreshed = await refreshAccessToken(client.m365_refresh_token, client.m365_tenant_id);
             accessToken = refreshed.accessToken;
 
             // Update stored tokens

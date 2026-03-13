@@ -43,6 +43,18 @@ export async function GET(req: NextRequest) {
     const tokens = await tokenRes.json();
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
 
+    // Extract Tenant ID from the access token JWT (tid claim)
+    let m365TenantId: string | null = null;
+    try {
+        const parts = tokens.access_token.split('.');
+        if (parts.length === 3) {
+            const payload = JSON.parse(
+                Buffer.from(parts[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')
+            );
+            m365TenantId = payload.tid || null;
+        }
+    } catch { /* non-critical — tenant ID can be set manually if needed */ }
+
     // Save tokens to Supabase (using server client to include auth cookies for RLS)
     const supabase = await createClient();
 
@@ -54,6 +66,7 @@ export async function GET(req: NextRequest) {
             m365_access_token: tokens.access_token,
             m365_refresh_token: tokens.refresh_token,
             m365_token_expires_at: expiresAt,
+            ...(m365TenantId && { m365_tenant_id: m365TenantId }),
         })
         .eq('id', clientId);
 
