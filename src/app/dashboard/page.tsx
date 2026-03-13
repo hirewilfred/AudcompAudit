@@ -141,6 +141,55 @@ export default function DashboardPage() {
                 if (!error && data) {
                     setAuditData(data);
                 }
+
+                // Integration: Adjust dashboard ROI parameters based on AI Advisor report if available
+                try {
+                    const { data: advisorData } = await (supabase
+                        .from('ai_advisor_reports') as any)
+                        .select('*')
+                        .eq('user_id', session.user.id)
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .single();
+                    
+                    if (advisorData?.roi_parameters) {
+                        const { numUsers, hourlyRate, timeSaved } = advisorData.roi_parameters;
+                        if (numUsers) setRoiEmployees(numUsers);
+                        if (hourlyRate) setRoiHourlyRate(hourlyRate);
+                        if (timeSaved) {
+                            // timeSaved is hours per month. Convert to weekly frequency/minutes
+                            const weeklyHours = timeSaved / 4;
+                            // Assume 5 occurrences per week, calculate minutes per task
+                            const minsPerTask = Math.round((weeklyHours * 60) / 5);
+                            setRoiFrequency(5);
+                            setRoiMinutes(minsPerTask);
+                        }
+                    } else {
+                        // Check legacy directors_notes if no new report found
+                        const { data: profileData } = await (supabase
+                            .from('profiles') as any)
+                            .select('directors_notes')
+                            .eq('id', session.user.id)
+                            .single();
+                        
+                        if (profileData?.directors_notes?.startsWith('AI_ADVISOR_REPORT:')) {
+                            const json = JSON.parse(profileData.directors_notes.replace('AI_ADVISOR_REPORT:', ''));
+                            // Industry-based lookup for defaults if we have responses
+                            if (json.responses) {
+                                const { generateRoiDefaults } = await import('@/lib/advisor-engine');
+                                const defaults = generateRoiDefaults(json.responses);
+                                setRoiEmployees(defaults.numUsers);
+                                setRoiHourlyRate(defaults.hourlyRate);
+                                const weeklyHours = defaults.timeSavedPerMonth / 4;
+                                setRoiFrequency(5);
+                                setRoiMinutes(Math.round((weeklyHours * 60) / 5));
+                            }
+                        }
+                    }
+                } catch (e) {
+                    // Silently fail if table doesn't exist yet or other issue
+                    console.log("No advisor report found for ROI sync");
+                }
             } catch (err) {
                 console.error("Error fetching dashboard data:", err);
             } finally {
@@ -470,7 +519,7 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    <div className="relative z-10 w-full lg:w-auto">
+                    <div className="relative z-10 w-full lg:w-auto flex flex-col gap-4">
                         <button
                             onClick={() => handleBooking()}
                             className="w-full lg:w-auto bg-slate-900 text-white font-black py-6 px-12 rounded-[32px] shadow-2xl shadow-slate-900/20 hover:bg-blue-600 focus:ring-4 focus:ring-blue-100 transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center justify-center gap-1 group"
@@ -482,6 +531,14 @@ export default function DashboardPage() {
                             </div>
                             <span className="text-[10px] opacity-60 font-black uppercase tracking-widest">Instant Strategic session</span>
                         </button>
+
+                        <Link 
+                            href="/ai-advisor/results"
+                            className="w-full lg:w-auto bg-white border-2 border-slate-100 text-slate-900 font-black py-5 px-12 rounded-[32px] shadow-sm hover:border-purple-200 hover:text-purple-600 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 group"
+                        >
+                            <BrainCircuit className="h-6 w-6 text-purple-600 group-hover:scale-110 transition-transform" />
+                            <span className="text-lg">View Strategic AI Roadmap</span>
+                        </Link>
                     </div>
                 </motion.section>
 

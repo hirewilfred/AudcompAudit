@@ -242,34 +242,56 @@ export function generateRoadmap(responses: AdvisorResponses): RoadmapPhase[] {
 export function generateRoiDefaults(responses: AdvisorResponses): RoiDefaults {
     const size = responses.company_size as string;
     const tier = responses.m365_tier as string;
+    const industry = responses.industry as string;
     const painPoints = (responses.pain_points as string[]) || [];
 
     const sizeMap: Record<string, number> = {
         '1-10': 5,
         '11-50': 20,
-        '51-200': 50,
-        '201-1000': 100,
-        '1000+': 200,
+        '51-200': 100,
+        '201-1000': 450,
+        '1000+': 1200,
     };
 
-    const numUsers = sizeMap[size] || 20;
-    const hourlyRate = 55; // Conservative average
+    const industryRateMap: Record<string, number> = {
+        'professional_services': 85,
+        'technology': 95,
+        'finance': 110,
+        'healthcare': 75,
+        'manufacturing': 45,
+        'retail': 35,
+        'logistics': 45,
+        'education': 40,
+        'nonprofit': 40,
+        'real_estate': 65,
+    };
 
-    // Time saved estimate based on pain points and M365 tier
-    let timeSaved = 8;
-    if (painPoints.includes('email_overload')) timeSaved += 2;
-    if (painPoints.includes('document_processing')) timeSaved += 3;
-    if (painPoints.includes('reporting')) timeSaved += 2;
-    if (painPoints.includes('manual_data_entry')) timeSaved += 2;
-    if (['e3', 'e5'].includes(tier)) timeSaved += 1;
+    const numUsers = sizeMap[size] || 25;
+    const hourlyRate = industryRateMap[industry] || 55;
 
-    const annualCostPerUser = tier === 'none' ? 120 : 360; // Basic rec vs Copilot
-    const monthlyPages = painPoints.includes('document_processing') ? 10000 : 0;
+    // Time saved estimate based on pain points
+    // Base savings (emails, meetings, basic tasks)
+    let timeSaved = 4; // Start at 4 hours / month conservative
+    
+    if (painPoints.includes('email_overload')) timeSaved += 4;
+    if (painPoints.includes('document_processing')) timeSaved += 6;
+    if (painPoints.includes('reporting')) timeSaved += 3;
+    if (painPoints.includes('manual_data_entry')) timeSaved += 5;
+    if (painPoints.includes('customer_service')) timeSaved += 4;
+    if (painPoints.includes('knowledge_sharing')) timeSaved += 2;
+    
+    // Efficiency multiplier for high-tier M365 (better integration)
+    if (['premium', 'e3', 'e5'].includes(tier)) {
+        timeSaved += 2;
+    }
+
+    const annualCostPerUser = tier === 'none' ? 120 : 360; 
+    const monthlyPages = painPoints.includes('document_processing') ? 5000 : 0;
 
     return {
         numUsers,
         hourlyRate,
-        timeSavedPerMonth: Math.min(timeSaved, 20),
+        timeSavedPerMonth: Math.min(timeSaved, 30), // Cap at 30 hours per month
         annualCostPerUser,
         monthlyPages,
     };

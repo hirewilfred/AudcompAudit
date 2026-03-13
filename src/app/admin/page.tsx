@@ -18,7 +18,8 @@ import {
     LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, X, Printer, Mail, AlertTriangle, Lightbulb, Phone } from 'lucide-react';
+import { FileText, X, Printer, Mail, AlertTriangle, Lightbulb, Phone, BrainCircuit } from 'lucide-react';
+import Link from 'next/link';
 
 export default function AdminPage() {
     const [loading, setLoading] = useState(true);
@@ -448,6 +449,14 @@ export default function AdminPage() {
                                             <><Mail className="h-4 w-4" /> Email Expert</>
                                         )}
                                     </button>
+                                    <Link
+                                        href={`/ai-advisor/results?userId=${selectedAudit.user.id}`}
+                                        target="_blank"
+                                        className="h-10 px-4 bg-purple-600 text-white rounded-full flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest hover:bg-purple-700 transition-colors shadow-sm shrink-0"
+                                    >
+                                        <BrainCircuit className="h-4 w-4" />
+                                        AI Roadmap
+                                    </Link>
                                     <button
                                         onClick={() => window.print()}
                                         className="h-10 px-4 bg-blue-600 text-white rounded-full flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-sm shrink-0"

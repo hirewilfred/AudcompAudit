@@ -16,7 +16,9 @@ import {
     Recommendation,
     RoadmapPhase,
     RoiDefaults,
+    buildPromptSummary
 } from '@/lib/advisor-engine';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -55,6 +57,10 @@ export default function AdvisorResultsPage() {
     const router = useRouter();
     const supabase = createClient();
 
+    const searchParams = useSearchParams();
+    const adminUserId = searchParams.get('userId');
+    const [isSaving, setIsSaving] = useState(false);
+
     useEffect(() => {
         async function init() {
             const { data: { session } } = await supabase.auth.getSession();
@@ -64,45 +70,106 @@ export default function AdvisorResultsPage() {
             }
             setIsCheckingAuth(false);
 
+            let parsed: AdvisorResponses | null = null;
+            let loadedNarrative = '';
+
+            // If we have a userId, we are in admin mode or loading a saved report
+            const userIdToLoad = adminUserId || session.user.id;
+
+            try {
+                // Try to fetch from DB first
+                const dbRes = await fetch(`/api/ai-advisor/save?userId=${userIdToLoad}`);
+                if (dbRes.ok) {
+                    const dbData = await dbRes.json();
+                    parsed = dbData.responses;
+                    loadedNarrative = dbData.narrative;
+                    setNarrative(loadedNarrative);
+                    setRecommendations(dbData.recommendations || generateRecommendations(parsed!));
+                    setRoadmap(dbData.roadmap || generateRoadmap(parsed!));
+                    setResponses(parsed);
+                    
+                    const defaults = generateRoiDefaults(parsed!);
+                    setRoiDefaults(defaults);
+                    
+                    // Use saved ROI parameters if they exist (from new table), else use engine defaults
+                    setNumUsers(dbData.roi_parameters?.numUsers ?? defaults.numUsers);
+                    setHourlyRate(dbData.roi_parameters?.hourlyRate ?? defaults.hourlyRate);
+                    setTimeSaved(dbData.roi_parameters?.timeSaved ?? defaults.timeSavedPerMonth);
+                    setAnnualCostPerUser(dbData.roi_parameters?.annualCostPerUser ?? defaults.annualCostPerUser);
+                    setMonthlyPages(defaults.monthlyPages);
+                    setLoadingNarrative(false);
+                    return; // Exit early if loaded from DB
+                }
+            } catch (err) {
+                console.error("Error loading from DB:", err);
+            }
+
+            // Fallback to SessionStorage (for the generator flow)
             const stored = sessionStorage.getItem('advisor_responses');
-            if (!stored) {
+            if (!stored && !adminUserId) {
                 router.push('/ai-advisor');
                 return;
             }
 
-            const parsed: AdvisorResponses = JSON.parse(stored);
-            setResponses(parsed);
+            if (stored) {
+                parsed = JSON.parse(stored);
+                setResponses(parsed);
 
-            const recs = generateRecommendations(parsed);
-            const rm = generateRoadmap(parsed);
-            const defaults = generateRoiDefaults(parsed);
+                const recs = generateRecommendations(parsed!);
+                const rm = generateRoadmap(parsed!);
+                const defaults = generateRoiDefaults(parsed!);
 
-            setRecommendations(recs);
-            setRoadmap(rm);
-            setRoiDefaults(defaults);
-            setNumUsers(defaults.numUsers);
-            setHourlyRate(defaults.hourlyRate);
-            setTimeSaved(defaults.timeSavedPerMonth);
-            setAnnualCostPerUser(defaults.annualCostPerUser);
-            setMonthlyPages(defaults.monthlyPages);
+                setRecommendations(recs);
+                setRoadmap(rm);
+                setRoiDefaults(defaults);
+                setNumUsers(defaults.numUsers);
+                setHourlyRate(defaults.hourlyRate);
+                setTimeSaved(defaults.timeSavedPerMonth);
+                setAnnualCostPerUser(defaults.annualCostPerUser);
+                setMonthlyPages(defaults.monthlyPages);
 
-            // Fetch Claude narrative
-            try {
-                const res = await fetch('/api/ai-advisor', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ responses: parsed }),
-                });
-                const data = await res.json();
-                setNarrative(data.narrative || '');
-            } catch {
-                setNarrative('Based on your inputs, your business has strong AI adoption potential. Focus on quick wins first — automating your highest-volume manual processes — then scale systematically with the roadmap below.');
-            } finally {
-                setLoadingNarrative(false);
+                // Fetch Claude narrative
+                try {
+                    const res = await fetch('/api/ai-advisor', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ responses: parsed }),
+                    });
+                    const data = await res.json();
+                    loadedNarrative = data.narrative || '';
+                    setNarrative(loadedNarrative);
+                } catch {
+                    loadedNarrative = 'Based on your inputs, your business has strong AI adoption potential. Focus on quick wins first — automating your highest-volume manual processes — then scale systematically with the roadmap below.';
+                    setNarrative(loadedNarrative);
+                } finally {
+                    setLoadingNarrative(false);
+                }
+
+                // If this is the user's own session, save it automatically
+                if (parsed && !adminUserId) {
+                    try {
+                        await fetch('/api/ai-advisor/save', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                responses: parsed,
+                                narrative: loadedNarrative,
+                                recommendations: recs,
+                                roadmap: rm,
+                                annualCostPerUser: defaults.annualCostPerUser,
+                                numUsers: defaults.numUsers,
+                                hourlyRate: defaults.hourlyRate,
+                                timeSaved: defaults.timeSavedPerMonth
+                            })
+                        });
+                    } catch (err) {
+                        console.error("Failed to save report:", err);
+                    }
+                }
             }
         }
         init();
-    }, []);
+    }, [adminUserId]);
 
     // ROI Calculations
     const annualTimeSavedHours = timeSaved * 12 * numUsers;
@@ -124,7 +191,7 @@ export default function AdvisorResultsPage() {
     return (
         <div className="min-h-screen bg-[#F4F7FE] text-slate-800">
             {/* Header */}
-            <header className="sticky top-0 z-50 flex w-full items-center justify-between px-8 py-5 bg-white shadow-sm">
+            <header className="sticky top-0 z-50 flex w-full items-center justify-between px-8 py-5 bg-white shadow-sm border-b border-slate-100">
                 <div className="flex items-center gap-3">
                     <Link href="/">
                         <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP" className="h-8 w-auto brightness-0" />
@@ -133,279 +200,271 @@ export default function AdvisorResultsPage() {
                         AI Adoption Advisor
                     </span>
                 </div>
-                <Link
-                    href="/ai-advisor"
-                    className="text-sm font-bold text-slate-400 hover:text-blue-600 transition-colors"
-                >
-                    ← Retake Assessment
-                </Link>
+                <div className="flex items-center gap-4">
+                    {adminUserId && (
+                        <div className="bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-100">
+                            Admin View Mode
+                        </div>
+                    )}
+                    <Link
+                        href={adminUserId ? "/admin" : "/dashboard"}
+                        className="text-sm font-black text-slate-900 bg-slate-100 hover:bg-slate-200 px-6 py-2 rounded-full transition-all active:scale-95"
+                    >
+                        {adminUserId ? "Back to Admin" : "Back to Dashboard"}
+                    </Link>
+                </div>
             </header>
 
-            <main className="mx-auto max-w-5xl px-6 py-12 space-y-16">
-
-                {/* Hero */}
+            <main className="mx-auto max-w-7xl px-6 py-12 space-y-12">
+                
+                {/* Hero / Report Title */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-center"
+                    className="flex flex-col md:flex-row items-center justify-between gap-6"
                 >
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-sm font-black uppercase tracking-widest text-blue-600 border border-blue-100">
-                        <BrainCircuit className="h-4 w-4" />
-                        Your AI Adoption Roadmap
+                    <div>
+                        <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1 text-xs font-black uppercase tracking-widest text-blue-600 border border-blue-100">
+                            <Sparkles className="h-3 w-3" />
+                            AI Strategy Report
+                        </div>
+                        <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+                            Strategic AI Roadmap
+                        </h1>
                     </div>
-                    <h1 className="text-4xl font-black sm:text-5xl text-slate-900 mb-4 tracking-tight">
-                        Here's Your Path to AI
-                    </h1>
-                    <p className="text-lg text-slate-500 max-w-xl mx-auto">
-                        Based on your environment, licensing, and business processes — here are your best AI opportunities.
-                    </p>
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={() => window.print()}
+                            className="flex items-center gap-2 rounded-2xl bg-white border border-slate-200 px-6 py-3 text-sm font-black text-slate-900 hover:bg-slate-50 transition-all shadow-sm"
+                        >
+                            <FileText className="h-4 w-4" /> Export PDF
+                        </button>
+                    </div>
                 </motion.div>
 
-                {/* AI Insight */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="rounded-[32px] bg-gradient-to-br from-blue-600 to-indigo-600 p-8 text-white shadow-xl shadow-blue-600/20"
-                >
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
-                            <Sparkles className="h-5 w-5 text-white" />
-                        </div>
-                        <span className="text-sm font-black uppercase tracking-widest text-blue-100">AI Insight</span>
+                {/* Personalized Strategic Insight */}
+                <section className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+                        <Sparkles className="h-64 w-64 text-blue-600" />
                     </div>
-                    {loadingNarrative ? (
-                        <div className="flex items-center gap-3 text-blue-100">
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                            <span className="font-medium">Generating your personalized insight...</span>
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="h-12 w-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/20">
+                                <BrainCircuit className="h-6 w-6" />
+                            </div>
+                            <h2 className="text-2xl font-black text-slate-900 tracking-tight underline decoration-blue-500/30 underline-offset-8">Executive Summary</h2>
                         </div>
-                    ) : (
-                        <p className="text-base leading-relaxed text-blue-50 font-medium">{narrative}</p>
-                    )}
-                </motion.div>
 
-                {/* Recommendations */}
-                <section>
-                    <div className="mb-6">
-                        <h2 className="text-2xl font-black text-slate-900">Recommended AI Tools</h2>
-                        <p className="text-slate-500 mt-1">Matched to your environment, licensing, and pain points.</p>
+                        {loadingNarrative ? (
+                            <div className="flex items-center gap-3 text-slate-400 font-bold py-4">
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                                Generating personalized roadmap...
+                            </div>
+                        ) : (
+                            <div className="prose prose-slate max-w-none prose-p:text-lg prose-p:font-medium prose-p:text-slate-600 prose-p:leading-relaxed">
+                                <p>{narrative}</p>
+                            </div>
+                        )}
                     </div>
-                    <div className="grid gap-5 sm:grid-cols-2">
-                        {recommendations.map((rec, i) => {
-                            const Icon = ICON_MAP[rec.icon] || BrainCircuit;
-                            return (
-                                <motion.div
-                                    key={rec.tool}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.1 + i * 0.05 }}
-                                    className="rounded-[24px] bg-white border border-slate-100 p-6 shadow-sm hover:shadow-md hover:border-blue-200 transition-all"
-                                >
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600/10">
-                                            <Icon className="h-5 w-5 text-blue-600" />
+                </section>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    
+                    {/* Left Column: Recommendations & Roadmap */}
+                    <div className="lg:col-span-8 space-y-8">
+                        
+                        {/* Recommendations */}
+                        <section className="bg-white rounded-[40px] p-8 md:p-10 shadow-sm border border-slate-100">
+                            <div className="flex items-center justify-between mb-10 border-b border-slate-50 pb-6">
+                                <h3 className="text-xl font-black flex items-center gap-2">
+                                    <Target className="h-5 w-5 text-blue-600" /> Tool Recommendations
+                                </h3>
+                                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full">
+                                    {recommendations.length} Suggestions
+                                </span>
+                            </div>
+                            
+                            <div className="grid gap-6">
+                                {recommendations.map((rec, i) => {
+                                    const Icon = ICON_MAP[rec.icon] || Zap;
+                                    return (
+                                        <div key={i} className="group flex items-start gap-6 p-6 rounded-[32px] border border-slate-50 hover:bg-slate-50/50 transition-all duration-300">
+                                            <div className="h-14 w-14 rounded-2xl bg-slate-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300 shadow-sm">
+                                                <Icon className="h-7 w-7" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                                    <h4 className="text-lg font-black text-slate-900">{rec.tool}</h4>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm ${PRIORITY_COLORS[rec.priority]}`}>
+                                                            {rec.priority} Priority
+                                                        </span>
+                                                        <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase tracking-widest">
+                                                            {rec.monthlyEstimate}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <p className="text-sm font-medium text-slate-500 leading-relaxed mb-4">{rec.description}</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {rec.tags.map(tag => (
+                                                        <span key={tag} className="text-[10px] font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full hover:bg-slate-200 transition-colors">#{tag}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <span className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide ${PRIORITY_COLORS[rec.priority]}`}>
-                                            {rec.priority} priority
-                                        </span>
-                                    </div>
-                                    <h3 className="text-base font-black text-slate-900 mb-1">{rec.tool}</h3>
-                                    <span className="inline-block mb-3 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-500">
-                                        {rec.category}
-                                    </span>
-                                    <p className="text-sm text-slate-500 leading-relaxed mb-4">{rec.description}</p>
-                                    <div className="flex items-center gap-2 border-t border-slate-50 pt-4">
-                                        <DollarSign className="h-4 w-4 text-emerald-600 shrink-0" />
-                                        <span className="text-sm font-bold text-slate-700">{rec.monthlyEstimate}</span>
-                                    </div>
-                                </motion.div>
-                            );
-                        })}
-                    </div>
-                </section>
+                                    );
+                                })}
+                            </div>
+                        </section>
 
-                {/* Roadmap */}
-                <section>
-                    <div className="mb-6">
-                        <h2 className="text-2xl font-black text-slate-900">Your Implementation Roadmap</h2>
-                        <p className="text-slate-500 mt-1">A phased approach to ensure lasting adoption without disruption.</p>
+                        {/* Roadmap */}
+                        <section className="bg-white rounded-[40px] p-8 md:p-10 shadow-sm border border-slate-100">
+                            <h3 className="text-xl font-black mb-10 flex items-center gap-2 text-slate-900 border-b border-slate-50 pb-6">
+                                <Rocket className="h-5 w-5 text-indigo-600" /> Implementation Roadmap
+                            </h3>
+                            <div className="space-y-12">
+                                {roadmap.map((phase, i) => (
+                                    <div key={i} className="relative pl-16">
+                                        {i < roadmap.length - 1 && (
+                                            <div className="absolute left-[27px] top-14 bottom-[-48px] w-0.5 bg-slate-100" />
+                                        )}
+                                        <div className={`absolute left-0 top-0 h-14 w-14 rounded-3xl flex items-center justify-center font-black text-lg shadow-sm ${PHASE_COLORS[phase.color]}`}>
+                                            {phase.phase}
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-4 mb-4">
+                                                <h4 className="text-2xl font-black text-slate-900 tracking-tight">{phase.title}</h4>
+                                                <span className="text-xs font-black text-slate-400 bg-slate-50 px-4 py-1.5 rounded-[12px] uppercase tracking-widest border border-slate-100">{phase.timeline}</span>
+                                            </div>
+                                            <div className="grid gap-3">
+                                                {phase.items.map((item, j) => (
+                                                    <div key={j} className="flex items-center gap-3 p-4 rounded-2xl border border-slate-50 bg-slate-50/50 hover:bg-white hover:shadow-sm transition-all font-bold text-slate-700 text-sm">
+                                                        <CheckCircle2 className={`h-5 w-5 shrink-0 text-blue-500/50`} />
+                                                        {item}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
                     </div>
-                    <div className="grid gap-5 sm:grid-cols-3">
-                        {roadmap.map((phase, i) => (
-                            <motion.div
-                                key={phase.phase}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 + i * 0.1 }}
-                                className="rounded-[24px] bg-white border border-slate-100 p-6 shadow-sm"
+
+                    {/* Right Column: ROI & CTA */}
+                    <div className="lg:col-span-4 space-y-8">
+                        
+                        {/* ROI Calculator */}
+                        <section className="bg-white rounded-[40px] p-8 shadow-sm border border-slate-100 sticky top-32">
+                            <div className="flex items-center gap-2 mb-6 border-b border-slate-50 pb-4">
+                                <BarChart3 className="h-6 w-6 text-emerald-600" />
+                                <h3 className="text-xl font-black text-slate-900">ROI Calculator</h3>
+                            </div>
+
+                            <div className="bg-emerald-50 text-[10px] font-bold text-emerald-700 p-3 rounded-2xl border border-emerald-100/50 mb-8 flex items-center gap-2">
+                                <Sparkles className="h-3 w-3" />
+                                <span>Note: Values pre-filled based on your industry and identified pain points.</span>
+                            </div>
+                            
+                            <div className="space-y-8">
+                                <div className="space-y-4">
+                                    <div>
+                                        <div className="flex justify-between mb-3 text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">
+                                            <span>Staff Size</span>
+                                            <span className="text-blue-600">{numUsers} People</span>
+                                        </div>
+                                        <input
+                                            type="range" min="5" max="250" step="5"
+                                            value={numUsers}
+                                            onChange={e => setNumUsers(Number(e.target.value))}
+                                            className="w-full accent-blue-600 h-1.5 bg-slate-100 rounded-full appearance-none cursor-pointer"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <div className="flex justify-between mb-3 text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">
+                                            <span>Hourly Rate</span>
+                                            <span className="text-blue-600">${hourlyRate}/hr</span>
+                                        </div>
+                                        <input
+                                            type="range" min="20" max="200" step="5"
+                                            value={hourlyRate}
+                                            onChange={e => setHourlyRate(Number(e.target.value))}
+                                            className="w-full accent-blue-600 h-1.5 bg-slate-100 rounded-full appearance-none cursor-pointer"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <div className="flex justify-between mb-3 text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">
+                                            <span>Time Saved / User</span>
+                                            <span className="text-blue-600">{timeSaved}h/mo</span>
+                                        </div>
+                                        <input
+                                            type="range" min="1" max="30"
+                                            value={timeSaved}
+                                            onChange={e => setTimeSaved(Number(e.target.value))}
+                                            className="w-full accent-blue-600 h-1.5 bg-slate-100 rounded-full appearance-none cursor-pointer"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="p-6 rounded-[32px] bg-[#F8FAFF] border border-blue-50 space-y-4">
+                                    <div className="flex justify-between items-baseline">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Annual Value</span>
+                                        <span className="text-2xl font-black text-slate-900">${Math.round(annualValue).toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between items-baseline">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Est. Investment</span>
+                                        <span className="text-lg font-black text-slate-400">${Math.round(totalAnnualCost).toLocaleString()}</span>
+                                    </div>
+                                    <div className="pt-4 border-t border-slate-200 flex justify-between items-baseline">
+                                        <span className="text-xs font-black text-blue-600 uppercase tracking-widest">Net ROI</span>
+                                        <div className="text-right">
+                                            <span className="text-3xl font-black text-blue-600">+{roiPct.toFixed(0)}%</span>
+                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Projected Annual Return</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Next Steps</h4>
+                                    <Link
+                                        href="/dashboard"
+                                        className="group flex w-full items-center justify-center gap-3 rounded-[24px] bg-slate-900 border border-slate-900 px-6 py-5 text-sm font-black text-white transition-all hover:bg-blue-600 hover:border-blue-600 hover:scale-[1.02] shadow-xl shadow-slate-900/10 active:scale-95"
+                                    >
+                                        Visit User Dashboard
+                                        <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                                    </Link>
+                                    {!adminUserId && (
+                                        <Link
+                                            href="/ai-advisor"
+                                            className="block w-full text-center text-xs font-black text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest"
+                                        >
+                                            Retake Assessment
+                                        </Link>
+                                    )}
+                                </div>
+                            </div>
+                        </section>
+
+                        <div className="p-8 rounded-[32px] bg-slate-900 text-white relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                                <Target className="h-16 w-16" />
+                            </div>
+                            <h4 className="text-lg font-black mb-2 relative z-10">Need an Expert?</h4>
+                            <p className="text-sm font-medium text-slate-400 mb-6 relative z-10">
+                                Get a dedicated session to review this roadmap and validate these savings.
+                            </p>
+                            <Link 
+                                href="/dashboard"
+                                className="inline-flex items-center gap-2 text-sm font-black text-blue-400 hover:text-blue-300 transition-colors relative z-10"
                             >
-                                <div className={`mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-black uppercase tracking-wide ${PHASE_COLORS[phase.color]}`}>
-                                    <Rocket className="h-3 w-3" />
-                                    Phase {phase.phase}
-                                </div>
-                                <h3 className="text-lg font-black text-slate-900 mb-1">{phase.title}</h3>
-                                <p className="text-xs font-bold text-slate-400 mb-5 uppercase tracking-wide">{phase.timeline}</p>
-                                <ul className="space-y-3">
-                                    {phase.items.map((item, j) => (
-                                        <li key={j} className="flex items-start gap-3">
-                                            <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-blue-500" />
-                                            <span className="text-sm text-slate-600 font-medium leading-snug">{item}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </motion.div>
-                        ))}
-                    </div>
-                </section>
-
-                {/* ROI Calculator */}
-                <section>
-                    <div className="mb-6">
-                        <h2 className="text-2xl font-black text-slate-900">ROI Calculator</h2>
-                        <p className="text-slate-500 mt-1">Adjust the inputs below to project your expected return.</p>
-                    </div>
-                    <div className="rounded-[32px] bg-white border border-slate-100 shadow-sm p-8">
-                        <div className="grid gap-6 sm:grid-cols-2 mb-8">
-                            <div>
-                                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
-                                    Number of users adopting AI
-                                </label>
-                                <input
-                                    type="number"
-                                    min={1}
-                                    value={numUsers}
-                                    onChange={e => setNumUsers(Number(e.target.value))}
-                                    className="w-full rounded-[16px] border border-slate-200 bg-slate-50 px-5 py-4 text-lg font-bold text-slate-900 outline-none focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-600/5 transition-all"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
-                                    Avg. hourly labour cost ($ CAD/USD)
-                                </label>
-                                <input
-                                    type="number"
-                                    min={10}
-                                    value={hourlyRate}
-                                    onChange={e => setHourlyRate(Number(e.target.value))}
-                                    className="w-full rounded-[16px] border border-slate-200 bg-slate-50 px-5 py-4 text-lg font-bold text-slate-900 outline-none focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-600/5 transition-all"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
-                                    Hours saved per user per month: <span className="text-blue-600">{timeSaved}h</span>
-                                </label>
-                                <input
-                                    type="range"
-                                    min={1}
-                                    max={30}
-                                    value={timeSaved}
-                                    onChange={e => setTimeSaved(Number(e.target.value))}
-                                    className="w-full accent-blue-600"
-                                />
-                                <div className="flex justify-between text-xs text-slate-400 mt-1 font-bold">
-                                    <span>1h</span><span>Benchmark: 9–20h</span><span>30h</span>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
-                                    Annual AI tool cost per user ($)
-                                </label>
-                                <input
-                                    type="number"
-                                    min={0}
-                                    value={annualCostPerUser}
-                                    onChange={e => setAnnualCostPerUser(Number(e.target.value))}
-                                    className="w-full rounded-[16px] border border-slate-200 bg-slate-50 px-5 py-4 text-lg font-bold text-slate-900 outline-none focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-600/5 transition-all"
-                                />
-                            </div>
-
-                            {roiDefaults?.monthlyPages && roiDefaults.monthlyPages > 0 ? (
-                                <>
-                                    <div>
-                                        <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
-                                            Pages processed / month
-                                        </label>
-                                        <input
-                                            type="number"
-                                            min={0}
-                                            value={monthlyPages}
-                                            onChange={e => setMonthlyPages(Number(e.target.value))}
-                                            className="w-full rounded-[16px] border border-slate-200 bg-slate-50 px-5 py-4 text-lg font-bold text-slate-900 outline-none focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-600/5 transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
-                                            Cost per 1,000 pages ($)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            min={0.5}
-                                            step={0.5}
-                                            value={costPerPage}
-                                            onChange={e => setCostPerPage(Number(e.target.value))}
-                                            className="w-full rounded-[16px] border border-slate-200 bg-slate-50 px-5 py-4 text-lg font-bold text-slate-900 outline-none focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-600/5 transition-all"
-                                        />
-                                    </div>
-                                </>
-                            ) : null}
+                                Book Strategy Session <ArrowRight className="h-4 w-4" />
+                            </Link>
                         </div>
 
-                        {/* Results */}
-                        <div className="grid gap-4 sm:grid-cols-4 mb-6">
-                            {[
-                                { label: 'Annual Value', value: `$${annualValue.toLocaleString('en-CA', { maximumFractionDigits: 0 })}`, icon: TrendingUp, color: 'text-emerald-600' },
-                                { label: 'Annual AI Cost', value: `$${totalAnnualCost.toLocaleString('en-CA', { maximumFractionDigits: 0 })}`, icon: DollarSign, color: 'text-blue-600' },
-                                { label: 'ROI', value: `${roiPct.toFixed(0)}%`, icon: Target, color: 'text-indigo-600' },
-                                { label: 'Payback Period', value: paybackMonths > 0 ? `${paybackMonths.toFixed(1)} mo` : '—', icon: Clock, color: 'text-slate-600' },
-                            ].map(metric => {
-                                const Icon = metric.icon;
-                                return (
-                                    <div key={metric.label} className="rounded-[20px] bg-slate-50 border border-slate-100 p-5 text-center">
-                                        <Icon className={`h-5 w-5 mx-auto mb-2 ${metric.color}`} />
-                                        <div className={`text-2xl font-black ${metric.color}`}>{metric.value}</div>
-                                        <div className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wide">{metric.label}</div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        <p className="text-xs text-slate-400 leading-relaxed border-t border-slate-50 pt-5">
-                            <strong className="text-slate-500">Note:</strong> These are projections based on industry benchmarks (Forrester/Microsoft studies show 9–20 hours saved/user/month). Actual ROI depends on adoption rate, training quality, and use case fit. Most SMBs see 3-year ROI of 130–350%.
-                        </p>
                     </div>
-                </section>
-
-                {/* CTA */}
-                <motion.section
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="rounded-[32px] bg-[#050B1A] p-10 text-center text-white"
-                >
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-600/10 border border-blue-500/20 px-4 py-1.5 text-sm font-black uppercase tracking-widest text-blue-400">
-                        <Rocket className="h-4 w-4" />
-                        Next Step
-                    </div>
-                    <h2 className="text-3xl font-black mb-4">Ready to make it real?</h2>
-                    <p className="text-slate-400 mb-8 max-w-lg mx-auto leading-relaxed">
-                        Get a full AI Readiness Audit with a detailed score, category breakdown, and a dedicated expert to guide your implementation.
-                    </p>
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Link
-                            href="/auth"
-                            className="group flex items-center gap-2 rounded-2xl bg-blue-600 px-8 py-4 text-base font-black text-white transition-all hover:bg-blue-700 hover:scale-105 shadow-xl shadow-blue-600/20"
-                        >
-                            Start Full AI Audit
-                            <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-                        </Link>
-                        <Link
-                            href="/dashboard"
-                            className="rounded-xl border border-white/10 bg-white/5 px-8 py-4 text-base font-semibold text-white transition-all hover:bg-white/10"
-                        >
-                            Back to Dashboard
-                        </Link>
-                    </div>
-                </motion.section>
+                </div>
             </main>
         </div>
     );
