@@ -331,18 +331,19 @@ export default function ClientDetailPage() {
                                             <p className="text-[9px] text-indigo-400 font-medium mt-1">Premium, E3, E5</p>
                                         </div>
                                         <div className={`p-5 rounded-2xl border relative overflow-hidden ${delta !== null && delta > 0 ? 'bg-red-50 border-red-100' : delta !== null && delta < 0 ? 'bg-amber-50 border-amber-100' : 'bg-emerald-50 border-emerald-100'}`}>
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 z-10 relative">Delta (Needs Billing)</p>
-                                            <p className={`text-3xl font-black tabular-nums z-10 relative
-                                                ${delta !== null && delta > 0 ? 'text-red-600' : delta !== null && delta < 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                                                {delta !== null && delta > 0 ? `+${delta}` : delta}
-                                            </p>
-                                            {missingRevenue !== null && (
-                                                <div className="mt-2 z-10 relative">
-                                                    <span className="inline-block bg-red-600 text-white text-xs font-black px-2.5 py-1 rounded-lg">
-                                                        +${missingRevenue.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mo
-                                                    </span>
-                                                    <p className="text-[9px] text-red-400 font-bold mt-0.5">{delta} seat{delta !== 1 ? 's' : ''} × ${ppu.toFixed(2)}</p>
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 z-10 relative">Missing Revenue</p>
+                                            {missingRevenue !== null ? (
+                                                <div className="z-10 relative">
+                                                    <p className="text-2xl font-black text-red-600 tabular-nums leading-tight">
+                                                        +${missingRevenue.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    </p>
+                                                    <p className="text-[9px] text-red-400 font-bold mt-0.5">{delta} seat{delta !== 1 ? 's' : ''} × ${ppu.toFixed(2)}/mo</p>
                                                 </div>
+                                            ) : (
+                                                <p className={`text-3xl font-black tabular-nums z-10 relative
+                                                    ${delta !== null && delta > 0 ? 'text-red-600' : delta !== null && delta < 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                                    {delta !== null && delta > 0 ? `+${delta}` : delta}
+                                                </p>
                                             )}
                                             {delta !== null && delta > 0 && <TrendingDown className="absolute right-4 top-1/2 -translate-y-1/2 h-16 w-16 text-red-100 opacity-50 z-0" />}
                                             {delta === 0 && <CheckCircle2 className="absolute right-4 top-1/2 -translate-y-1/2 h-16 w-16 text-emerald-100 opacity-50 z-0" />}
