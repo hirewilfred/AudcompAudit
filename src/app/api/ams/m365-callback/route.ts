@@ -21,6 +21,13 @@ export async function GET(req: NextRequest) {
     const clientId = state;
     const redirectUri = `${appUrl}/api/ams/m365-callback`;
 
+    // Guard: ensure env vars are present (would silently be "undefined" string otherwise)
+    if (!AZURE_CLIENT_ID || !AZURE_CLIENT_SECRET) {
+        return NextResponse.redirect(
+            `${appUrl}/admin/ams/clients/${clientId}?m365_error=${encodeURIComponent('Server configuration error: Azure credentials are not set. Contact your administrator.')}`
+        );
+    }
+
     // Exchange the authorization code for tokens
     const tokenRes = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
         method: 'POST',
@@ -31,13 +38,20 @@ export async function GET(req: NextRequest) {
             code,
             redirect_uri: redirectUri,
             grant_type: 'authorization_code',
+            scope: 'https://graph.microsoft.com/Directory.Read.All https://graph.microsoft.com/Organization.Read.All offline_access',
         }),
     });
 
     if (!tokenRes.ok) {
-        const errText = await tokenRes.text();
-        console.error('Token exchange failed:', errText);
-        return NextResponse.redirect(`${appUrl}/admin/ams/clients/${clientId}?m365_error=${encodeURIComponent('Token exchange failed. Please try again.')}`);
+        let msError = 'Token exchange failed.';
+        try {
+            const errJson = await tokenRes.json();
+            msError = errJson.error_description || errJson.error || msError;
+        } catch {
+            msError = await tokenRes.text().catch(() => msError);
+        }
+        console.error('Token exchange failed:', msError);
+        return NextResponse.redirect(`${appUrl}/admin/ams/clients/${clientId}?m365_error=${encodeURIComponent(msError)}`);
     }
 
     const tokens = await tokenRes.json();
