@@ -128,6 +128,7 @@ export default function ClientDetailPage() {
     const isOver = actual !== null && contracted > 0 && actual > contracted;
     const isUnder = actual !== null && contracted > 0 && actual < contracted;
     const delta = actual !== null ? actual - contracted : null;
+    const missingRevenue = delta !== null && delta > 0 && ppu > 0 ? delta * ppu : null;
 
     return (
         <div className="min-h-screen bg-[#F8FAFC]">
@@ -160,9 +161,17 @@ export default function ClientDetailPage() {
                             <p className="text-slate-400 font-medium text-sm mt-0.5">{client.agreement_type || 'No Agreement Type'} · {client.contact_name || 'No Contact'}</p>
                         </div>
                     </div>
-                    <Link href={`/admin/ams/clients/${id}/edit`} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-6 py-3 rounded-2xl font-black text-sm hover:bg-slate-50 shadow-sm transition-all">
-                        <Edit2 className="h-4 w-4" /> Edit Client
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <Link 
+                            href={`/ai-advisor/results?search=${encodeURIComponent(client.company_name)}`}
+                            className="flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-purple-700 shadow-lg shadow-purple-600/20 transition-all"
+                        >
+                            <Cloud className="h-4 w-4" /> AI Roadmap
+                        </Link>
+                        <Link href={`/admin/ams/clients/${id}/edit`} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-6 py-3 rounded-2xl font-black text-sm hover:bg-slate-50 shadow-sm transition-all">
+                            <Edit2 className="h-4 w-4" /> Edit Client
+                        </Link>
+                    </div>
                 </header>
 
                 <div className="grid grid-cols-12 gap-6">
@@ -326,6 +335,11 @@ export default function ClientDetailPage() {
                                                 ${delta !== null && delta > 0 ? 'text-red-600' : delta !== null && delta < 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
                                                 {delta !== null && delta > 0 ? `+${delta}` : delta}
                                             </p>
+                                            {missingRevenue !== null && (
+                                                <p className="text-xs font-black text-red-500 mt-1 z-10 relative">
+                                                    +${missingRevenue.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mo missing
+                                                </p>
+                                            )}
                                             {delta !== null && delta > 0 && <TrendingDown className="absolute right-4 top-1/2 -translate-y-1/2 h-16 w-16 text-red-100 opacity-50 z-0" />}
                                             {delta === 0 && <CheckCircle2 className="absolute right-4 top-1/2 -translate-y-1/2 h-16 w-16 text-emerald-100 opacity-50 z-0" />}
                                         </div>
