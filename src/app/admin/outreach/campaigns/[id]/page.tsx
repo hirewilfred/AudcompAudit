@@ -188,16 +188,16 @@ export default function CampaignDetailPage() {
             <AdminNavbar />
             <main className="pl-64 pr-10 pt-10 pb-20">
                 {/* Header */}
-                <header className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-4">
+                <header className="flex items-start justify-between gap-6 mb-8 flex-wrap">
+                    <div className="flex items-center gap-4 min-w-0">
                         <Link href="/admin/outreach/campaigns"
-                            className="h-10 w-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 shadow-sm transition-colors">
+                            className="h-10 w-10 shrink-0 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 shadow-sm transition-colors">
                             <ArrowLeft className="h-5 w-5" />
                         </Link>
-                        <div>
-                            <div className="flex items-center gap-3">
-                                <h1 className="text-3xl font-black text-slate-900 tracking-tight">{campaign.name}</h1>
-                                <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border uppercase ${statusBadge(campaign.status)}`}>
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-3 flex-wrap">
+                                <h1 className="text-3xl font-black text-slate-900 tracking-tight truncate">{campaign.name}</h1>
+                                <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border uppercase shrink-0 ${statusBadge(campaign.status)}`}>
                                     {campaign.status}
                                 </span>
                             </div>
@@ -206,18 +206,18 @@ export default function CampaignDetailPage() {
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 shrink-0">
                         <button onClick={handleScrape} disabled={scraping}
-                            className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-3 rounded-2xl font-black text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50">
+                            className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-3 rounded-2xl font-black text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50 whitespace-nowrap">
                             {scraping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                             {scraping ? 'Scraping...' : 'Scrape Leads'}
                         </button>
                         <button onClick={openSyncModal}
-                            className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-3 rounded-2xl font-black text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20">
+                            className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-3 rounded-2xl font-black text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 whitespace-nowrap">
                             <Send className="h-4 w-4" /> Sync to Instantly
                         </button>
                         <Link href={`/admin/outreach/campaigns/${id}/settings`}
-                            className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-5 py-3 rounded-2xl font-black text-sm hover:bg-slate-50 shadow-sm transition-all">
+                            className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-5 py-3 rounded-2xl font-black text-sm hover:bg-slate-50 shadow-sm transition-all whitespace-nowrap">
                             <Settings className="h-4 w-4" /> Settings
                         </Link>
                     </div>
