@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, UserCircle, Home, LogOut, Building2 } from 'lucide-react';
+import { LayoutDashboard, Users, UserCircle, Home, LogOut, Building2, Megaphone, Zap, Users2 } from 'lucide-react';
 
 export default function AdminNavbar() {
     const pathname = usePathname();
@@ -16,6 +16,12 @@ export default function AdminNavbar() {
     const amsItems = [
         { label: 'AMS Dashboard', href: '/admin/ams', icon: Building2 },
         { label: 'AMS Clients', href: '/admin/ams/clients', icon: UserCircle },
+    ];
+
+    const outreachItems = [
+        { label: 'Outreach Dashboard', href: '/admin/outreach', icon: Megaphone },
+        { label: 'Campaigns', href: '/admin/outreach/campaigns', icon: Zap },
+        { label: 'All Leads', href: '/admin/outreach/leads', icon: Users2 },
     ];
 
     const renderItems = (items: { label: string; href: string; icon: React.ElementType }[]) =>
@@ -55,6 +61,12 @@ export default function AdminNavbar() {
             <div className="flex flex-col gap-1">
                 <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 px-4 mb-1">AMS Portal</p>
                 {renderItems(amsItems)}
+            </div>
+
+            {/* AI Outreach Section */}
+            <div className="flex flex-col gap-1">
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 px-4 mb-1">AI Outreach</p>
+                {renderItems(outreachItems)}
             </div>
 
             <div className="mt-auto flex flex-col gap-2">
