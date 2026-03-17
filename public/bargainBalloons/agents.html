@@ -10,7 +10,6 @@
   :root {
     --white:     #ffffff;
     --card-bg:   #ffffff;
-    --bg:        #edf1f9;
     --border:    rgba(215,220,240,0.65);
     --shadow:    0 4px 24px rgba(100,110,180,0.09);
     --shadow-sm: 0 2px 12px rgba(100,110,180,0.06);
@@ -20,6 +19,7 @@
     --purple-md: #a78bfa;
     --coral:     #f97316;
     --coral-lt:  #fff4ee;
+    --coral-md:  #fdba74;
     --blue:      #3b82f6;
     --blue-lt:   #eff6ff;
     --blue-md:   #93c5fd;
@@ -37,266 +37,297 @@
     --nav-pill:  #312e81;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
-
   body {
     background: linear-gradient(145deg, #e6eaf5 0%, #edf1f9 55%, #e8ecf6 100%);
     background-attachment: fixed;
     color: var(--text);
     font-family: 'Plus Jakarta Sans', sans-serif;
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    display: flex; flex-direction: column;
   }
 
-  /* ── NAV (matches index.html) ── */
+  /* ── NAV ── */
   nav {
-    background: #ffffff;
-    border-bottom: 1px solid var(--border);
-    padding: 0 28px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 68px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 16px rgba(100,110,180,0.07);
-    flex-shrink: 0;
+    background: #ffffff; border-bottom: 1px solid var(--border);
+    padding: 0 28px; display: flex; align-items: center; justify-content: space-between;
+    height: 68px; position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 16px rgba(100,110,180,0.07); flex-shrink: 0;
   }
   .nav-left { display:flex; align-items:center; gap:24px; }
   .bb-logo { height:36px; object-fit:contain; }
-
   .nav-links { display:flex; align-items:center; gap:4px; margin-left:12px; }
   .nav-link {
     padding: 8px 18px; border-radius: 999px; font-size: 13px; font-weight: 600;
-    color: var(--muted); cursor: pointer; transition: all .2s;
-    text-decoration: none; display: inline-block;
+    color: var(--muted); cursor: pointer; transition: all .2s; text-decoration: none;
   }
   .nav-link:hover { background: var(--purple-lt); color: var(--purple); }
   .nav-link.active { background: var(--nav-pill); color: #fff; }
-
   .nav-right { display:flex; align-items:center; gap:12px; }
   .nav-icon-btn {
-    width: 38px; height: 38px; border-radius: 50%; border: none;
-    background: #f5f5fb; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px; box-shadow: var(--shadow-sm); transition: all .2s;
+    width:38px; height:38px; border-radius:50%; border:none; background:#f5f5fb;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    font-size:16px; box-shadow:var(--shadow-sm); transition:all .2s;
   }
   .nav-icon-btn:hover { background: var(--purple-lt); }
   .clock-badge {
-    background: #f5f5fb; border: 1px solid var(--border);
-    padding: 6px 14px; border-radius: 999px; font-size: 12px;
-    font-family: 'DM Mono', monospace; color: var(--muted);
-    box-shadow: var(--shadow-sm);
+    background:#f5f5fb; border:1px solid var(--border); padding:6px 14px;
+    border-radius:999px; font-size:12px; font-family:'DM Mono',monospace;
+    color:var(--muted); box-shadow:var(--shadow-sm);
   }
   .user-chip {
-    display: flex; align-items: center; gap: 8px;
-    background: #f5f5fb; border-radius: 999px;
-    padding: 5px 14px 5px 6px; box-shadow: var(--shadow-sm);
-    cursor: pointer; border: 1px solid var(--border);
+    display:flex; align-items:center; gap:8px; background:#f5f5fb;
+    border-radius:999px; padding:5px 14px 5px 6px; box-shadow:var(--shadow-sm);
+    cursor:pointer; border:1px solid var(--border);
   }
   .user-avatar {
-    width: 30px; height: 30px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--purple) 0%, var(--blue) 100%);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700; color: #fff;
+    width:30px; height:30px; border-radius:50%;
+    background:linear-gradient(135deg,var(--purple) 0%,var(--blue) 100%);
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700; color:#fff;
   }
-  .user-name { font-size: 12px; font-weight: 700; color: var(--navy); line-height:1.2; }
-  .user-sub  { font-size: 10px; color: var(--muted); line-height:1.2; }
+  .user-name { font-size:12px; font-weight:700; color:var(--navy); line-height:1.2; }
+  .user-sub  { font-size:10px; color:var(--muted); line-height:1.2; }
 
   /* ── LAYOUT ── */
-  .layout { display:flex; flex:1; min-height: 0; }
+  .layout { display:flex; flex:1; min-height:0; }
 
   /* ── SIDENAV ── */
   .sidenav {
-    width: 240px;
-    background: #ffffff;
-    border-right: 1px solid var(--border);
-    padding: 16px 0;
-    flex-shrink: 0;
-    box-shadow: 2px 0 12px rgba(100,110,180,0.05);
+    width:240px; background:#ffffff; border-right:1px solid var(--border);
+    padding:16px 0; flex-shrink:0; box-shadow:2px 0 12px rgba(100,110,180,0.05);
   }
   .snav-section {
-    padding: 6px 16px 4px;
-    font-size: 10px; font-weight: 700; color: var(--muted2);
-    letter-spacing: .1em; text-transform: uppercase;
-    font-family: 'DM Mono', monospace; margin-top: 12px;
+    padding:6px 16px 4px; font-size:10px; font-weight:700; color:var(--muted2);
+    letter-spacing:.1em; text-transform:uppercase; font-family:'DM Mono',monospace; margin-top:12px;
   }
   .snav-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 16px; font-size: 12px; font-weight: 600;
-    color: var(--muted); cursor: pointer;
-    border-left: 2px solid transparent; transition: all .15s;
+    display:flex; align-items:center; gap:10px; padding:9px 16px;
+    font-size:12px; font-weight:600; color:var(--muted); cursor:pointer;
+    border-left:2px solid transparent; transition:all .15s;
   }
-  .snav-item:hover { background: var(--purple-lt); color: var(--navy); }
-  .snav-item.active { border-color: var(--nav-pill); background: var(--purple-lt); color: var(--nav-pill); }
-  .snav-icon { font-size: 16px; }
+  .snav-item:hover { background:var(--purple-lt); color:var(--navy); }
+  .snav-item.active { border-color:var(--nav-pill); background:var(--purple-lt); color:var(--nav-pill); }
+  .snav-icon { font-size:16px; }
   .snav-badge {
-    margin-left: auto; font-size: 9px; padding: 2px 7px;
-    border-radius: 999px; font-weight: 700;
-    background: var(--amber-lt); color: var(--amber);
+    margin-left:auto; font-size:9px; padding:2px 7px; border-radius:999px;
+    font-weight:700; background:var(--amber-lt); color:var(--amber);
   }
 
   /* ── CONTENT ── */
-  .content { flex:1; padding:24px; overflow-y:auto; }
+  .content { flex:1; padding:24px 28px; overflow-y:auto; }
 
   /* Section header */
   .section-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
   .section-title { font-size:15px; font-weight:800; color:var(--navy); letter-spacing:-.01em; }
-  .see-all { font-size:12px; color:var(--purple); font-weight:700; cursor:pointer; }
+  .see-all { font-size:12px; color:var(--purple); font-weight:700; cursor:pointer; text-decoration:none; transition:opacity .2s; }
+  .see-all:hover { opacity:.7; }
 
-  /* ── AGENT HERO ── */
-  .agent-hero {
-    background: linear-gradient(160deg, #f4f0ff 0%, #ffffff 50%);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 26px;
-    margin-bottom: 20px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 24px;
-    box-shadow: var(--shadow);
+  /* ── PAGE HEADER ROW (like Tasklyn's "Paperpillar x Client Team") ── */
+  .page-hdr {
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:22px;
   }
-  .hero-eyebrow {
-    font-size: 11px; font-weight: 700; color: var(--muted);
-    font-family: 'DM Mono', monospace; letter-spacing: .08em;
-    text-transform: uppercase; margin-bottom: 10px;
-    display: flex; align-items: center; gap: 8px;
+  .page-hdr-left {}
+  .page-hdr-title { font-size:22px; font-weight:800; color:var(--navy); letter-spacing:-.02em; }
+  .page-hdr-sub   { font-size:12px; color:var(--muted); margin-top:3px; font-family:'DM Mono',monospace; }
+  .page-hdr-right { display:flex; align-items:center; gap:12px; }
+
+  /* Avatar stack (like Tasklyn "+10" team row) */
+  .avatar-stack { display:flex; align-items:center; }
+  .av-circle {
+    width:32px; height:32px; border-radius:50%; border:2px solid #fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:700; color:#fff; margin-left:-8px;
+    box-shadow:var(--shadow-sm);
   }
-  .hero-icon { font-size: 44px; margin-bottom: 10px; display: block; }
-  .hero-name { font-size: 28px; font-weight: 800; color: var(--navy); letter-spacing: -.02em; margin-bottom: 8px; }
-  .hero-desc { font-size: 13px; color: var(--muted); line-height: 1.65; max-width: 520px; }
-  .hero-right { text-align: right; flex-shrink: 0; }
-  .status-big {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 9px 20px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  .av-circle:first-child { margin-left:0; }
+  .av-more {
+    width:32px; height:32px; border-radius:50%; border:2px solid #fff;
+    background:#f5f5fb; color:var(--muted); font-size:10px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; margin-left:-8px;
+    box-shadow:var(--shadow-sm);
   }
-  .sb-green { background: var(--green-lt); color: var(--green); }
-  .hero-stat { margin-top: 18px; }
-  .hs-label { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; text-transform:uppercase; letter-spacing:.04em; }
-  .hs-val { font-size: 24px; font-weight: 800; color: var(--navy); margin-top:2px; }
-  .live-dot { width:7px; height:7px; border-radius:50%; background:var(--green); animation:blink 1.8s ease-in-out infinite; flex-shrink:0; }
+
+  /* Status pill */
+  .status-pill {
+    display:flex; align-items:center; gap:6px; padding:8px 16px;
+    border-radius:999px; font-size:12px; font-weight:700; box-shadow:var(--shadow-sm);
+  }
+  .pill-green { background:var(--green-lt); color:var(--green); }
+  .pill-amber { background:var(--amber-lt); color:var(--amber); }
+  .live-dot { width:7px; height:7px; border-radius:50%; animation:blink 1.8s ease-in-out infinite; flex-shrink:0; }
+  .dot-green { background:var(--green); }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
+  .new-seq-btn {
+    display:flex; align-items:center; gap:6px; padding:10px 20px; border-radius:999px;
+    background:var(--nav-pill); color:#fff; border:none; font-size:13px; font-weight:700;
+    cursor:pointer; font-family:inherit; box-shadow:0 4px 16px rgba(49,46,129,0.28); transition:all .2s;
+  }
+  .new-seq-btn:hover { background:var(--purple); transform:translateY(-1px); }
+
   /* ── TABS ── */
-  .tabs { display:flex; border-bottom: 2px solid rgba(215,220,240,0.5); margin-bottom:20px; }
+  .tabs { display:flex; border-bottom:2px solid rgba(215,220,240,0.5); margin-bottom:22px; }
   .tab {
-    padding: 10px 20px; font-size: 12px; font-weight: 700;
-    cursor: pointer; color: var(--muted);
-    border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .15s;
+    padding:10px 20px; font-size:12px; font-weight:700; cursor:pointer;
+    color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-2px; transition:all .15s;
   }
-  .tab:hover { color: var(--navy); }
-  .tab.active { color: var(--nav-pill); border-color: var(--nav-pill); }
+  .tab:hover { color:var(--navy); }
+  .tab.active { color:var(--nav-pill); border-color:var(--nav-pill); }
 
-  /* ── METRICS ROW ── */
-  .metrics-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
-  .metric-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 20px 22px;
-    box-shadow: var(--shadow);
-    transition: transform .2s, box-shadow .2s;
+  /* ── PLATFORM CARDS (like "Today Task") ── */
+  .platform-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:22px; }
+  .platform-card {
+    border-radius:20px; padding:22px; cursor:pointer;
+    transition:all .25s; box-shadow:var(--shadow); border:1px solid rgba(215,220,240,0.4);
+    position:relative;
   }
-  .metric-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-  .mc-icon {
-    width: 44px; height: 44px; border-radius: 14px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px; margin-bottom: 14px;
-  }
-  .mc-lbl { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 6px; }
-  .mc-val { font-size: 30px; font-weight: 800; letter-spacing: -.04em; line-height:1; }
-  .mc-delta { font-size: 11px; font-weight: 600; margin-top: 8px; color: var(--green); }
+  .platform-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-lg); }
+  .pc-tiktok   { background:linear-gradient(160deg,#d8e0ff 0%,#eef0ff 55%,#f5f6ff 100%); }
+  .pc-insta    { background:linear-gradient(160deg,#ffd9cc 0%,#ffede6 55%,#fff8f5 100%); }
+  .pc-facebook { background:linear-gradient(160deg,#cce8ff 0%,#e0f1ff 55%,#f0f8ff 100%); }
 
-  /* ── TABLE ── */
+  .pc-priority { font-size:10px; font-weight:700; padding:4px 10px; border-radius:999px; display:inline-flex; align-items:center; gap:5px; margin-bottom:14px; }
+  .pc-prio-live     { background:rgba(16,185,129,0.15); color:var(--green); }
+  .pc-prio-active   { background:rgba(108,92,231,0.15); color:var(--purple); }
+  .pc-prio-pending  { background:rgba(245,158,11,0.18); color:var(--amber); }
+
+  .pc-icon { font-size:36px; margin-bottom:10px; display:block; }
+  .pc-name { font-size:19px; font-weight:800; color:var(--navy); letter-spacing:-.02em; margin-bottom:4px; }
+  .pc-sub  { font-size:11px; color:var(--muted); margin-bottom:16px; line-height:1.5; }
+
+  /* Avatar row inside platform card */
+  .pc-avatars { display:flex; align-items:center; margin-bottom:14px; }
+  .pc-av {
+    width:26px; height:26px; border-radius:50%; border:2px solid rgba(255,255,255,0.8);
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; color:#fff; margin-left:-6px;
+  }
+  .pc-av:first-child { margin-left:0; }
+
+  .pc-footer { display:flex; justify-content:space-between; align-items:center; margin-top:14px; }
+  .pc-bar-wrap { flex:1; margin-right:14px; }
+  .pc-bar-track { height:8px; background:rgba(255,255,255,0.5); border-radius:999px; overflow:hidden; margin-top:4px; }
+  .pc-bar-fill  { height:100%; border-radius:999px; }
+  .pc-bar-label { font-size:9px; font-weight:700; color:var(--muted); }
+  .pc-count { font-size:12px; font-weight:800; color:var(--muted); font-family:'DM Mono',monospace; white-space:nowrap; }
+
+  /* ── MIDDLE ROW: Performance + Tracker ── */
+  .mid-row { display:grid; grid-template-columns:320px 1fr 1fr; gap:14px; margin-bottom:22px; }
+
+  /* Performance (like "Project Completed") */
+  .perf-card {
+    background:var(--card-bg); border:1px solid var(--border); border-radius:20px;
+    padding:20px; box-shadow:var(--shadow);
+  }
+  .perf-total { font-size:10px; color:var(--muted); font-weight:600; }
+  .perf-donut-wrap { display:flex; align-items:center; gap:16px; margin:16px 0; }
+  .perf-legend { flex:1; display:flex; flex-direction:column; gap:12px; }
+  .perf-row { display:flex; align-items:center; justify-content:space-between; }
+  .perf-left { display:flex; align-items:center; gap:8px; }
+  .perf-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .perf-label { font-size:12px; color:var(--text); font-weight:600; }
+  .perf-label small { display:block; font-size:10px; color:var(--muted); font-weight:400; }
+  .perf-val { font-size:18px; font-weight:800; color:var(--navy); }
+
+  /* Tracker chart (like "Tracker Detail") */
+  .tracker-card {
+    background:var(--card-bg); border:1px solid var(--border); border-radius:20px;
+    padding:20px; box-shadow:var(--shadow);
+  }
+  .tracker-legend { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+  .tleg-item { display:flex; align-items:center; gap:6px; font-size:11px; font-weight:600; color:var(--muted); }
+  .tleg-dot { width:10px; height:10px; border-radius:50%; }
+  .tracker-chart { display:flex; align-items:flex-end; gap:8px; height:90px; margin-bottom:10px; }
+  .tc-col { flex:1; display:flex; gap:4px; align-items:flex-end; height:100%; }
+  .tc-bar {
+    flex:1; border-radius:6px; min-height:6px;
+    transition:height .6s cubic-bezier(.4,0,.2,1);
+  }
+  .tc-bar.published { background:linear-gradient(0deg,var(--coral),var(--coral-md)); }
+  .tc-bar.scheduled { background:rgba(180,185,220,0.4); }
+  .tc-labels { display:flex; gap:8px; }
+  .tc-lbl { flex:1; text-align:center; font-size:9px; color:var(--muted); font-weight:700; font-family:'DM Mono',monospace; }
+
+  /* Rank-style list (like "Rank Performance") */
+  .rank-card {
+    background:var(--card-bg); border:1px solid var(--border); border-radius:20px;
+    padding:20px; box-shadow:var(--shadow);
+  }
+  .rank-item { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid rgba(215,220,240,0.3); }
+  .rank-item:last-child { border-bottom:none; }
+  .rank-av {
+    width:36px; height:36px; border-radius:12px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:18px;
+  }
+  .rank-info { flex:1; }
+  .rank-name { font-size:12px; font-weight:700; color:var(--navy); }
+  .rank-sub  { font-size:10px; color:var(--muted); margin-top:1px; }
+  .rank-val  { font-size:15px; font-weight:800; color:var(--navy); }
+
+  /* ── SEQUENCES TABLE ── */
   .table-wrap {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    overflow: hidden;
-    margin-bottom: 20px;
-    box-shadow: var(--shadow);
+    background:var(--card-bg); border:1px solid var(--border); border-radius:20px;
+    overflow:hidden; margin-bottom:22px; box-shadow:var(--shadow);
   }
   .table-head {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+    padding:16px 20px; border-bottom:1px solid var(--border);
   }
-  .new-seq-btn {
-    font-size: 12px; font-weight: 700; padding: 9px 18px;
-    background: var(--nav-pill); color: #fff;
-    border: none; border-radius: 999px; cursor: pointer;
-    font-family: inherit; transition: all .15s;
-    box-shadow: 0 4px 14px rgba(49,46,129,0.25);
-  }
-  .new-seq-btn:hover { background: var(--purple); transform: translateY(-1px); }
   table { width:100%; border-collapse:collapse; }
   th {
-    text-align: left; padding: 10px 20px;
-    font-size: 10px; font-weight: 700; color: var(--muted2);
-    font-family: 'DM Mono', monospace; text-transform: uppercase;
-    letter-spacing: .06em; background: #f6f5ff; border-bottom: 1px solid var(--border);
+    text-align:left; padding:10px 20px; font-size:10px; font-weight:700; color:var(--muted2);
+    font-family:'DM Mono',monospace; text-transform:uppercase; letter-spacing:.06em;
+    background:#f6f5ff; border-bottom:1px solid var(--border);
   }
-  td { padding: 13px 20px; font-size: 12px; border-bottom: 1px solid rgba(215,220,240,0.4); color: var(--text); }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(245,244,255,0.5); }
-  .badge { font-size: 10px; font-weight: 700; padding: 4px 11px; border-radius: 999px; }
-  .badge-active { background: var(--green-lt); color: var(--green); }
-  .badge-draft  { background: rgba(215,220,240,0.3); color: var(--muted2); border: 1px solid var(--border); }
-  .badge-warn   { background: var(--amber-lt); color: var(--amber); }
-  .tbl-edit   { color: var(--purple); font-weight: 700; cursor: pointer; font-size: 11px; }
-  .tbl-review { color: var(--amber); font-weight: 700; cursor: pointer; font-size: 11px; }
+  td { padding:13px 20px; font-size:12px; border-bottom:1px solid rgba(215,220,240,0.35); color:var(--text); }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(245,244,255,0.5); }
+  .badge { font-size:10px; font-weight:700; padding:4px 11px; border-radius:999px; }
+  .badge-active { background:var(--green-lt); color:var(--green); }
+  .badge-draft  { background:rgba(215,220,240,0.3); color:var(--muted2); border:1px solid var(--border); }
+  .badge-warn   { background:var(--amber-lt); color:var(--amber); }
+  .tbl-action { font-weight:700; cursor:pointer; font-size:11px; }
+  .tbl-edit   { color:var(--purple); }
+  .tbl-review { color:var(--amber); }
 
   /* ── CONFIG + LOG ── */
-  .config-row-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .bottom-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
   .config-panel, .log-panel {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: var(--shadow);
+    background:var(--card-bg); border:1px solid var(--border);
+    border-radius:20px; padding:20px; box-shadow:var(--shadow);
   }
-  .cpanel-title {
-    font-size: 15px; font-weight: 800; color: var(--navy);
-    letter-spacing: -.01em; margin-bottom: 16px;
-  }
+  .cpanel-title { font-size:15px; font-weight:800; color:var(--navy); letter-spacing:-.01em; margin-bottom:16px; }
   .cfg-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 0; border-bottom: 1px solid rgba(215,220,240,0.4);
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 0; border-bottom:1px solid rgba(215,220,240,0.35);
   }
-  .cfg-row:last-child { border-bottom: none; }
-  .cfg-key { font-size: 12px; color: var(--text); font-weight: 500; }
-  .cfg-val { font-size: 12px; color: var(--purple); font-weight: 700; }
+  .cfg-row:last-child { border-bottom:none; }
+  .cfg-key { font-size:12px; color:var(--text); font-weight:500; }
+  .cfg-val { font-size:12px; color:var(--purple); font-weight:700; }
   .toggle { width:40px; height:22px; border-radius:999px; cursor:pointer; position:relative; transition:background .2s; flex-shrink:0; }
-  .toggle.on { background: var(--green); }
-  .toggle.off { background: var(--muted2); }
+  .toggle.on  { background:var(--green); }
+  .toggle.off { background:var(--muted2); }
   .toggle::after {
-    content:''; position:absolute; width:16px; height:16px;
-    background:#fff; border-radius:50%; top:3px;
-    transition:left .2s; box-shadow:0 1px 4px rgba(0,0,0,0.2);
+    content:''; position:absolute; width:16px; height:16px; background:#fff;
+    border-radius:50%; top:3px; transition:left .2s; box-shadow:0 1px 4px rgba(0,0,0,0.2);
   }
   .toggle.on::after  { left:21px; }
   .toggle.off::after { left:3px; }
-
   .log-box {
-    background: #f6f5ff; border: 1px solid var(--border);
-    border-radius: 12px; padding: 14px;
-    max-height: 210px; overflow-y: auto;
-    font-family: 'DM Mono', monospace;
+    background:#f6f5ff; border:1px solid var(--border); border-radius:12px;
+    padding:14px; max-height:220px; overflow-y:auto; font-family:'DM Mono',monospace;
   }
-  .log-line { font-size: 10px; line-height: 2; }
-  .log-ts   { color: var(--muted2); }
-  .log-ok   { color: var(--green); }
-  .log-warn { color: var(--amber); }
-  .log-info { color: var(--purple); }
+  .log-line { font-size:10px; line-height:2; }
+  .log-ts   { color:var(--muted2); }
+  .log-ok   { color:var(--green); }
+  .log-warn { color:var(--amber); }
+  .log-info { color:var(--purple); }
 
   /* ── FOOTER ── */
   footer {
-    background: #ffffff;
-    border-top: 1px solid var(--border);
-    padding: 14px 28px;
-    display: flex; justify-content: space-between; align-items: center;
-    box-shadow: 0 -2px 12px rgba(100,110,180,0.05);
-    flex-shrink: 0;
+    background:#ffffff; border-top:1px solid var(--border); padding:14px 28px;
+    display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 -2px 12px rgba(100,110,180,0.05); flex-shrink:0;
   }
   .footer-left  { font-size:11px; color:var(--muted); }
   .footer-right { font-size:11px; color:var(--muted2); font-family:'DM Mono',monospace; }
@@ -343,13 +374,11 @@
     <div class="snav-item"><span class="snav-icon">🔁</span>Retention</div>
     <div class="snav-item"><span class="snav-icon">🎉</span>Seasonal Campaigns<span class="snav-badge">Action</span></div>
     <div class="snav-item"><span class="snav-icon">💰</span>Pricing Intel</div>
-
     <div class="snav-section">Command Centre</div>
     <div class="snav-item"><span class="snav-icon">📊</span>Overview Dashboard</div>
     <div class="snav-item"><span class="snav-icon">📧</span>Weekly Digest</div>
     <div class="snav-item"><span class="snav-icon">🔔</span>Alert Centre</div>
     <div class="snav-item"><span class="snav-icon">💵</span>Revenue Attribution</div>
-
     <div class="snav-section">Settings</div>
     <div class="snav-item"><span class="snav-icon">🔗</span>Integrations</div>
     <div class="snav-item"><span class="snav-icon">🔔</span>Notifications</div>
@@ -359,27 +388,22 @@
   <!-- CONTENT -->
   <div class="content">
 
-    <!-- HERO -->
-    <div class="agent-hero">
-      <div>
-        <div class="hero-eyebrow">
-          <span style="background:var(--purple-lt);color:var(--purple);padding:3px 10px;border-radius:6px;font-size:10px;">AGENT 02</span>
-          Social Media Agent
-        </div>
-        <span class="hero-icon">📱</span>
-        <div class="hero-name">Social Media Agent</div>
-        <div class="hero-desc">Generates and publishes AI-driven balloon content across TikTok, Instagram, and Facebook. Maintains a 4–5 post/day cadence tailored to Bargain Balloons' product catalogue, seasonal events, and B2B audience — without any manual effort from your team.</div>
+    <!-- PAGE HEADER (like "Paperpillar x Client Team") -->
+    <div class="page-hdr">
+      <div class="page-hdr-left">
+        <div class="page-hdr-title">Social Media Agent</div>
+        <div class="page-hdr-sub">Agent 02 · AI Business Operating System · Bargain Balloons</div>
       </div>
-      <div class="hero-right">
-        <div class="status-big sb-green"><span class="live-dot"></span>Running</div>
-        <div class="hero-stat">
-          <div class="hs-label">Uptime</div>
-          <div class="hs-val">23d 14h</div>
+      <div class="page-hdr-right">
+        <!-- Avatar stack like Tasklyn -->
+        <div class="avatar-stack">
+          <div class="av-circle" style="background:linear-gradient(135deg,#e2198b,#f97316)">T</div>
+          <div class="av-circle" style="background:linear-gradient(135deg,#f97316,#fbbf24)">I</div>
+          <div class="av-circle" style="background:linear-gradient(135deg,#1877f2,#60a5fa)">F</div>
+          <div class="av-more">+3</div>
         </div>
-        <div class="hero-stat" style="margin-top:12px">
-          <div class="hs-label">Next Scheduled Post</div>
-          <div style="font-size:13px;font-weight:700;color:var(--purple);margin-top:4px">TikTok — 2h 14m</div>
-        </div>
+        <div class="status-pill pill-green"><span class="live-dot dot-green"></span>Running</div>
+        <button class="new-seq-btn">＋ New Sequence</button>
       </div>
     </div>
 
@@ -392,33 +416,243 @@
       <div class="tab">Logs</div>
     </div>
 
-    <!-- METRICS -->
-    <div class="metrics-row">
-      <div class="metric-card">
-        <div class="mc-icon" style="background:var(--purple-lt);">📱</div>
-        <div class="mc-lbl">Posts Published (30D)</div>
-        <div class="mc-val" style="color:var(--purple)">134</div>
-        <div class="mc-delta">↑ vs 12 manual avg</div>
-      </div>
-      <div class="metric-card">
-        <div class="mc-icon" style="background:var(--blue-lt);">💬</div>
-        <div class="mc-lbl">Avg Engagement Rate</div>
-        <div class="mc-val" style="color:var(--blue)">4.8%</div>
-        <div class="mc-delta">↑ from 1.2% baseline</div>
-      </div>
-      <div class="metric-card">
-        <div class="mc-icon" style="background:var(--green-lt);">📣</div>
-        <div class="mc-lbl">Total Reach (30D)</div>
-        <div class="mc-val" style="color:var(--green)">128K</div>
-        <div class="mc-delta">↑ 3.1× manual avg</div>
-      </div>
-      <div class="metric-card">
-        <div class="mc-icon" style="background:var(--amber-lt);">🌐</div>
-        <div class="mc-lbl">Website Traffic (Social)</div>
-        <div class="mc-val" style="color:var(--amber)">+41%</div>
-        <div class="mc-delta" style="color:var(--muted)">vs prior 30 days</div>
-      </div>
+    <!-- PLATFORM CARDS (like "Today Task") -->
+    <div class="section-hdr">
+      <div class="section-title">Platform Activity</div>
+      <a class="see-all">See All →</a>
     </div>
+    <div class="platform-grid">
+
+      <!-- TikTok — periwinkle -->
+      <div class="platform-card pc-tiktok">
+        <div class="pc-priority pc-prio-live"><span class="live-dot dot-green"></span>Live Now</div>
+        <span class="pc-icon">🎵</span>
+        <div class="pc-name">TikTok</div>
+        <div class="pc-sub">Spring reveals · Packing videos · Tutorials</div>
+        <div class="pc-avatars">
+          <div class="pc-av" style="background:#6c5ce7">T</div>
+          <div class="pc-av" style="background:#a78bfa">V</div>
+          <div class="pc-av" style="background:#7c3aed">R</div>
+        </div>
+        <div class="pc-footer">
+          <div class="pc-bar-wrap">
+            <div class="pc-bar-label">Weekly Calendar</div>
+            <div class="pc-bar-track">
+              <div class="pc-bar-fill" style="width:86%;background:linear-gradient(90deg,#6c5ce7,#a78bfa)"></div>
+            </div>
+          </div>
+          <div class="pc-count">6/7</div>
+        </div>
+      </div>
+
+      <!-- Instagram — peach/coral -->
+      <div class="platform-card pc-insta">
+        <div class="pc-priority pc-prio-active">Active</div>
+        <span class="pc-icon">📸</span>
+        <div class="pc-name">Instagram</div>
+        <div class="pc-sub">Reels · Stories · B2B carousel posts</div>
+        <div class="pc-avatars">
+          <div class="pc-av" style="background:#f97316">I</div>
+          <div class="pc-av" style="background:#fdba74">S</div>
+          <div class="pc-av" style="background:#ef4444">R</div>
+        </div>
+        <div class="pc-footer">
+          <div class="pc-bar-wrap">
+            <div class="pc-bar-label">Weekly Calendar</div>
+            <div class="pc-bar-track">
+              <div class="pc-bar-fill" style="width:71%;background:linear-gradient(90deg,#f97316,#fdba74)"></div>
+            </div>
+          </div>
+          <div class="pc-count">5/7</div>
+        </div>
+      </div>
+
+      <!-- Facebook — light blue -->
+      <div class="platform-card pc-facebook">
+        <div class="pc-priority pc-prio-pending">⚡ Approval Needed</div>
+        <span class="pc-icon">📘</span>
+        <div class="pc-name">Facebook</div>
+        <div class="pc-sub">Event planners · B2B outreach · Groups</div>
+        <div class="pc-avatars">
+          <div class="pc-av" style="background:#3b82f6">F</div>
+          <div class="pc-av" style="background:#60a5fa">B</div>
+          <div class="pc-av" style="background:#93c5fd">G</div>
+        </div>
+        <div class="pc-footer">
+          <div class="pc-bar-wrap">
+            <div class="pc-bar-label">Weekly Calendar</div>
+            <div class="pc-bar-track">
+              <div class="pc-bar-fill" style="width:43%;background:linear-gradient(90deg,#3b82f6,#93c5fd)"></div>
+            </div>
+          </div>
+          <div class="pc-count">3/7</div>
+        </div>
+      </div>
+
+    </div><!-- /platform-grid -->
+
+    <!-- MIDDLE ROW: Performance + Tracker + Rank -->
+    <div class="mid-row">
+
+      <!-- Performance (like "Project Completed") -->
+      <div class="perf-card">
+        <div class="section-hdr" style="margin-bottom:0">
+          <div class="section-title">30-Day Output</div>
+          <div class="perf-total">Total 134 posts</div>
+        </div>
+        <div class="perf-donut-wrap">
+          <!-- Concentric rings: Published / Scheduled / Draft -->
+          <svg width="100" height="100" viewBox="0 0 100 100" style="flex-shrink:0">
+            <!-- Track rings -->
+            <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(210,208,238,0.25)" stroke-width="9"/>
+            <circle cx="50" cy="50" r="29" fill="none" stroke="rgba(210,208,238,0.25)" stroke-width="9"/>
+            <circle cx="50" cy="50" r="18" fill="none" stroke="rgba(210,208,238,0.25)" stroke-width="9"/>
+            <!-- Published 68% outer ring  circ=251 -->
+            <circle cx="50" cy="50" r="40" fill="none" stroke="url(#gPub)" stroke-width="9"
+              stroke-dasharray="171 80" stroke-linecap="round" transform="rotate(-90 50 50)"/>
+            <!-- Scheduled 22% mid ring  circ=182 -->
+            <circle cx="50" cy="50" r="29" fill="none" stroke="url(#gSch)" stroke-width="9"
+              stroke-dasharray="40 142" stroke-linecap="round" transform="rotate(-90 50 50)"/>
+            <!-- Draft 10% inner ring  circ=113 -->
+            <circle cx="50" cy="50" r="18" fill="none" stroke="var(--muted2)" stroke-width="9"
+              stroke-dasharray="11 102" stroke-linecap="round" transform="rotate(-90 50 50)"/>
+            <defs>
+              <linearGradient id="gPub" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#6c5ce7"/><stop offset="100%" stop-color="#a78bfa"/>
+              </linearGradient>
+              <linearGradient id="gSch" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="#fdba74"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="perf-legend">
+            <div class="perf-row">
+              <div class="perf-left">
+                <div class="perf-dot" style="background:var(--purple)"></div>
+                <div class="perf-label">Published<small>Live on platform</small></div>
+              </div>
+              <div class="perf-val" style="color:var(--purple)">68%</div>
+            </div>
+            <div class="perf-row">
+              <div class="perf-left">
+                <div class="perf-dot" style="background:var(--coral)"></div>
+                <div class="perf-label">Scheduled<small>Queued to post</small></div>
+              </div>
+              <div class="perf-val" style="color:var(--coral)">22%</div>
+            </div>
+            <div class="perf-row">
+              <div class="perf-left">
+                <div class="perf-dot" style="background:var(--muted2)"></div>
+                <div class="perf-label">Draft<small>Awaiting review</small></div>
+              </div>
+              <div class="perf-val" style="color:var(--muted2)">10%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tracker (like "Tracker Detail") -->
+      <div class="tracker-card">
+        <div class="section-hdr" style="margin-bottom:0">
+          <div class="section-title">Post Tracker</div>
+          <a class="see-all">See All →</a>
+        </div>
+        <div class="tracker-legend" style="margin-top:12px">
+          <div class="tleg-item"><div class="tleg-dot" style="background:var(--coral)"></div>Published</div>
+          <div class="tleg-item"><div class="tleg-dot" style="background:rgba(180,185,220,0.5)"></div>Scheduled</div>
+        </div>
+        <div class="tracker-chart">
+          <div class="tc-col">
+            <div class="tc-bar scheduled" style="height:60%"></div>
+            <div class="tc-bar published" style="height:80%"></div>
+          </div>
+          <div class="tc-col">
+            <div class="tc-bar scheduled" style="height:45%"></div>
+            <div class="tc-bar published" style="height:55%"></div>
+          </div>
+          <div class="tc-col">
+            <div class="tc-bar scheduled" style="height:70%"></div>
+            <div class="tc-bar published" style="height:90%"></div>
+          </div>
+          <div class="tc-col">
+            <div class="tc-bar scheduled" style="height:40%"></div>
+            <div class="tc-bar published" style="height:50%"></div>
+          </div>
+          <div class="tc-col">
+            <div class="tc-bar scheduled" style="height:80%"></div>
+            <div class="tc-bar published" style="height:70%"></div>
+          </div>
+          <div class="tc-col">
+            <div class="tc-bar scheduled" style="height:55%"></div>
+            <div class="tc-bar published" style="height:100%"></div>
+          </div>
+          <div class="tc-col">
+            <div class="tc-bar scheduled" style="height:65%"></div>
+            <div class="tc-bar published" style="height:60%"></div>
+          </div>
+        </div>
+        <div class="tc-labels">
+          <div class="tc-lbl">MON</div>
+          <div class="tc-lbl">TUE</div>
+          <div class="tc-lbl">WED</div>
+          <div class="tc-lbl">THU</div>
+          <div class="tc-lbl">FRI</div>
+          <div class="tc-lbl">SAT</div>
+          <div class="tc-lbl">SUN</div>
+        </div>
+      </div>
+
+      <!-- Rank-style top content (like "Rank Performance") -->
+      <div class="rank-card">
+        <div class="section-hdr" style="margin-bottom:0">
+          <div class="section-title">Top Performing Posts</div>
+          <a class="see-all">See All →</a>
+        </div>
+        <div style="margin-top:14px;">
+          <div class="rank-item">
+            <div class="rank-av" style="background:var(--purple-lt)">🎵</div>
+            <div class="rank-info">
+              <div class="rank-name">Spring Arch Reveal</div>
+              <div class="rank-sub">TikTok · Published today</div>
+            </div>
+            <div class="rank-val" style="color:var(--purple)">847</div>
+          </div>
+          <div class="rank-item">
+            <div class="rank-av" style="background:var(--coral-lt)">📸</div>
+            <div class="rank-info">
+              <div class="rank-name">Balloon Wall Setup</div>
+              <div class="rank-sub">Instagram · 2 days ago</div>
+            </div>
+            <div class="rank-val" style="color:var(--coral)">612</div>
+          </div>
+          <div class="rank-item">
+            <div class="rank-av" style="background:var(--blue-lt)">📘</div>
+            <div class="rank-info">
+              <div class="rank-name">B2B Planner Guide</div>
+              <div class="rank-sub">Facebook · 3 days ago</div>
+            </div>
+            <div class="rank-val" style="color:var(--blue)">430</div>
+          </div>
+          <div class="rank-item">
+            <div class="rank-av" style="background:var(--purple-lt)">🎵</div>
+            <div class="rank-info">
+              <div class="rank-name">Packing Time-Lapse</div>
+              <div class="rank-sub">TikTok · 4 days ago</div>
+            </div>
+            <div class="rank-val" style="color:var(--purple)">391</div>
+          </div>
+          <div class="rank-item">
+            <div class="rank-av" style="background:var(--amber-lt)">🎉</div>
+            <div class="rank-info">
+              <div class="rank-name">Mother's Day Preview</div>
+              <div class="rank-sub">All Platforms · 5 days ago</div>
+            </div>
+            <div class="rank-val" style="color:var(--amber)">284</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /mid-row -->
 
     <!-- SEQUENCES TABLE -->
     <div class="table-wrap">
@@ -441,64 +675,58 @@
         <tbody>
           <tr>
             <td style="font-weight:700;color:var(--navy)">Spring Seasonal Reveals 2026</td>
-            <td>TikTok + Instagram</td>
-            <td>8</td>
+            <td>TikTok + Instagram</td><td>8</td>
             <td style="color:var(--green);font-weight:700">12,400</td>
             <td style="color:var(--green);font-weight:700">6.2%</td>
             <td><span class="badge badge-active">Active</span></td>
-            <td class="tbl-edit">Edit</td>
+            <td class="tbl-action tbl-edit">Edit</td>
           </tr>
           <tr>
             <td style="font-weight:700;color:var(--navy)">Order Packing Videos (BB Warehouse)</td>
-            <td>TikTok</td>
-            <td>4</td>
+            <td>TikTok</td><td>4</td>
             <td style="color:var(--green);font-weight:700">9,800</td>
             <td style="color:var(--green);font-weight:700">5.4%</td>
             <td><span class="badge badge-active">Active</span></td>
-            <td class="tbl-edit">Edit</td>
+            <td class="tbl-action tbl-edit">Edit</td>
           </tr>
           <tr>
             <td style="font-weight:700;color:var(--navy)">B2B Event Planner Series</td>
-            <td>Facebook + LinkedIn</td>
-            <td>5</td>
+            <td>Facebook + LinkedIn</td><td>5</td>
             <td style="font-weight:600">4,200</td>
             <td style="font-weight:600">3.8%</td>
             <td><span class="badge badge-active">Active</span></td>
-            <td class="tbl-edit">Edit</td>
+            <td class="tbl-action tbl-edit">Edit</td>
           </tr>
           <tr>
             <td style="font-weight:700;color:var(--navy)">Mother's Day Campaign 2026</td>
-            <td>All Platforms</td>
-            <td>12</td>
+            <td>All Platforms</td><td>12</td>
             <td style="color:var(--muted2)">—</td>
             <td style="color:var(--muted2)">—</td>
             <td><span class="badge badge-warn">Awaiting Approval</span></td>
-            <td class="tbl-review">Review</td>
+            <td class="tbl-action tbl-review">Review</td>
           </tr>
           <tr>
             <td style="font-weight:700;color:var(--navy)">Balloon Decorating Tutorial Series</td>
-            <td>Instagram + TikTok</td>
-            <td>3</td>
+            <td>Instagram + TikTok</td><td>3</td>
             <td style="font-weight:600">3,100</td>
             <td style="font-weight:600">2.9%</td>
             <td><span class="badge badge-draft">Draft</span></td>
-            <td class="tbl-edit">Edit</td>
+            <td class="tbl-action tbl-edit">Edit</td>
           </tr>
           <tr>
             <td style="font-weight:700;color:var(--navy)">New Product Drop Alerts (Balloonia)</td>
-            <td>Instagram</td>
-            <td>2</td>
+            <td>Instagram</td><td>2</td>
             <td style="color:var(--muted2)">—</td>
             <td style="color:var(--muted2)">—</td>
             <td><span class="badge badge-draft">Draft</span></td>
-            <td class="tbl-edit">Edit</td>
+            <td class="tbl-action tbl-edit">Edit</td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <!-- CONFIG + LOG -->
-    <div class="config-row-grid">
+    <div class="bottom-row">
       <div class="config-panel">
         <div class="cpanel-title">Agent Settings</div>
         <div class="cfg-row"><span class="cfg-key">Daily post limit</span><span class="cfg-val">5 posts/day</span></div>
@@ -548,9 +776,17 @@
     t.classList.add('active');
   }));
 
-  document.querySelectorAll('.metric-card,.agent-hero,.table-wrap,.config-panel,.log-panel').forEach((el,i) => {
-    el.style.opacity='0'; el.style.transform='translateY(12px)';
-    setTimeout(()=>{ el.style.transition='all .4s ease'; el.style.opacity='1'; el.style.transform='none'; }, i*70+80);
+  // Staggered entrance
+  const els = document.querySelectorAll('.platform-card,.perf-card,.tracker-card,.rank-card,.table-wrap,.config-panel,.log-panel');
+  els.forEach((el,i) => {
+    el.style.opacity='0'; el.style.transform='translateY(14px)';
+    setTimeout(()=>{ el.style.transition='all .42s ease'; el.style.opacity='1'; el.style.transform='none'; }, i*65+100);
+  });
+
+  // Animate platform card progress bars
+  document.querySelectorAll('.pc-bar-fill').forEach(bar => {
+    const w = bar.style.width; bar.style.width='0';
+    setTimeout(()=>{ bar.style.transition='width 1s cubic-bezier(.4,0,.2,1)'; bar.style.width=w; }, 500);
   });
 </script>
 </body>
