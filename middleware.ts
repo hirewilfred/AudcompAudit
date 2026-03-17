@@ -21,5 +21,6 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/bargainballoons/:path*'],
+  // Match /bargainballoons, /bargainballoons/, and all sub-paths
+  matcher: ['/bargainballoons', '/bargainballoons/:path*'],
 };
