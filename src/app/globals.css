@@ -137,8 +137,41 @@
     box-shadow: none !important;
   }
 
+  /* AI Advisor Results print — show full page content */
+  #ai-advisor-print,
+  #ai-advisor-print * {
+    visibility: visible;
+  }
+
+  #ai-advisor-print {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
   /* Hide the print button and close button during print */
   .no-print {
     display: none !important;
+  }
+
+  /* Remove sticky positioning in print */
+  #ai-advisor-print header,
+  #ai-advisor-print .sticky {
+    position: static !important;
+    box-shadow: none !important;
+  }
+
+  /* Ensure backgrounds print (force color) */
+  #ai-advisor-print .bg-white {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Avoid breaking cards across pages */
+  #ai-advisor-print section,
+  #ai-advisor-print .group {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }

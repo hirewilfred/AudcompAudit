@@ -80,14 +80,25 @@ function AdvisorResultsContent() {
 
             try {
                 // Try to fetch from DB first
-                // Try to fetch from DB first
                 let query = supabase.from('ai_advisor_reports').select('*') as any;
-                
+
                 if (adminUserId) {
                     query = query.eq('user_id', adminUserId);
                 } else if (searchOrg) {
-                    // Search by organization name (case-insensitive-ish or exact)
-                    query = query.eq('organization', searchOrg);
+                    // Look up the user_id from profiles.organization, then fetch their report
+                    const { data: profileMatch } = await (supabase
+                        .from('profiles')
+                        .select('id')
+                        .eq('organization', searchOrg)
+                        .maybeSingle() as any);
+
+                    if (profileMatch?.id) {
+                        query = query.eq('user_id', profileMatch.id);
+                    } else {
+                        // No profile matched — nothing to show
+                        setLoadingNarrative(false);
+                        return;
+                    }
                 } else {
                     query = query.eq('user_id', session.user.id);
                 }
@@ -96,26 +107,107 @@ function AdvisorResultsContent() {
 
                 if (dbData) {
                     parsed = dbData.responses;
-                    loadedNarrative = dbData.narrative;
-                    setNarrative(loadedNarrative);
-                    setRecommendations(dbData.recommendations || generateRecommendations(parsed!));
-                    setRoadmap(dbData.roadmap || generateRoadmap(parsed!));
+                    loadedNarrative = dbData.narrative || '';
+                    setRecommendations(
+                        (dbData.recommendations && dbData.recommendations.length > 0)
+                            ? dbData.recommendations
+                            : (parsed ? generateRecommendations(parsed) : [])
+                    );
+                    setRoadmap(
+                        (dbData.roadmap && dbData.roadmap.length > 0)
+                            ? dbData.roadmap
+                            : (parsed ? generateRoadmap(parsed) : [])
+                    );
                     setResponses(parsed);
-                    
-                    const defaults = generateRoiDefaults(parsed!);
-                    setRoiDefaults(defaults);
-                    
-                    // Use saved ROI parameters if they exist
-                    setNumUsers(dbData.roi_parameters?.numUsers ?? defaults.numUsers);
-                    setHourlyRate(dbData.roi_parameters?.hourlyRate ?? defaults.hourlyRate);
-                    setTimeSaved(dbData.roi_parameters?.timeSaved ?? defaults.timeSavedPerMonth);
-                    setAnnualCostPerUser(dbData.roi_parameters?.annualCostPerUser ?? defaults.annualCostPerUser);
-                    setMonthlyPages(defaults.monthlyPages);
-                    setLoadingNarrative(false);
+
+                    if (parsed) {
+                        const defaults = generateRoiDefaults(parsed);
+                        setRoiDefaults(defaults);
+                        setNumUsers(dbData.roi_parameters?.numUsers ?? defaults.numUsers);
+                        setHourlyRate(dbData.roi_parameters?.hourlyRate ?? defaults.hourlyRate);
+                        setTimeSaved(dbData.roi_parameters?.timeSaved ?? defaults.timeSavedPerMonth);
+                        setAnnualCostPerUser(dbData.roi_parameters?.annualCostPerUser ?? defaults.annualCostPerUser);
+                        setMonthlyPages(defaults.monthlyPages);
+                    }
+
+                    // If narrative is missing, generate it on-the-fly
+                    if (loadedNarrative) {
+                        setNarrative(loadedNarrative);
+                        setLoadingNarrative(false);
+                    } else if (parsed) {
+                        try {
+                            const res = await fetch('/api/ai-advisor', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ responses: parsed }),
+                            });
+                            const data = await res.json();
+                            setNarrative(data.narrative || '');
+                        } catch {
+                            setNarrative('Based on your inputs, your business has strong AI adoption potential. Focus on quick wins first — automating your highest-volume manual processes — then scale systematically with the roadmap below.');
+                        } finally {
+                            setLoadingNarrative(false);
+                        }
+                    } else {
+                        setLoadingNarrative(false);
+                    }
                     return; // Exit early if loaded from DB
                 }
             } catch (err) {
                 console.error("Error loading from DB:", err);
+            }
+
+            // If admin userId but no ai_advisor_reports row, try the API which checks profiles.directors_notes
+            if (adminUserId) {
+                try {
+                    const res = await fetch(`/api/ai-advisor?userId=${adminUserId}`);
+                    if (res.ok) {
+                        const apiData = await res.json();
+                        if (apiData?.responses) {
+                            parsed = apiData.responses;
+                            const recs = (apiData.recommendations?.length > 0)
+                                ? apiData.recommendations
+                                : generateRecommendations(parsed!);
+                            const rm = (apiData.roadmap?.length > 0)
+                                ? apiData.roadmap
+                                : generateRoadmap(parsed!);
+                            const defaults = generateRoiDefaults(parsed!);
+                            setRecommendations(recs);
+                            setRoadmap(rm);
+                            setResponses(parsed);
+                            setRoiDefaults(defaults);
+                            setNumUsers(defaults.numUsers);
+                            setHourlyRate(defaults.hourlyRate);
+                            setTimeSaved(defaults.timeSavedPerMonth);
+                            setAnnualCostPerUser(defaults.annualCostPerUser);
+                            setMonthlyPages(defaults.monthlyPages);
+                            if (apiData.narrative) {
+                                setNarrative(apiData.narrative);
+                                setLoadingNarrative(false);
+                            } else {
+                                try {
+                                    const nr = await fetch('/api/ai-advisor', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ responses: parsed }),
+                                    });
+                                    const nd = await nr.json();
+                                    setNarrative(nd.narrative || '');
+                                } catch {
+                                    setNarrative('Based on your inputs, this business has strong AI adoption potential. Focus on quick wins first, then scale systematically.');
+                                } finally {
+                                    setLoadingNarrative(false);
+                                }
+                            }
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error loading from API fallback:', err);
+                }
+                // No data found for this admin userId at all
+                setLoadingNarrative(false);
+                return;
             }
 
             // Fallback to SessionStorage (for the generator flow)
@@ -203,9 +295,9 @@ function AdvisorResultsContent() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F4F7FE] text-slate-800">
+        <div id="ai-advisor-print" className="min-h-screen bg-[#F4F7FE] text-slate-800">
             {/* Header */}
-            <header className="sticky top-0 z-50 flex w-full items-center justify-between px-8 py-5 bg-white shadow-sm border-b border-slate-100">
+            <header className="no-print sticky top-0 z-50 flex w-full items-center justify-between px-8 py-5 bg-white shadow-sm border-b border-slate-100">
                 <div className="flex items-center gap-3">
                     <Link href="/">
                         <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP" className="h-8 w-auto brightness-0" />
@@ -246,8 +338,8 @@ function AdvisorResultsContent() {
                             Strategic AI Roadmap
                         </h1>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <button 
+                    <div className="no-print flex items-center gap-3">
+                        <button
                             onClick={() => window.print()}
                             className="flex items-center gap-2 rounded-2xl bg-white border border-slate-200 px-6 py-3 text-sm font-black text-slate-900 hover:bg-slate-50 transition-all shadow-sm"
                         >
