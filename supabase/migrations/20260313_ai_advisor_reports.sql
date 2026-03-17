@@ -56,13 +56,11 @@ create policy "Users can update their own reports"
 
 create policy "Admins can view all AI advisor reports"
   on public.ai_advisor_reports for select
-  using (
-    exists (
-      select 1 from public.profiles
-      where profiles.id = auth.uid()
-      and profiles.is_admin = true
-    )
-  );
+  using ( public.is_admin() );
+
+create policy "Admins can update all AI advisor reports"
+  on public.ai_advisor_reports for update
+  using ( public.is_admin() );
 
 -- Auto-update updated_at
 create or replace function public.update_ai_advisor_reports_updated_at()
