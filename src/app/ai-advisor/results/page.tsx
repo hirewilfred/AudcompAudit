@@ -205,6 +205,62 @@ function AdvisorResultsContent() {
                 } catch (err) {
                     console.error('Error loading from API fallback:', err);
                 }
+                // Last resort: read profiles.directors_notes directly via browser client
+                // (same approach the admin dashboard uses to read all user profiles)
+                try {
+                    const { data: profileNotes } = await (supabase
+                        .from('profiles')
+                        .select('directors_notes')
+                        .eq('id', adminUserId)
+                        .maybeSingle() as any);
+
+                    if (profileNotes?.directors_notes?.startsWith('AI_ADVISOR_REPORT:')) {
+                        const reportJson = JSON.parse(
+                            profileNotes.directors_notes.replace('AI_ADVISOR_REPORT:', '')
+                        );
+                        if (reportJson.responses) {
+                            parsed = reportJson.responses;
+                            const recs = (reportJson.recommendations?.length > 0)
+                                ? reportJson.recommendations
+                                : generateRecommendations(parsed!);
+                            const rm = (reportJson.roadmap?.length > 0)
+                                ? reportJson.roadmap
+                                : generateRoadmap(parsed!);
+                            const defaults = generateRoiDefaults(parsed!);
+                            setRecommendations(recs);
+                            setRoadmap(rm);
+                            setResponses(parsed);
+                            setRoiDefaults(defaults);
+                            setNumUsers(defaults.numUsers);
+                            setHourlyRate(defaults.hourlyRate);
+                            setTimeSaved(defaults.timeSavedPerMonth);
+                            setAnnualCostPerUser(defaults.annualCostPerUser);
+                            setMonthlyPages(defaults.monthlyPages);
+                            if (reportJson.narrative) {
+                                setNarrative(reportJson.narrative);
+                                setLoadingNarrative(false);
+                            } else {
+                                try {
+                                    const nr = await fetch('/api/ai-advisor', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ responses: parsed }),
+                                    });
+                                    const nd = await nr.json();
+                                    setNarrative(nd.narrative || '');
+                                } catch {
+                                    setNarrative('Based on your inputs, this business has strong AI adoption potential. Focus on quick wins first, then scale systematically.');
+                                } finally {
+                                    setLoadingNarrative(false);
+                                }
+                            }
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error loading directors_notes fallback:', err);
+                }
+
                 // No data found for this admin userId at all
                 setLoadingNarrative(false);
                 return;

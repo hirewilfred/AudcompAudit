@@ -386,8 +386,15 @@ export default function AdminPage() {
                                                         )}
                                                     </td>
                                                     <td className="py-4 text-right">
-                                                        <div className="flex items-center justify-end gap-3">
+                                                        <div className="flex items-center justify-end gap-2">
                                                             <span className="font-bold text-slate-500 text-sm hidden sm:inline-block">{completionDate}</span>
+                                                            <Link
+                                                                href={`/ai-advisor/results?userId=${userRow.id}`}
+                                                                target="_blank"
+                                                                className="bg-purple-50 text-purple-600 hover:bg-purple-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest transition-colors flex items-center gap-1 shadow-sm border border-purple-100 shrink-0"
+                                                            >
+                                                                <BrainCircuit className="h-3 w-3" /> AI Roadmap
+                                                            </Link>
                                                             {scoreObj && (
                                                                 <button onClick={() => handleViewAudit(userRow)} className="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest transition-colors flex items-center gap-1 shadow-sm border border-blue-100 shrink-0">
                                                                     <Eye className="h-3 w-3" /> View
