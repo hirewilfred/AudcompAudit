@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Access — Bargain Balloons AI OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple:   #6c5ce7; --purple-lt: #ede9fe; --purple-md: #a78bfa;
+    --blue:     #3b82f6; --blue-lt:   #eff6ff;
+    --green:    #10b981; --green-lt:  #ecfdf5;
+    --navy:     #1e1b4b; --text:      #3a3770;
+    --muted:    #8a88b8; --muted2:    #c2c0db;
+    --border:   rgba(215,220,240,0.65);
+    --shadow:   0 4px 24px rgba(100,110,180,0.09);
+    --shadow-lg:0 20px 60px rgba(100,110,180,0.18);
+    --nav-pill: #312e81;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: linear-gradient(145deg, #e6eaf5 0%, #edf1f9 55%, #e8ecf6 100%);
+    background-attachment: fixed;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: var(--text);
+  }
+
+  .login-card {
+    background: #ffffff; border: 1px solid var(--border);
+    border-radius: 28px; padding: 48px 44px;
+    box-shadow: var(--shadow-lg);
+    width: 100%; max-width: 420px;
+    animation: fadeUp .5s ease both;
+  }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+
+  .login-logo {
+    display: flex; align-items: center; gap:12px; margin-bottom: 32px; justify-content: center;
+  }
+  .login-logo img { height:36px; object-fit:contain; }
+  .login-logo-text { font-size:17px; font-weight:800; color:var(--nav-pill); }
+
+  .login-title { font-size:24px; font-weight:800; color:var(--navy); letter-spacing:-.02em; text-align:center; margin-bottom:6px; }
+  .login-sub   { font-size:12px; color:var(--muted); text-align:center; margin-bottom:32px; font-family:'DM Mono',monospace; }
+
+  .form-group { margin-bottom:18px; }
+  .form-label { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:7px; display:block; }
+  .form-input {
+    width:100%; padding:13px 16px; border:1.5px solid var(--border);
+    border-radius:14px; font-size:13px; font-family:inherit; color:var(--navy);
+    background:#f8f7ff; transition:all .2s; outline:none;
+  }
+  .form-input:focus { border-color:var(--purple-md); background:#fff; box-shadow:0 0 0 3px rgba(108,92,231,0.1); }
+  .form-input::placeholder { color:var(--muted2); }
+
+  .login-btn {
+    width:100%; padding:14px; border-radius:999px; border:none;
+    background:var(--nav-pill); color:#fff; font-size:14px; font-weight:700;
+    font-family:inherit; cursor:pointer; transition:all .2s;
+    box-shadow:0 4px 16px rgba(49,46,129,0.28); margin-top:6px;
+  }
+  .login-btn:hover { background:var(--purple); transform:translateY(-1px); box-shadow:0 6px 22px rgba(108,92,231,0.35); }
+  .login-btn:disabled { background:var(--muted2); box-shadow:none; cursor:not-allowed; transform:none; }
+
+  .error-msg {
+    display:none; background:#fef2f2; border:1px solid rgba(239,68,68,0.3);
+    color:#ef4444; font-size:11px; font-weight:600; padding:10px 14px;
+    border-radius:10px; margin-top:14px; text-align:center;
+  }
+  .error-msg.show { display:block; }
+
+  .login-footer { margin-top:32px; text-align:center; font-size:10px; color:var(--muted2); font-family:'DM Mono',monospace; }
+  .lock-icon { font-size:40px; text-align:center; margin-bottom:20px; }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="login-logo">
+    <img src="https://bargainballoons.com/cdn/shop/files/Logo-with-outline.png?v=1700787295&width=250"
+      alt="Bargain Balloons" onerror="this.style.display='none'">
+  </div>
+  <div class="lock-icon">🔒</div>
+  <div class="login-title">AI Command Centre</div>
+  <div class="login-sub">Protected · Enter your access password</div>
+
+  <div class="form-group">
+    <label class="form-label" for="password">Password</label>
+    <input class="form-input" type="password" id="password" placeholder="Enter password…" autocomplete="current-password">
+  </div>
+
+  <button class="login-btn" id="loginBtn" onclick="doLogin()">Unlock Access →</button>
+  <div class="error-msg" id="errorMsg">Incorrect password. Please try again.</div>
+
+  <div class="login-footer">Managed by AUDCOMP · Confidential<br>bargainballoons.ca · Mississauga, ON</div>
+</div>
+
+<script>
+  // Also allow Enter key
+  document.getElementById('password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  async function doLogin() {
+    const btn = document.getElementById('loginBtn');
+    const err = document.getElementById('errorMsg');
+    const pw  = document.getElementById('password').value.trim();
+
+    if (!pw) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Checking…';
+    err.classList.remove('show');
+
+    try {
+      const res = await fetch('/api/bb-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw }),
+        credentials: 'same-origin',
+      });
+
+      if (res.ok) {
+        btn.textContent = '✓ Access Granted';
+        btn.style.background = '#10b981';
+        setTimeout(() => { window.location.href = '/bargainballoons/'; }, 500);
+      } else {
+        err.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Unlock Access →';
+        document.getElementById('password').value = '';
+        document.getElementById('password').focus();
+      }
+    } catch {
+      err.textContent = 'Connection error. Please try again.';
+      err.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Unlock Access →';
+    }
+  }
+</script>
+</body>
+</html>
