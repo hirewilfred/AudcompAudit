@@ -12,10 +12,36 @@ create table if not exists public.ai_advisor_reports (
   updated_at timestamp with time zone default now()
 );
 
+-- Add new columns if they don't exist (for tables created before this migration was updated)
+alter table public.ai_advisor_reports add column if not exists organization text;
+alter table public.ai_advisor_reports add column if not exists updated_at timestamp with time zone default now();
+
+-- Make recommendations/roadmap/narrative nullable if they were created as not null
+alter table public.ai_advisor_reports alter column recommendations drop not null;
+alter table public.ai_advisor_reports alter column roadmap drop not null;
+alter table public.ai_advisor_reports alter column narrative drop not null;
+
+-- Add unique constraint on user_id if not exists
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'ai_advisor_reports_user_id_key'
+    and conrelid = 'public.ai_advisor_reports'::regclass
+  ) then
+    alter table public.ai_advisor_reports add constraint ai_advisor_reports_user_id_key unique (user_id);
+  end if;
+end $$;
+
 -- Enable RLS
 alter table public.ai_advisor_reports enable row level security;
 
--- Policies
+-- Policies (drop first to allow re-running)
+drop policy if exists "Users can view their own reports" on public.ai_advisor_reports;
+drop policy if exists "Users can insert their own reports" on public.ai_advisor_reports;
+drop policy if exists "Users can update their own reports" on public.ai_advisor_reports;
+drop policy if exists "Admins can view all AI advisor reports" on public.ai_advisor_reports;
+
 create policy "Users can view their own reports"
   on public.ai_advisor_reports for select
   using (auth.uid() = user_id);
