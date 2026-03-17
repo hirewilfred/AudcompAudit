@@ -74,17 +74,65 @@ function AdvisorResultsContent() {
             let parsed: AdvisorResponses | null = null;
             let loadedNarrative = '';
 
-            // If we have a userId, we are in admin mode or loading a saved report
             const searchOrg = searchParams.get('search');
-            const userIdToLoad = adminUserId || session.user.id;
+
+            // Admin view: always use server-side API (bypasses RLS)
+            if (adminUserId) {
+                try {
+                    const res = await fetch(`/api/ai-advisor?userId=${adminUserId}`);
+                    if (res.ok) {
+                        const apiData = await res.json();
+                        if (apiData?.responses) {
+                            parsed = apiData.responses;
+                            const recs = (apiData.recommendations?.length > 0)
+                                ? apiData.recommendations
+                                : generateRecommendations(parsed!);
+                            const rm = (apiData.roadmap?.length > 0)
+                                ? apiData.roadmap
+                                : generateRoadmap(parsed!);
+                            const defaults = generateRoiDefaults(parsed!);
+                            setRecommendations(recs);
+                            setRoadmap(rm);
+                            setResponses(parsed);
+                            setRoiDefaults(defaults);
+                            setNumUsers(apiData.roi_parameters?.numUsers ?? defaults.numUsers);
+                            setHourlyRate(apiData.roi_parameters?.hourlyRate ?? defaults.hourlyRate);
+                            setTimeSaved(apiData.roi_parameters?.timeSaved ?? defaults.timeSavedPerMonth);
+                            setAnnualCostPerUser(apiData.roi_parameters?.annualCostPerUser ?? defaults.annualCostPerUser);
+                            setMonthlyPages(defaults.monthlyPages);
+                            if (apiData.narrative) {
+                                setNarrative(apiData.narrative);
+                                setLoadingNarrative(false);
+                            } else {
+                                try {
+                                    const nr = await fetch('/api/ai-advisor', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ responses: parsed }),
+                                    });
+                                    const nd = await nr.json();
+                                    setNarrative(nd.narrative || '');
+                                } catch {
+                                    setNarrative('Based on your inputs, this business has strong AI adoption potential. Focus on quick wins first, then scale systematically.');
+                                } finally {
+                                    setLoadingNarrative(false);
+                                }
+                            }
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Admin API load failed:', err);
+                }
+                setLoadingNarrative(false);
+                return;
+            }
 
             try {
-                // Try to fetch from DB first
+                // Non-admin: fetch own report from DB
                 let query = supabase.from('ai_advisor_reports').select('*') as any;
 
-                if (adminUserId) {
-                    query = query.eq('user_id', adminUserId);
-                } else if (searchOrg) {
+                if (searchOrg) {
                     // Look up the user_id from profiles.organization, then fetch their report
                     const { data: profileMatch } = await (supabase
                         .from('profiles')
@@ -95,7 +143,6 @@ function AdvisorResultsContent() {
                     if (profileMatch?.id) {
                         query = query.eq('user_id', profileMatch.id);
                     } else {
-                        // No profile matched — nothing to show
                         setLoadingNarrative(false);
                         return;
                     }
@@ -155,115 +202,6 @@ function AdvisorResultsContent() {
                 }
             } catch (err) {
                 console.error("Error loading from DB:", err);
-            }
-
-            // If admin userId but no ai_advisor_reports row, try the API which checks profiles.directors_notes
-            if (adminUserId) {
-                try {
-                    const res = await fetch(`/api/ai-advisor?userId=${adminUserId}`);
-                    if (res.ok) {
-                        const apiData = await res.json();
-                        if (apiData?.responses) {
-                            parsed = apiData.responses;
-                            const recs = (apiData.recommendations?.length > 0)
-                                ? apiData.recommendations
-                                : generateRecommendations(parsed!);
-                            const rm = (apiData.roadmap?.length > 0)
-                                ? apiData.roadmap
-                                : generateRoadmap(parsed!);
-                            const defaults = generateRoiDefaults(parsed!);
-                            setRecommendations(recs);
-                            setRoadmap(rm);
-                            setResponses(parsed);
-                            setRoiDefaults(defaults);
-                            setNumUsers(defaults.numUsers);
-                            setHourlyRate(defaults.hourlyRate);
-                            setTimeSaved(defaults.timeSavedPerMonth);
-                            setAnnualCostPerUser(defaults.annualCostPerUser);
-                            setMonthlyPages(defaults.monthlyPages);
-                            if (apiData.narrative) {
-                                setNarrative(apiData.narrative);
-                                setLoadingNarrative(false);
-                            } else {
-                                try {
-                                    const nr = await fetch('/api/ai-advisor', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ responses: parsed }),
-                                    });
-                                    const nd = await nr.json();
-                                    setNarrative(nd.narrative || '');
-                                } catch {
-                                    setNarrative('Based on your inputs, this business has strong AI adoption potential. Focus on quick wins first, then scale systematically.');
-                                } finally {
-                                    setLoadingNarrative(false);
-                                }
-                            }
-                            return;
-                        }
-                    }
-                } catch (err) {
-                    console.error('Error loading from API fallback:', err);
-                }
-                // Last resort: read profiles.directors_notes directly via browser client
-                // (same approach the admin dashboard uses to read all user profiles)
-                try {
-                    const { data: profileNotes } = await (supabase
-                        .from('profiles')
-                        .select('directors_notes')
-                        .eq('id', adminUserId)
-                        .maybeSingle() as any);
-
-                    if (profileNotes?.directors_notes?.startsWith('AI_ADVISOR_REPORT:')) {
-                        const reportJson = JSON.parse(
-                            profileNotes.directors_notes.replace('AI_ADVISOR_REPORT:', '')
-                        );
-                        if (reportJson.responses) {
-                            parsed = reportJson.responses;
-                            const recs = (reportJson.recommendations?.length > 0)
-                                ? reportJson.recommendations
-                                : generateRecommendations(parsed!);
-                            const rm = (reportJson.roadmap?.length > 0)
-                                ? reportJson.roadmap
-                                : generateRoadmap(parsed!);
-                            const defaults = generateRoiDefaults(parsed!);
-                            setRecommendations(recs);
-                            setRoadmap(rm);
-                            setResponses(parsed);
-                            setRoiDefaults(defaults);
-                            setNumUsers(defaults.numUsers);
-                            setHourlyRate(defaults.hourlyRate);
-                            setTimeSaved(defaults.timeSavedPerMonth);
-                            setAnnualCostPerUser(defaults.annualCostPerUser);
-                            setMonthlyPages(defaults.monthlyPages);
-                            if (reportJson.narrative) {
-                                setNarrative(reportJson.narrative);
-                                setLoadingNarrative(false);
-                            } else {
-                                try {
-                                    const nr = await fetch('/api/ai-advisor', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ responses: parsed }),
-                                    });
-                                    const nd = await nr.json();
-                                    setNarrative(nd.narrative || '');
-                                } catch {
-                                    setNarrative('Based on your inputs, this business has strong AI adoption potential. Focus on quick wins first, then scale systematically.');
-                                } finally {
-                                    setLoadingNarrative(false);
-                                }
-                            }
-                            return;
-                        }
-                    }
-                } catch (err) {
-                    console.error('Error loading directors_notes fallback:', err);
-                }
-
-                // No data found for this admin userId at all
-                setLoadingNarrative(false);
-                return;
             }
 
             // Fallback to SessionStorage (for the generator flow)

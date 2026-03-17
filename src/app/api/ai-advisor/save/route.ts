@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+
+// Service role client bypasses RLS — server-side only
+const adminSupabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function POST(request: NextRequest) {
     try {
@@ -69,7 +76,6 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
     try {
-        const supabase = await createClient();
         const { searchParams } = new URL(request.url);
         const userId = searchParams.get('userId');
 
@@ -77,21 +83,19 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
         }
 
-        // 1. Try the dedicated table first
-        const { data: tableData, error: tableError } = await supabase
+        // Use service role client to bypass RLS for admin reads
+        const { data: tableData, error: tableError } = await adminSupabase
             .from('ai_advisor_reports')
             .select('*')
             .eq('user_id', userId)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
+            .maybeSingle();
 
         if (!tableError && tableData) {
             return NextResponse.json(tableData);
         }
 
-        // 2. Fallback to profiles for legacy reports
-        const { data, error } = await supabase
+        // Fallback to profiles.directors_notes for legacy reports
+        const { data, error } = await adminSupabase
             .from('profiles')
             .select('directors_notes')
             .eq('id', userId)
