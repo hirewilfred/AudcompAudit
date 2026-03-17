@@ -5,7 +5,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
     BrainCircuit, Sparkles, FileText, Zap, Shield, BarChart3, TrendingUp, Bot, BookOpen,
-    ArrowRight, CheckCircle2, Loader2, DollarSign, Clock, Users, Target, Rocket
+    ArrowRight, CheckCircle2, Loader2, DollarSign, Clock, Users, Target, Rocket,
+    GraduationCap, Wrench, Calendar, Download, ChevronDown
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -38,6 +39,64 @@ const PRIORITY_COLORS: Record<string, string> = {
     low: 'bg-slate-50 text-slate-500 border border-slate-100',
 };
 
+const SERVICES = [
+    {
+        icon: Users,
+        label: 'Consulting & Strategy',
+        description: 'Deep-dive sessions, customized roadmap, and hands-on implementation support.',
+        tiers: [
+            { label: 'Free Discovery Call', price: 'Free — 30 min' },
+            { label: 'Strategy Session', price: '$500–$1,200 CAD' },
+            { label: 'Full Project', price: '$3,000–$12,000 CAD' },
+        ],
+        cta: 'Book Free Discovery Call',
+        accent: 'blue',
+    },
+    {
+        icon: Bot,
+        label: 'Custom AI Agent Build',
+        description: 'We build, test, and deploy custom AI agents tailored to your workflows.',
+        tiers: [
+            { label: 'Starter Agent', price: '$1,497–$3,500 CAD' },
+            { label: 'Standard Agent', price: '$4,000–$9,000 CAD' },
+            { label: 'Advanced / Multi-Agent', price: '$10,000+ CAD' },
+        ],
+        cta: 'Request Agent Quote',
+        accent: 'indigo',
+    },
+    {
+        icon: GraduationCap,
+        label: 'Training & Workshops',
+        description: 'Hands-on AI training for teams and individuals — virtual or in-person.',
+        tiers: [
+            { label: 'Group Workshop', price: '$149–$299/person' },
+            { label: 'Private Company Session', price: '$1,500–$6,000 CAD' },
+            { label: 'Self-Paced Course', price: '$199–$499 CAD' },
+        ],
+        cta: 'View Training Options',
+        accent: 'emerald',
+    },
+    {
+        icon: Wrench,
+        label: 'Ongoing Maintenance',
+        description: 'Monthly monitoring, updates, and performance optimization of your AI stack.',
+        tiers: [
+            { label: 'Basic Retainer', price: '$250–$500/mo' },
+            { label: 'Standard Retainer', price: '$600–$1,200/mo' },
+            { label: 'Premium / Dedicated', price: '$1,500+/mo' },
+        ],
+        cta: 'See Maintenance Plans',
+        accent: 'amber',
+    },
+] as const;
+
+const SERVICE_ACCENT: Record<string, { card: string; icon: string; btn: string }> = {
+    blue:    { card: 'border-blue-100 hover:border-blue-200',    icon: 'bg-blue-50 text-blue-600 border-blue-100',    btn: 'bg-blue-600 hover:bg-blue-700 text-white' },
+    indigo:  { card: 'border-indigo-100 hover:border-indigo-200', icon: 'bg-indigo-50 text-indigo-600 border-indigo-100', btn: 'bg-indigo-600 hover:bg-indigo-700 text-white' },
+    emerald: { card: 'border-emerald-100 hover:border-emerald-200',icon: 'bg-emerald-50 text-emerald-600 border-emerald-100',btn: 'bg-emerald-600 hover:bg-emerald-700 text-white' },
+    amber:   { card: 'border-amber-100 hover:border-amber-200',  icon: 'bg-amber-50 text-amber-600 border-amber-100',  btn: 'bg-amber-500 hover:bg-amber-600 text-white' },
+};
+
 function AdvisorResultsContent() {
     const [responses, setResponses] = useState<AdvisorResponses | null>(null);
     const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
@@ -54,6 +113,20 @@ function AdvisorResultsContent() {
     const [annualCostPerUser, setAnnualCostPerUser] = useState(360);
     const [monthlyPages, setMonthlyPages] = useState(0);
     const [costPerPage, setCostPerPage] = useState(5);
+
+    const [sowCompany, setSowCompany] = useState('');
+    const [sowRole, setSowRole] = useState('');
+    const [showSow, setShowSow] = useState(false);
+
+    const printSow = () => {
+        document.body.classList.add('printing-sow');
+        const cleanup = () => {
+            document.body.classList.remove('printing-sow');
+            window.removeEventListener('afterprint', cleanup);
+        };
+        window.addEventListener('afterprint', cleanup);
+        window.print();
+    };
 
     const router = useRouter();
     const supabase = createClient();
@@ -555,7 +628,7 @@ function AdvisorResultsContent() {
                             <p className="text-sm font-medium text-slate-400 mb-6 relative z-10">
                                 Get a dedicated session to review this roadmap and validate these savings.
                             </p>
-                            <Link 
+                            <Link
                                 href="/dashboard"
                                 className="inline-flex items-center gap-2 text-sm font-black text-blue-400 hover:text-blue-300 transition-colors relative z-10"
                             >
@@ -565,6 +638,189 @@ function AdvisorResultsContent() {
 
                     </div>
                 </div>
+
+                {/* ── Services & Packages ── */}
+                {recommendations.length > 0 && (
+                    <>
+                        <section className="space-y-6 no-print">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Services & Packages</h2>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">All prices in CAD + taxes</span>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                                {SERVICES.map((svc) => {
+                                    const Icon = svc.icon;
+                                    const a = SERVICE_ACCENT[svc.accent];
+                                    return (
+                                        <div key={svc.label} className={`bg-white rounded-[32px] p-6 shadow-sm border transition-colors flex flex-col gap-5 ${a.card}`}>
+                                            <div className={`h-12 w-12 rounded-2xl flex items-center justify-center border ${a.icon}`}>
+                                                <Icon className="h-6 w-6" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-black text-slate-900 text-base mb-1">{svc.label}</h3>
+                                                <p className="text-xs font-medium text-slate-500 leading-relaxed">{svc.description}</p>
+                                            </div>
+                                            <div className="flex-1 space-y-2.5">
+                                                {svc.tiers.map((tier) => (
+                                                    <div key={tier.label} className="flex justify-between items-baseline gap-2">
+                                                        <span className="text-[11px] text-slate-500 truncate">{tier.label}</span>
+                                                        <span className="text-[11px] font-black text-slate-900 shrink-0">{tier.price}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <Link
+                                                href="/dashboard"
+                                                className={`w-full text-center text-[11px] font-black py-3 rounded-2xl transition-all ${a.btn}`}
+                                            >
+                                                {svc.cta}
+                                            </Link>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </section>
+
+                        {/* ── Management SOW Generator ── */}
+                        {!adminUserId && (
+                            <section className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100 no-print">
+                                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+                                    <div>
+                                        <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-1 text-xs font-black uppercase tracking-widest text-white">
+                                            <Download className="h-3 w-3" /> Management Report
+                                        </div>
+                                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">Present to Leadership</h2>
+                                        <p className="text-sm font-medium text-slate-500 mt-1">Generate a professional Scope of Work + ROI report ready to print or email to your C-suite.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowSow(!showSow)}
+                                        className="shrink-0 flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-2xl text-sm font-black hover:bg-blue-600 transition-all"
+                                    >
+                                        {showSow ? 'Hide Report' : 'Generate Report'}
+                                        <ChevronDown className={`h-4 w-4 transition-transform ${showSow ? 'rotate-180' : ''}`} />
+                                    </button>
+                                </div>
+
+                                {showSow && (
+                                    <div className="space-y-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Company / Store Name</label>
+                                                <input
+                                                    type="text" value={sowCompany} onChange={e => setSowCompany(e.target.value)}
+                                                    placeholder="Acme Business"
+                                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-400"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Your Role</label>
+                                                <input
+                                                    type="text" value={sowRole} onChange={e => setSowRole(e.target.value)}
+                                                    placeholder="Operations Manager"
+                                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-400"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* SOW Document */}
+                                        <div className="sow-print-area bg-[#FAFBFF] border border-slate-200 rounded-3xl p-8 md:p-12 space-y-10">
+                                            <div className="flex justify-between items-start border-b border-slate-200 pb-8">
+                                                <div>
+                                                    <div className="text-xs font-black uppercase tracking-widest text-blue-600 mb-2">AI Adoption — Scope of Work & ROI Report</div>
+                                                    <h1 className="text-3xl font-black text-slate-900">{sowCompany || 'Your Company'}</h1>
+                                                    <p className="text-sm text-slate-500 mt-2">Prepared by {sowRole || 'Your Name'} &nbsp;·&nbsp; {new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                                </div>
+                                                <div className="text-right shrink-0 ml-8">
+                                                    <div className="text-[10px] uppercase tracking-widest text-slate-400">Prepared by</div>
+                                                    <div className="font-black text-slate-900 mt-0.5">Audcomp AI Advisory</div>
+                                                    <div className="text-xs text-slate-500">Hamilton, Ontario</div>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <h2 className="text-lg font-black text-slate-900 mb-3 flex items-center gap-2"><Sparkles className="h-4 w-4 text-blue-600" /> Executive Summary</h2>
+                                                <p className="text-sm text-slate-600 leading-relaxed">{narrative || 'Based on your AI Adoption Advisor scan, targeted AI tools and one custom automation agent are recommended to drive measurable productivity gains and ROI within 12 months.'}</p>
+                                            </div>
+
+                                            <div>
+                                                <h2 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2"><BarChart3 className="h-4 w-4 text-emerald-600" /> Projected ROI</h2>
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                                    {[
+                                                        { label: 'Annual Value', value: `$${Math.round(annualValue).toLocaleString()}` },
+                                                        { label: 'Est. Investment', value: `$${Math.round(totalAnnualCost).toLocaleString()}` },
+                                                        { label: 'Net ROI', value: `+${roiPct.toFixed(0)}%` },
+                                                        { label: 'Payback Period', value: `${paybackMonths.toFixed(1)} mo` },
+                                                    ].map(m => (
+                                                        <div key={m.label} className="bg-white border border-slate-100 rounded-2xl p-4 text-center shadow-sm">
+                                                            <div className="text-2xl font-black text-slate-900">{m.value}</div>
+                                                            <div className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-1">{m.label}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {roadmap.length > 0 && (
+                                                <div>
+                                                    <h2 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2"><Rocket className="h-4 w-4 text-indigo-600" /> Scope of Work</h2>
+                                                    <div className="space-y-3">
+                                                        {roadmap.map((phase, i) => (
+                                                            <div key={i} className="flex gap-4 items-start bg-white border border-slate-100 rounded-2xl px-5 py-4">
+                                                                <div className="h-8 w-8 rounded-xl bg-indigo-50 text-indigo-600 font-black text-sm flex items-center justify-center shrink-0">{phase.phase}</div>
+                                                                <div>
+                                                                    <div className="font-black text-slate-900 text-sm">{phase.title} <span className="text-slate-400 font-medium">— {phase.timeline}</span></div>
+                                                                    <div className="text-xs text-slate-500 mt-0.5">{phase.items.slice(0, 2).join(' · ')}</div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {recommendations.length > 0 && (
+                                                <div>
+                                                    <h2 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2"><Target className="h-4 w-4 text-blue-600" /> Recommended Tools</h2>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                        {recommendations.slice(0, 4).map((rec, i) => (
+                                                            <div key={i} className="flex justify-between items-center bg-white border border-slate-100 rounded-2xl px-4 py-3 shadow-sm">
+                                                                <div>
+                                                                    <div className="font-black text-sm text-slate-900">{rec.tool}</div>
+                                                                    <div className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">{rec.priority} priority</div>
+                                                                </div>
+                                                                <div className="text-xs font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-xl shrink-0">{rec.monthlyEstimate}</div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div className="border-t border-slate-200 pt-6 flex flex-col md:flex-row justify-between gap-4">
+                                                <div>
+                                                    <h2 className="text-base font-black text-slate-900 mb-1">Recommended Next Step</h2>
+                                                    <p className="text-sm text-slate-600">Book a free 30-minute discovery call to validate this roadmap and confirm scope before any budget commitment.</p>
+                                                </div>
+                                                <div className="shrink-0 text-right">
+                                                    <div className="font-black text-blue-600 text-sm">aiaudit.audcomp.ai</div>
+                                                    <div className="text-xs text-slate-400 mt-0.5">Hamilton, Ontario</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-3">
+                                            <button
+                                                onClick={printSow}
+                                                className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-2xl text-sm font-black hover:bg-blue-600 transition-all shadow-sm"
+                                            >
+                                                <Download className="h-4 w-4" /> Print / Save as PDF
+                                            </button>
+                                            <Link href="/dashboard" className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-6 py-3 rounded-2xl text-sm font-black hover:bg-slate-50 transition-all shadow-sm">
+                                                <Calendar className="h-4 w-4" /> Book Discovery Call
+                                            </Link>
+                                        </div>
+                                    </div>
+                                )}
+                            </section>
+                        )}
+                    </>
+                )}
             </main>
         </div>
     );
