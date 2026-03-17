@@ -49,6 +49,7 @@ export interface Database {
           assigned_expert_id?: string | null
           updated_at?: string | null
         }
+        Relationships: []
       }
       experts: {
         Row: {
@@ -84,6 +85,7 @@ export interface Database {
           created_at?: string
           updated_at?: string | null
         }
+        Relationships: []
       }
       audit_responses: {
         Row: {
@@ -107,6 +109,7 @@ export interface Database {
           answer?: Json
           created_at?: string
         }
+        Relationships: []
       }
       audit_scores: {
         Row: {
@@ -136,7 +139,51 @@ export interface Database {
           report_url?: string | null
           created_at?: string
         }
+        Relationships: []
+      }
+      ai_advisor_reports: {
+        Row: {
+          id: string
+          user_id: string
+          organization: string | null
+          responses: Json
+          recommendations: Json | null
+          roadmap: Json | null
+          narrative: string | null
+          roi_parameters: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          organization?: string | null
+          responses: Json
+          recommendations?: Json | null
+          roadmap?: Json | null
+          narrative?: string | null
+          roi_parameters?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          organization?: string | null
+          responses?: Json
+          recommendations?: Json | null
+          roadmap?: Json | null
+          narrative?: string | null
+          roi_parameters?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
+    Views: Record<string, never>
+    Functions: Record<string, never>
+    Enums: Record<string, never>
+    CompositeTypes: Record<string, never>
   }
 }

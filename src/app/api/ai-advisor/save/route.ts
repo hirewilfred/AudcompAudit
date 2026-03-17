@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
     try {
         const supabase = await createClient();
         const { data: { session } } = await supabase.auth.getSession();
-        
+
         if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -17,10 +17,13 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Missing responses' }, { status: 400 });
         }
 
-        // We'll store this in profiles for simplicity, or audit_scores if we want historical records
-        // Given the requirement to see it in admin view, saving to profiles.directors_notes (or a dedicated table if we had one)
-        // Since we cannot run migrations, we'll use a JSON string in directors_notes prefixed with AI_ADVISOR_REPORT:
-        
+        // Get user's organization for lookup purposes
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('organization')
+            .eq('id', session.user.id)
+            .single();
+
         const reportData = {
             responses,
             narrative,
@@ -29,11 +32,12 @@ export async function POST(request: NextRequest) {
             savedAt: new Date().toISOString()
         };
 
-        // 1. Try to save to the new dedicated table
-        const { error: tableError } = await (supabase
-            .from('ai_advisor_reports') as any)
+        // 1. Save to the dedicated table
+        const { error: tableError } = await supabase
+            .from('ai_advisor_reports')
             .upsert({
                 user_id: session.user.id,
+                organization: profile?.organization ?? null,
                 responses,
                 narrative,
                 recommendations,
@@ -44,11 +48,11 @@ export async function POST(request: NextRequest) {
                     hourlyRate: body.hourlyRate,
                     timeSaved: body.timeSaved
                 }
-            }, { onConflict: 'user_id' }); // Upsert by user_id if we want only one report per user
+            }, { onConflict: 'user_id' });
 
-        // 2. Also keep directors_notes updated for backward compatibility and admin views that use it
-        const { error: profileError } = await (supabase
-            .from('profiles') as any)
+        // 2. Also keep directors_notes for backward compatibility
+        const { error: profileError } = await supabase
+            .from('profiles')
             .update({
                 directors_notes: `AI_ADVISOR_REPORT:${JSON.stringify(reportData)}`
             })
@@ -73,9 +77,9 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
         }
 
-        // 1. Try the new dedicated table first
-        const { data: tableData, error: tableError } = await (supabase
-            .from('ai_advisor_reports') as any)
+        // 1. Try the dedicated table first
+        const { data: tableData, error: tableError } = await supabase
+            .from('ai_advisor_reports')
             .select('*')
             .eq('user_id', userId)
             .order('created_at', { ascending: false })
@@ -87,8 +91,8 @@ export async function GET(request: NextRequest) {
         }
 
         // 2. Fallback to profiles for legacy reports
-        const { data, error } = await (supabase
-            .from('profiles') as any)
+        const { data, error } = await supabase
+            .from('profiles')
             .select('directors_notes')
             .eq('id', userId)
             .single();
