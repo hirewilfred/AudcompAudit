@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import AdminNavbar from '@/components/AdminNavbar';
@@ -8,7 +8,7 @@ import Link from 'next/link';
 import {
     Building2, DollarSign, Cloud, Loader2, ArrowLeft,
     CheckCircle2, AlertTriangle, TrendingDown, Users, Calendar,
-    RefreshCw, Link as LinkIcon, Edit2, ShieldAlert
+    RefreshCw, Link as LinkIcon, Edit2, ShieldAlert, ChevronDown
 } from 'lucide-react';
 
 export default function ClientDetailPage() {
@@ -22,6 +22,15 @@ export default function ClientDetailPage() {
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [syncing, setSyncing] = useState(false);
     const [syncResult, setSyncResult] = useState<{ success?: boolean; error?: string } | null>(null);
+    const [expandedSkus, setExpandedSkus] = useState<Set<string>>(new Set());
+
+    const toggleSku = (sku: string) => {
+        setExpandedSkus(prev => {
+            const next = new Set(prev);
+            if (next.has(sku)) next.delete(sku); else next.add(sku);
+            return next;
+        });
+    };
 
     // Messages from OAuth redirect
     const m365Connected = searchParams.get('m365_connected');
@@ -30,7 +39,7 @@ export default function ClientDetailPage() {
     const fetchClient = async () => {
         const { data, error } = await (supabase
             .from('ams_clients') as any)
-            .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, premium_licensed_users, license_breakdown, snapshot_date)`)
+            .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, premium_licensed_users, license_breakdown, license_users, snapshot_date)`)
             .eq('id', id)
             .order('snapshot_date', { referencedTable: 'ams_user_snapshots', ascending: false })
             .single();
@@ -362,12 +371,39 @@ export default function ClientDetailPage() {
                                             </thead>
                                             <tbody className="divide-y divide-slate-50">
                                                 {Object.entries(snap.license_breakdown || {}).length > 0 ? (
-                                                    Object.entries(snap.license_breakdown || {}).map(([sku, count]) => (
-                                                        <tr key={sku} className="hover:bg-slate-50/50">
-                                                            <td className="py-3 px-4 font-bold text-slate-700">{sku}</td>
-                                                            <td className="py-3 px-4 font-black text-slate-900 text-right tabular-nums">{count as React.ReactNode}</td>
-                                                        </tr>
-                                                    ))
+                                                    Object.entries(snap.license_breakdown || {}).map(([sku, count]) => {
+                                                        const users: string[] = (snap.license_users || {})[sku] || [];
+                                                        const isExpanded = expandedSkus.has(sku);
+                                                        return (
+                                                            <React.Fragment key={sku}>
+                                                                <tr
+                                                                    className={`hover:bg-slate-50/50 ${users.length > 0 ? 'cursor-pointer' : ''}`}
+                                                                    onClick={() => users.length > 0 && toggleSku(sku)}
+                                                                >
+                                                                    <td className="py-3 px-4 font-bold text-slate-700">
+                                                                        <span className="flex items-center gap-2">
+                                                                            {sku}
+                                                                            {users.length > 0 && (
+                                                                                <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-150 ${isExpanded ? 'rotate-180' : ''}`} />
+                                                                            )}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="py-3 px-4 font-black text-slate-900 text-right tabular-nums">{count as React.ReactNode}</td>
+                                                                </tr>
+                                                                {isExpanded && users.length > 0 && (
+                                                                    <tr>
+                                                                        <td colSpan={2} className="px-4 pb-3 pt-0 bg-slate-50/40">
+                                                                            <div className="pl-4 border-l-2 border-blue-100 space-y-1 pt-1">
+                                                                                {users.map(user => (
+                                                                                    <p key={user} className="text-xs text-slate-500 font-medium">{user}</p>
+                                                                                ))}
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                )}
+                                                            </React.Fragment>
+                                                        );
+                                                    })
                                                 ) : (
                                                     <tr>
                                                         <td colSpan={2} className="py-8 text-center text-slate-400 font-medium text-xs">No licenses active for this client.</td>

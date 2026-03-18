@@ -159,6 +159,36 @@ export async function POST(req: NextRequest) {
             }
         }
 
+        // Fetch all users with their assigned licenses to build per-SKU user lists
+        const licenseUsers: Record<string, string[]> = {};
+        try {
+            let nextUrl: string | null =
+                'https://graph.microsoft.com/v1.0/users?$select=displayName,userPrincipalName,assignedLicenses&$top=999';
+            while (nextUrl) {
+                const usersRes: Response = await fetch(nextUrl, {
+                    headers: { Authorization: `Bearer ${accessToken}` },
+                });
+                if (!usersRes.ok) throw new Error(await usersRes.text());
+                const usersData: any = await usersRes.json();
+                for (const user of usersData.value || []) {
+                    for (const assigned of user.assignedLicenses || []) {
+                        const skuName = AMS_LICENSE_SKUS[assigned.skuId];
+                        if (skuName) {
+                            if (!licenseUsers[skuName]) licenseUsers[skuName] = [];
+                            const label = user.displayName
+                                ? `${user.displayName} (${user.userPrincipalName})`
+                                : user.userPrincipalName;
+                            licenseUsers[skuName].push(label);
+                        }
+                    }
+                }
+                nextUrl = usersData['@odata.nextLink'] || null;
+            }
+        } catch (userFetchErr: any) {
+            // Non-fatal: user list is a bonus; snapshot still proceeds without it
+            console.warn('Could not fetch user list from Graph API:', userFetchErr.message);
+        }
+
         // Store snapshot
         const { error: insertError } = await (supabase.from('ams_user_snapshots') as any).insert({
             client_id: clientId,
@@ -167,6 +197,7 @@ export async function POST(req: NextRequest) {
             basic_licensed_users: basicLicensedUsers,
             premium_licensed_users: premiumLicensedUsers,
             license_breakdown: licenseBreakdown,
+            license_users: licenseUsers,
         });
 
         if (insertError) {
@@ -179,7 +210,7 @@ export async function POST(req: NextRequest) {
             m365_last_synced_at: new Date().toISOString(),
         }).eq('id', clientId);
 
-        return NextResponse.json({ success: true, totalLicensedUsers, basicLicensedUsers, premiumLicensedUsers, licenseBreakdown });
+        return NextResponse.json({ success: true, totalLicensedUsers, basicLicensedUsers, premiumLicensedUsers, licenseBreakdown, licenseUsers });
 
     } catch (err: any) {
         console.error('M365 sync error:', err);
