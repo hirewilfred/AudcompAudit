@@ -24,7 +24,7 @@ import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 const ICON_MAP: Record<string, React.ElementType> = {
-    Sparkles, FileText, Zap, Shield, BarChart3, TrendingUp, Bot, BookOpen, BrainCircuit,
+    Sparkles, FileText, Zap, Shield, BarChart3, TrendingUp, Bot, BookOpen, BrainCircuit, Target, Users,
 };
 
 const PHASE_COLORS: Record<string, string> = {
@@ -362,26 +362,34 @@ function AdvisorResultsContent() {
     }
 
     return (
-        <div id="ai-advisor-print" className="min-h-screen bg-[#F4F7FE] text-slate-800">
-            {/* Header */}
-            <header className="no-print sticky top-0 z-50 flex w-full items-center justify-between px-8 py-5 bg-white shadow-sm border-b border-slate-100">
-                <div className="flex items-center gap-3">
+        <div id="ai-advisor-print" className="min-h-screen bg-[#F4F7FE] text-slate-800 selection:bg-blue-600/10">
+            {/* Background Accent — matches dashboard */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] right-[-5%] h-[600px] w-[600px] rounded-full bg-blue-600/5 blur-[120px]" />
+                <div className="absolute bottom-[-10%] left-[-5%] h-[600px] w-[600px] rounded-full bg-indigo-600/5 blur-[120px]" />
+            </div>
+
+            {/* Header — matches dashboard glassmorphic style */}
+            <header className="no-print sticky top-0 z-50 flex w-full items-center justify-between px-10 py-6 bg-white/80 backdrop-blur-xl border-b border-slate-100">
+                <div className="flex items-center gap-12">
                     <Link href="/">
-                        <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP" className="h-8 w-auto brightness-0" />
+                        <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP" className="h-9 w-auto brightness-0" />
                     </Link>
-                    <span className="font-bold tracking-tight border-l border-slate-200 ml-2 pl-4 text-slate-400">
-                        AI Adoption Advisor
-                    </span>
+                    <nav className="hidden lg:flex items-center gap-2">
+                        <span className="px-6 py-2.5 rounded-full bg-slate-900 text-white text-sm font-black shadow-lg shadow-slate-900/10">
+                            AI Advisor Report
+                        </span>
+                        {adminUserId && (
+                            <div className="px-4 py-2 rounded-full bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-widest border border-amber-100">
+                                Admin View Mode
+                            </div>
+                        )}
+                    </nav>
                 </div>
                 <div className="flex items-center gap-4">
-                    {adminUserId && (
-                        <div className="bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-100">
-                            Admin View Mode
-                        </div>
-                    )}
                     <Link
                         href={adminUserId ? "/admin" : "/dashboard"}
-                        className="text-sm font-black text-slate-900 bg-slate-100 hover:bg-slate-200 px-6 py-2 rounded-full transition-all active:scale-95"
+                        className="px-6 py-2.5 rounded-full bg-white border border-slate-100 text-slate-500 hover:text-blue-600 hover:border-blue-100 text-sm font-black transition-all"
                     >
                         {adminUserId ? "Back to Admin" : "Back to Dashboard"}
                     </Link>
@@ -416,7 +424,7 @@ function AdvisorResultsContent() {
                 </motion.div>
 
                 {/* Personalized Strategic Insight */}
-                <section className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100 relative overflow-hidden">
+                <section className="bg-white rounded-[48px] p-8 md:p-12 shadow-sm border border-slate-100 relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
                         <Sparkles className="h-64 w-64 text-blue-600" />
                     </div>
@@ -447,7 +455,7 @@ function AdvisorResultsContent() {
                     <div className="lg:col-span-8 space-y-8">
                         
                         {/* Recommendations */}
-                        <section className="bg-white rounded-[40px] p-8 md:p-10 shadow-sm border border-slate-100">
+                        <section className="bg-white rounded-[48px] p-8 md:p-10 shadow-sm border border-slate-100">
                             <div className="flex items-center justify-between mb-10 border-b border-slate-50 pb-6">
                                 <h3 className="text-xl font-black flex items-center gap-2">
                                     <Target className="h-5 w-5 text-blue-600" /> Tool Recommendations
@@ -491,7 +499,7 @@ function AdvisorResultsContent() {
                         </section>
 
                         {/* Roadmap */}
-                        <section className="bg-white rounded-[40px] p-8 md:p-10 shadow-sm border border-slate-100">
+                        <section className="bg-white rounded-[48px] p-8 md:p-10 shadow-sm border border-slate-100">
                             <h3 className="text-xl font-black mb-10 flex items-center gap-2 text-slate-900 border-b border-slate-50 pb-6">
                                 <Rocket className="h-5 w-5 text-indigo-600" /> Implementation Roadmap
                             </h3>
@@ -528,7 +536,7 @@ function AdvisorResultsContent() {
                     <div className="lg:col-span-4 space-y-8">
                         
                         {/* ROI Calculator */}
-                        <section className="bg-white rounded-[40px] p-8 shadow-sm border border-slate-100 sticky top-32">
+                        <section className="bg-white rounded-[48px] p-8 shadow-sm border border-slate-100 sticky top-32">
                             <div className="flex items-center gap-2 mb-6 border-b border-slate-50 pb-4">
                                 <BarChart3 className="h-6 w-6 text-emerald-600" />
                                 <h3 className="text-xl font-black text-slate-900">ROI Calculator</h3>
@@ -682,7 +690,7 @@ function AdvisorResultsContent() {
 
                         {/* ── Management SOW Generator ── */}
                         {!adminUserId && (
-                            <section className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100 no-print">
+                            <section className="bg-white rounded-[48px] p-8 md:p-12 shadow-sm border border-slate-100 no-print">
                                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
                                     <div>
                                         <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-1 text-xs font-black uppercase tracking-widest text-white">

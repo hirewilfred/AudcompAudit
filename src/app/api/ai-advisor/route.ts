@@ -20,21 +20,27 @@ export async function POST(request: NextRequest) {
 
         const message = await client.messages.create({
             model: 'claude-sonnet-4-6',
-            max_tokens: 600,
+            max_tokens: 700,
             messages: [
                 {
                     role: 'user',
-                    content: `You are an expert Microsoft AI adoption consultant working with SMBs in Canada.
+                    content: `You are an expert AI adoption consultant working with SMBs in Canada. You are platform-agnostic — you recommend the best AI tools for each business regardless of vendor.
 
-Based on the following company profile, write a 2-3 paragraph personalized insight about their AI adoption opportunity.
-Be specific, practical, and encouraging. Reference their specific tools, industry, and pain points.
-Focus on the biggest wins they can achieve quickly and the realistic journey ahead.
-Use plain language — no jargon. Do not use bullet points. Keep it under 250 words.
+Based on the following company profile, write a 2-3 paragraph personalized executive insight about their specific AI adoption opportunity. This must feel written for THIS company, not a generic template.
+
+Rules:
+- Name their actual tools (e.g. "your QuickBooks subscription", "your HubSpot CRM", "your Google Workspace")
+- Reference their specific industry and what AI means for businesses like theirs
+- Connect their pain points directly to concrete outcomes (e.g. "eliminating manual invoice entry could save your team X hours per month")
+- Be honest about complexity if they are early-stage — don't oversell
+- Use plain language, no buzzwords, no bullet points
+- Keep it under 280 words
+- Write directly to the business owner in second person ("your company", "you can", "your team")
 
 Company Assessment:
 ${summary}
 
-Write directly to the business owner in second person ("your company", "you can", "your team").`,
+Write the insight now — start directly with the first sentence, no preamble.`,
                 },
             ],
         });
