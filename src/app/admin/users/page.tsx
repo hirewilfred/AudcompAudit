@@ -32,7 +32,7 @@ export default function UsersListPage() {
                 .order('updated_at', { ascending: false });
 
             if (error) throw error;
-            setProfiles(data || []);
+            setProfiles((data as any) || []);
         } catch (err) {
             console.error("Error fetching profiles:", err);
         } finally {

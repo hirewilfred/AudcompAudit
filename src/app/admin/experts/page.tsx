@@ -37,7 +37,7 @@ export default function ExpertsListPage() {
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            setExperts(data || []);
+            setExperts((data as any) || []);
         } catch (err) {
             console.error("Error fetching experts:", err);
         } finally {
