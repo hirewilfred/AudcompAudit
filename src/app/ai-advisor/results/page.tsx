@@ -152,7 +152,7 @@ function AdvisorResultsContent() {
             // Admin view: always use server-side API (bypasses RLS)
             if (adminUserId) {
                 try {
-                    const res = await fetch(`/api/ai-advisor?userId=${adminUserId}`);
+                    const res = await fetch(`/api/ai-advisor/save?userId=${adminUserId}`);
                     if (res.ok) {
                         const apiData = await res.json();
                         if (apiData?.responses) {
@@ -688,8 +688,8 @@ function AdvisorResultsContent() {
                             </div>
                         </section>
 
-                        {/* ── Management SOW Generator ── */}
-                        {!adminUserId && (
+                        {/* ── Management SOW Generator — admin only ── */}
+                        {adminUserId && (
                             <section className="bg-white rounded-[48px] p-8 md:p-12 shadow-sm border border-slate-100 no-print">
                                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
                                     <div>
