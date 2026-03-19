@@ -158,13 +158,16 @@ export async function POST(req: NextRequest) {
                 const consumed = sku.consumedUnits || 0;
                 const provisioned = sku.prepaidUnits?.enabled || 0;
 
-                if (consumed > 0) {
-                    licenseBreakdown[skuName] = consumed;
-                    totalLicensedUsers += consumed;
-                    if (BILLABLE_LICENSE_SKUS.has(sku.skuId)) {
-                        billableLicensedUsers += consumed;
-                        if (ABOVE_STANDARD_SKUS.has(sku.skuId)) {
-                            aboveStandardUsers += consumed;
+                // Include in breakdown if provisioned OR consumed — shows all purchased licenses
+                if (consumed > 0 || provisioned > 0) {
+                    licenseBreakdown[skuName] = consumed; // 0 if purchased but no one assigned
+                    if (consumed > 0) {
+                        totalLicensedUsers += consumed;
+                        if (BILLABLE_LICENSE_SKUS.has(sku.skuId)) {
+                            billableLicensedUsers += consumed;
+                            if (ABOVE_STANDARD_SKUS.has(sku.skuId)) {
+                                aboveStandardUsers += consumed;
+                            }
                         }
                     }
                 }

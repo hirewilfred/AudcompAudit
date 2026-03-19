@@ -388,8 +388,12 @@ export default function ClientDetailPage() {
                                                                     onClick={() => users.length > 0 && toggleSku(sku)}
                                                                 >
                                                                     <td className="py-3 px-4 font-bold text-slate-700">
-                                                                        <span className="flex items-center gap-2">
+                                                                        <span className="flex items-center gap-2 flex-wrap">
                                                                             {sku}
+                                                                            {(count as number) > 0
+                                                                                ? <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">Active</span>
+                                                                                : <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-400">No Users</span>
+                                                                            }
                                                                             {users.length > 0 && (
                                                                                 <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-150 ${isExpanded ? 'rotate-180' : ''}`} />
                                                                             )}
