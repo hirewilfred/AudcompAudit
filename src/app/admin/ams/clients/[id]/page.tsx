@@ -337,7 +337,16 @@ export default function ClientDetailPage() {
                                             <p className="text-[9px] text-slate-400 font-medium mt-1">Standard, Premium, E3, E5</p>
                                         </div>
                                         <div className={`p-5 rounded-2xl border ${unused !== null && unused > 0 ? 'border-amber-100 bg-amber-50' : 'border-slate-100 bg-slate-50'}`}>
-                                            <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${unused !== null && unused > 0 ? 'text-amber-400' : 'text-slate-400'}`}>Unused Seats</p>
+                                            <p className={`text-[10px] font-black uppercase tracking-widest mb-1 flex items-center gap-1.5 ${unused !== null && unused > 0 ? 'text-amber-400' : 'text-slate-400'}`}>
+                                                {/* Microsoft four-square logo */}
+                                                <svg width="11" height="11" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <rect x="0" y="0" width="10" height="10" fill="#F25022"/>
+                                                    <rect x="11" y="0" width="10" height="10" fill="#7FBA00"/>
+                                                    <rect x="0" y="11" width="10" height="10" fill="#00A4EF"/>
+                                                    <rect x="11" y="11" width="10" height="10" fill="#FFB900"/>
+                                                </svg>
+                                                Microsoft Unused Seats
+                                            </p>
                                             <p className={`text-3xl font-black tabular-nums ${unused !== null && unused > 0 ? 'text-amber-600' : 'text-slate-800'}`}>{unused !== null ? unused : '—'}</p>
                                             <p className={`text-[9px] font-medium mt-1 ${unused !== null && unused > 0 ? 'text-amber-400' : 'text-slate-400'}`}>
                                                 {provisioned !== null ? `${provisioned} provisioned` : 'Sync to see provisioned seats'}
