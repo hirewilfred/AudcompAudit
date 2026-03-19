@@ -149,7 +149,9 @@ export default function ClientDetailPage() {
     const isOver = basic !== null && contracted > 0 && basic > contracted;
     const isUnder = basic !== null && contracted > 0 && basic < contracted;
     const delta = basic !== null ? basic - contracted : null;
-    const missingRevenue = delta !== null && delta > 0 && ppu > 0 ? delta * ppu : null;
+    // Subtract unused Microsoft seats: if provisioned > consumed, that buffer offsets the overage
+    const effectiveDelta = delta !== null ? Math.max(0, delta - (unused ?? 0)) : null;
+    const missingRevenue = effectiveDelta !== null && effectiveDelta > 0 && ppu > 0 ? effectiveDelta * ppu : null;
 
     // Format a raw SKU part number into something readable
     // e.g. "POWER_BI_PRO" → "Power Bi Pro", "VISIO_PLAN2" → "Visio Plan2"
@@ -387,12 +389,12 @@ export default function ClientDetailPage() {
                                                     <p className="text-2xl font-black text-red-600 tabular-nums leading-tight">
                                                         +${missingRevenue.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                     </p>
-                                                    <p className="text-[9px] text-red-400 font-bold mt-0.5">{delta} seat{delta !== 1 ? 's' : ''} × ${ppu.toFixed(2)}/mo</p>
+                                                    <p className="text-[9px] text-red-400 font-bold mt-0.5">{effectiveDelta} seat{effectiveDelta !== 1 ? 's' : ''} × ${ppu.toFixed(2)}/mo</p>
                                                 </div>
                                             ) : (
                                                 <p className={`text-3xl font-black tabular-nums z-10 relative
                                                     ${delta !== null && delta > 0 ? 'text-red-600' : delta !== null && delta < 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                                                    {delta !== null && delta > 0 ? `+${delta}` : delta}
+                                                    {effectiveDelta !== null && effectiveDelta > 0 ? `+${effectiveDelta}` : effectiveDelta}
                                                 </p>
                                             )}
                                             {delta !== null && delta > 0 && <TrendingDown className="absolute right-4 top-1/2 -translate-y-1/2 h-16 w-16 text-red-100 opacity-50 z-0" />}
