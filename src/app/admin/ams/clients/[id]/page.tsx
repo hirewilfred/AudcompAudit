@@ -167,7 +167,7 @@ export default function ClientDetailPage() {
         'Office 365 E1':                  '18181a46-0d4e-45cd-891e-60aabd171b4e',
         'Office 365 E3':                  '6fd2c87f-b296-42f0-b197-1e91e994b900',
         'Office 365 E5':                  'c7df2760-2c81-4ef7-b578-5b5392b571df',
-        'Microsoft 365 Copilot':          '639dec6b-bb19-468b-871c-c5c441c4b0cb',
+        'Microsoft 365 Copilot':          'a6d18b68-a67e-4cbd-ba00-8744bc468faa',
     };
 
     return (
