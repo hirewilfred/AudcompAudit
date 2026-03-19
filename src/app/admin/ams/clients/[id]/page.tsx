@@ -23,9 +23,18 @@ export default function ClientDetailPage() {
     const [syncing, setSyncing] = useState(false);
     const [syncResult, setSyncResult] = useState<{ success?: boolean; error?: string } | null>(null);
     const [expandedSkus, setExpandedSkus] = useState<Set<string>>(new Set());
+    const [expandedOtherSkus, setExpandedOtherSkus] = useState<Set<string>>(new Set());
 
     const toggleSku = (sku: string) => {
         setExpandedSkus(prev => {
+            const next = new Set(prev);
+            if (next.has(sku)) next.delete(sku); else next.add(sku);
+            return next;
+        });
+    };
+
+    const toggleOtherSku = (sku: string) => {
+        setExpandedOtherSkus(prev => {
             const next = new Set(prev);
             if (next.has(sku)) next.delete(sku); else next.add(sku);
             return next;
@@ -39,7 +48,7 @@ export default function ClientDetailPage() {
     const fetchClient = async () => {
         const { data, error } = await (supabase
             .from('ams_clients') as any)
-            .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, premium_licensed_users, total_provisioned_seats, license_breakdown, license_breakdown_provisioned, license_users, snapshot_date)`)
+            .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, premium_licensed_users, total_provisioned_seats, license_breakdown, license_breakdown_provisioned, license_users, other_license_breakdown, other_license_breakdown_provisioned, other_license_users, snapshot_date)`)
             .eq('id', id)
             .order('snapshot_date', { referencedTable: 'ams_user_snapshots', ascending: false })
             .single();
@@ -141,6 +150,11 @@ export default function ClientDetailPage() {
     const isUnder = basic !== null && contracted > 0 && basic < contracted;
     const delta = basic !== null ? basic - contracted : null;
     const missingRevenue = delta !== null && delta > 0 && ppu > 0 ? delta * ppu : null;
+
+    // Format a raw SKU part number into something readable
+    // e.g. "POWER_BI_PRO" → "Power Bi Pro", "VISIO_PLAN2" → "Visio Plan2"
+    const formatPartNumber = (partNumber: string) =>
+        partNumber.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
 
     return (
         <div className="min-h-screen bg-[#F8FAFC]">
@@ -451,6 +465,88 @@ export default function ClientDetailPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* All Other Microsoft Licensing — full width below main grid */}
+                {snap && (
+                    <div className="mt-6 bg-white rounded-[32px] border border-slate-100 shadow-sm p-8">
+                        <div className="flex items-center gap-3 mb-6">
+                            <svg width="18" height="18" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="0" y="0" width="10" height="10" fill="#F25022"/>
+                                <rect x="11" y="0" width="10" height="10" fill="#7FBA00"/>
+                                <rect x="0" y="11" width="10" height="10" fill="#00A4EF"/>
+                                <rect x="11" y="11" width="10" height="10" fill="#FFB900"/>
+                            </svg>
+                            <h2 className="text-xl font-black text-slate-900">All Other Microsoft Licensing</h2>
+                        </div>
+
+                        {Object.keys(snap.other_license_breakdown || {}).length === 0 ? (
+                            <div className="text-center py-10 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                                <p className="text-slate-400 font-bold text-sm">No additional Microsoft licenses found.</p>
+                                <p className="text-slate-400 text-xs font-medium mt-1">Sync to pull the latest data from Microsoft 365.</p>
+                            </div>
+                        ) : (
+                            <div className="border border-slate-100 rounded-2xl overflow-hidden">
+                                <table className="w-full text-sm">
+                                    <thead className="bg-slate-50/50 border-b border-slate-100">
+                                        <tr>
+                                            <th className="py-3 px-4 text-left text-[10px] font-black uppercase tracking-widest text-slate-400">License</th>
+                                            <th className="py-3 px-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Assigned</th>
+                                            <th className="py-3 px-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Provisioned</th>
+                                            <th className="py-3 px-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Unused</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        {Object.entries(snap.other_license_breakdown || {}).map(([partNumber, count]) => {
+                                            const users: string[] = (snap.other_license_users || {})[partNumber] || [];
+                                            const prov: number | null = (snap.other_license_breakdown_provisioned || {})[partNumber] ?? null;
+                                            const unusedCount = prov !== null ? prov - (count as number) : null;
+                                            const isExpanded = expandedOtherSkus.has(partNumber);
+                                            return (
+                                                <React.Fragment key={partNumber}>
+                                                    <tr
+                                                        className={`hover:bg-slate-50/50 ${users.length > 0 ? 'cursor-pointer' : ''}`}
+                                                        onClick={() => users.length > 0 && toggleOtherSku(partNumber)}
+                                                    >
+                                                        <td className="py-3 px-4 font-bold text-slate-700">
+                                                            <span className="flex items-center gap-2 flex-wrap">
+                                                                {formatPartNumber(partNumber)}
+                                                                {(count as number) > 0
+                                                                    ? <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">Active</span>
+                                                                    : <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-400">No Users</span>
+                                                                }
+                                                                {users.length > 0 && (
+                                                                    <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-150 ${isExpanded ? 'rotate-180' : ''}`} />
+                                                                )}
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-3 px-4 font-black text-slate-900 text-right tabular-nums">{count as React.ReactNode}</td>
+                                                        <td className="py-3 px-4 font-bold text-slate-500 text-right tabular-nums">{prov ?? '—'}</td>
+                                                        <td className="py-3 px-4 text-right tabular-nums">
+                                                            {unusedCount !== null
+                                                                ? <span className={`font-black ${unusedCount > 0 ? 'text-amber-500' : 'text-emerald-500'}`}>{unusedCount}</span>
+                                                                : <span className="text-slate-300 text-xs">—</span>}
+                                                        </td>
+                                                    </tr>
+                                                    {isExpanded && users.length > 0 && (
+                                                        <tr>
+                                                            <td colSpan={4} className="px-4 pb-3 pt-0 bg-slate-50/40">
+                                                                <div className="pl-4 border-l-2 border-blue-100 space-y-1 pt-1">
+                                                                    {users.map(user => (
+                                                                        <p key={user} className="text-xs text-slate-500 font-medium">{user}</p>
+                                                                    ))}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </React.Fragment>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
 
             </main>
         </div>

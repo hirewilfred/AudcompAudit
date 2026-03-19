@@ -149,12 +149,18 @@ export async function POST(req: NextRequest) {
         const licenseBreakdown: Record<string, number> = {};
         const licenseBreakdownProvisioned: Record<string, number> = {};
 
-        for (const sku of skus) {
-            // Skip suspended, deleted, or locked-out subscriptions
-            if (sku.capabilityStatus !== 'Enabled' && sku.capabilityStatus !== 'Warning') continue;
+        // All non-AMS Microsoft licenses (Visio, Project, Intune, Defender, Azure AD P2, etc.)
+        const otherLicenseBreakdown: Record<string, number> = {};
+        const otherLicenseBreakdownProvisioned: Record<string, number> = {};
+        // skuId → skuPartNumber for non-AMS SKUs, used when building user lists below
+        const nonAmsSkuIdToPartNumber: Record<string, string> = {};
 
+        for (const sku of skus) {
             const skuName = AMS_LICENSE_SKUS[sku.skuId];
             if (skuName) {
+                // For AMS billing accuracy, only count active subscriptions
+                if (sku.capabilityStatus !== 'Enabled' && sku.capabilityStatus !== 'Warning') continue;
+
                 const consumed = sku.consumedUnits || 0;
                 const provisioned = sku.prepaidUnits?.enabled || 0;
 
@@ -177,11 +183,26 @@ export async function POST(req: NextRequest) {
                     licenseBreakdownProvisioned[skuName] = provisioned;
                     totalProvisionedSeats += provisioned;
                 }
+            } else {
+                // Non-AMS SKU — capture ALL statuses (informational only, not used for billing)
+                // Includes LockedOut, Suspended, etc. so nothing is hidden from the admin view
+                const consumed = sku.consumedUnits || 0;
+                const provisioned = sku.prepaidUnits?.enabled || 0;
+                const partNumber: string = sku.skuPartNumber || sku.skuId;
+
+                if (consumed > 0 || provisioned > 0) {
+                    nonAmsSkuIdToPartNumber[sku.skuId] = partNumber;
+                    otherLicenseBreakdown[partNumber] = consumed;
+                    if (provisioned > 0) {
+                        otherLicenseBreakdownProvisioned[partNumber] = provisioned;
+                    }
+                }
             }
         }
 
         // Fetch all users with their assigned licenses to build per-SKU user lists
         const licenseUsers: Record<string, string[]> = {};
+        const otherLicenseUsers: Record<string, string[]> = {};
         try {
             let nextUrl: string | null =
                 'https://graph.microsoft.com/v1.0/users?$select=displayName,userPrincipalName,assignedLicenses&$top=999';
@@ -192,14 +213,20 @@ export async function POST(req: NextRequest) {
                 if (!usersRes.ok) throw new Error(await usersRes.text());
                 const usersData: any = await usersRes.json();
                 for (const user of usersData.value || []) {
+                    const label = user.displayName
+                        ? `${user.displayName} (${user.userPrincipalName})`
+                        : user.userPrincipalName;
                     for (const assigned of user.assignedLicenses || []) {
                         const skuName = AMS_LICENSE_SKUS[assigned.skuId];
                         if (skuName) {
                             if (!licenseUsers[skuName]) licenseUsers[skuName] = [];
-                            const label = user.displayName
-                                ? `${user.displayName} (${user.userPrincipalName})`
-                                : user.userPrincipalName;
                             licenseUsers[skuName].push(label);
+                        } else {
+                            const partNumber = nonAmsSkuIdToPartNumber[assigned.skuId];
+                            if (partNumber) {
+                                if (!otherLicenseUsers[partNumber]) otherLicenseUsers[partNumber] = [];
+                                otherLicenseUsers[partNumber].push(label);
+                            }
                         }
                     }
                 }
@@ -221,6 +248,9 @@ export async function POST(req: NextRequest) {
             license_breakdown: licenseBreakdown,
             license_breakdown_provisioned: licenseBreakdownProvisioned,
             license_users: licenseUsers,
+            other_license_breakdown: otherLicenseBreakdown,
+            other_license_breakdown_provisioned: otherLicenseBreakdownProvisioned,
+            other_license_users: otherLicenseUsers,
         });
 
         if (insertError) {
@@ -233,7 +263,7 @@ export async function POST(req: NextRequest) {
             m365_last_synced_at: new Date().toISOString(),
         }).eq('id', clientId);
 
-        return NextResponse.json({ success: true, totalLicensedUsers, billableLicensedUsers, aboveStandardUsers, totalProvisionedSeats, licenseBreakdown, licenseBreakdownProvisioned, licenseUsers });
+        return NextResponse.json({ success: true, totalLicensedUsers, billableLicensedUsers, aboveStandardUsers, totalProvisionedSeats, licenseBreakdown, licenseBreakdownProvisioned, licenseUsers, otherLicenseBreakdown, otherLicenseBreakdownProvisioned, otherLicenseUsers });
 
     } catch (err: any) {
         console.error('M365 sync error:', err);
