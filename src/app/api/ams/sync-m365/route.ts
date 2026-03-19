@@ -157,6 +157,8 @@ export async function POST(req: NextRequest) {
         const otherLicenseBreakdownProvisioned: Record<string, number> = {};
         // skuId → skuPartNumber for non-AMS SKUs, used when building user lists below
         const nonAmsSkuIdToPartNumber: Record<string, string> = {};
+        // partNumber → skuId, stored so the UI can display the raw GUID
+        const otherLicenseSkuIds: Record<string, string> = {};
 
         for (const sku of skus) {
             const skuName = AMS_LICENSE_SKUS[sku.skuId];
@@ -195,6 +197,7 @@ export async function POST(req: NextRequest) {
 
                 if (consumed > 0 || provisioned > 0) {
                     nonAmsSkuIdToPartNumber[sku.skuId] = partNumber;
+                    otherLicenseSkuIds[partNumber] = sku.skuId;
                     otherLicenseBreakdown[partNumber] = consumed;
                     if (provisioned > 0) {
                         otherLicenseBreakdownProvisioned[partNumber] = provisioned;
@@ -254,6 +257,7 @@ export async function POST(req: NextRequest) {
             other_license_breakdown: otherLicenseBreakdown,
             other_license_breakdown_provisioned: otherLicenseBreakdownProvisioned,
             other_license_users: otherLicenseUsers,
+            other_license_skuids: otherLicenseSkuIds,
         });
 
         if (insertError) {

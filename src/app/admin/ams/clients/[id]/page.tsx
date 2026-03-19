@@ -48,7 +48,7 @@ export default function ClientDetailPage() {
     const fetchClient = async () => {
         const { data, error } = await (supabase
             .from('ams_clients') as any)
-            .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, premium_licensed_users, total_provisioned_seats, license_breakdown, license_breakdown_provisioned, license_users, other_license_breakdown, other_license_breakdown_provisioned, other_license_users, snapshot_date)`)
+            .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, premium_licensed_users, total_provisioned_seats, license_breakdown, license_breakdown_provisioned, license_users, other_license_breakdown, other_license_breakdown_provisioned, other_license_users, other_license_skuids, snapshot_date)`)
             .eq('id', id)
             .order('snapshot_date', { referencedTable: 'ams_user_snapshots', ascending: false })
             .single();
@@ -155,6 +155,20 @@ export default function ClientDetailPage() {
     // e.g. "POWER_BI_PRO" → "Power Bi Pro", "VISIO_PLAN2" → "Visio Plan2"
     const formatPartNumber = (partNumber: string) =>
         partNumber.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+
+    // Reverse map: friendly name → skuId, for displaying GUIDs in the AMS breakdown table
+    const AMS_NAME_TO_SKU_ID: Record<string, string> = {
+        'Microsoft 365 F3':               '66b55226-6b4f-492c-910c-a3b7a3c9d993',
+        'Microsoft 365 Business Basic':   'b05e124f-c7cc-45a0-a6aa-8cf78c946968',
+        'Microsoft 365 Business Premium': 'cbdc14ab-d96c-4c30-b9f4-6ada7cdc1d46',
+        'Microsoft 365 Business Standard':'f245ecc8-75af-4f8e-b61f-27d8114de5f3',
+        'Microsoft 365 E3':               '05e9a617-0261-4cee-bb44-138d3ef5d965',
+        'Microsoft 365 E5':               '06ebc4ee-1bb5-47dd-8120-11324bc54e06',
+        'Office 365 E1':                  '18181a46-0d4e-45cd-891e-60aabd171b4e',
+        'Office 365 E3':                  '6fd2c87f-b296-42f0-b197-1e91e994b900',
+        'Office 365 E5':                  'c7df2760-2c81-4ef7-b578-5b5392b571df',
+        'Microsoft 365 Copilot':          '639dec6b-bb19-468b-871c-c5c441c4b0cb',
+    };
 
     return (
         <div className="min-h-screen bg-[#F8FAFC]">
@@ -421,6 +435,9 @@ export default function ClientDetailPage() {
                                                                                 <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-150 ${isExpanded ? 'rotate-180' : ''}`} />
                                                                             )}
                                                                         </span>
+                                                                        {AMS_NAME_TO_SKU_ID[sku] && (
+                                                                            <p className="text-[10px] font-mono text-slate-300 mt-0.5 select-all">{AMS_NAME_TO_SKU_ID[sku]}</p>
+                                                                        )}
                                                                     </td>
                                                                     <td className="py-3 px-4 font-black text-slate-900 text-right tabular-nums">{count as React.ReactNode}</td>
                                                                     <td className="py-3 px-4 font-bold text-slate-500 text-right tabular-nums">{prov ?? '—'}</td>
@@ -518,6 +535,9 @@ export default function ClientDetailPage() {
                                                                     <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-150 ${isExpanded ? 'rotate-180' : ''}`} />
                                                                 )}
                                                             </span>
+                                                            {((snap.other_license_skuids || {})[partNumber]) && (
+                                                                <p className="text-[10px] font-mono text-slate-300 mt-0.5 select-all">{(snap.other_license_skuids || {})[partNumber]}</p>
+                                                            )}
                                                         </td>
                                                         <td className="py-3 px-4 font-black text-slate-900 text-right tabular-nums">{count as React.ReactNode}</td>
                                                         <td className="py-3 px-4 font-bold text-slate-500 text-right tabular-nums">{prov ?? '—'}</td>
