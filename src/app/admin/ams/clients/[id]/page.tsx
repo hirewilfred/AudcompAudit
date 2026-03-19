@@ -39,7 +39,7 @@ export default function ClientDetailPage() {
     const fetchClient = async () => {
         const { data, error } = await (supabase
             .from('ams_clients') as any)
-            .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, premium_licensed_users, license_breakdown, license_users, snapshot_date)`)
+            .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, premium_licensed_users, total_provisioned_seats, license_breakdown, license_breakdown_provisioned, license_users, snapshot_date)`)
             .eq('id', id)
             .order('snapshot_date', { referencedTable: 'ams_user_snapshots', ascending: false })
             .single();
@@ -128,8 +128,9 @@ export default function ClientDetailPage() {
 
     const snap = client.ams_user_snapshots?.[0];
     const actual = snap?.total_licensed_users ?? null;
-    const basic = snap?.basic_licensed_users ?? null;
-    const premium = snap?.premium_licensed_users ?? null;
+    const basic = snap?.basic_licensed_users ?? null;   // billable (Standard+) consumed
+    const provisioned = snap?.total_provisioned_seats ?? null; // billable provisioned (paid for)
+    const unused = provisioned !== null && basic !== null ? provisioned - basic : null;
     const contracted = client.users_contracted || 0;
     const monthly = parseFloat(client.monthly_amount) || 0;
     // Derive per-seat price from stored field, or fall back to monthly ÷ contracted
@@ -331,14 +332,16 @@ export default function ClientDetailPage() {
                                             <p className="text-3xl font-black text-slate-800 tabular-nums">{contracted}</p>
                                         </div>
                                         <div className="p-5 rounded-2xl border border-slate-100 bg-slate-50">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Basic Licenses</p>
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Billable Licenses</p>
                                             <p className="text-3xl font-black text-blue-600 tabular-nums">{basic !== null ? basic : '—'}</p>
-                                            <p className="text-[9px] text-slate-400 font-medium mt-1">F1, F3, Basic, Standard, E1</p>
+                                            <p className="text-[9px] text-slate-400 font-medium mt-1">Standard, Premium, E3, E5</p>
                                         </div>
-                                        <div className="p-5 rounded-2xl border border-indigo-100 bg-indigo-50">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-1">Premium Licenses</p>
-                                            <p className="text-3xl font-black text-indigo-600 tabular-nums">{premium !== null ? premium : '—'}</p>
-                                            <p className="text-[9px] text-indigo-400 font-medium mt-1">Premium, E3, E5</p>
+                                        <div className={`p-5 rounded-2xl border ${unused !== null && unused > 0 ? 'border-amber-100 bg-amber-50' : 'border-slate-100 bg-slate-50'}`}>
+                                            <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${unused !== null && unused > 0 ? 'text-amber-400' : 'text-slate-400'}`}>Unused Seats</p>
+                                            <p className={`text-3xl font-black tabular-nums ${unused !== null && unused > 0 ? 'text-amber-600' : 'text-slate-800'}`}>{unused !== null ? unused : '—'}</p>
+                                            <p className={`text-[9px] font-medium mt-1 ${unused !== null && unused > 0 ? 'text-amber-400' : 'text-slate-400'}`}>
+                                                {provisioned !== null ? `${provisioned} provisioned` : 'Sync to see provisioned seats'}
+                                            </p>
                                         </div>
                                         <div className={`p-5 rounded-2xl border relative overflow-hidden ${delta !== null && delta > 0 ? 'bg-red-50 border-red-100' : delta !== null && delta < 0 ? 'bg-amber-50 border-amber-100' : 'bg-emerald-50 border-emerald-100'}`}>
                                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 z-10 relative">Missing Revenue</p>
@@ -366,13 +369,17 @@ export default function ClientDetailPage() {
                                             <thead className="bg-slate-50/50 border-b border-slate-100">
                                                 <tr>
                                                     <th className="py-3 px-4 text-left text-[10px] font-black uppercase tracking-widest text-slate-400">License SKU</th>
-                                                    <th className="py-3 px-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Assigned Seats</th>
+                                                    <th className="py-3 px-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Assigned</th>
+                                                    <th className="py-3 px-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Provisioned</th>
+                                                    <th className="py-3 px-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Unused</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-50">
                                                 {Object.entries(snap.license_breakdown || {}).length > 0 ? (
                                                     Object.entries(snap.license_breakdown || {}).map(([sku, count]) => {
                                                         const users: string[] = (snap.license_users || {})[sku] || [];
+                                                        const prov: number | null = (snap.license_breakdown_provisioned || {})[sku] ?? null;
+                                                        const unusedCount = prov !== null ? prov - (count as number) : null;
                                                         const isExpanded = expandedSkus.has(sku);
                                                         return (
                                                             <React.Fragment key={sku}>
@@ -389,10 +396,16 @@ export default function ClientDetailPage() {
                                                                         </span>
                                                                     </td>
                                                                     <td className="py-3 px-4 font-black text-slate-900 text-right tabular-nums">{count as React.ReactNode}</td>
+                                                                    <td className="py-3 px-4 font-bold text-slate-500 text-right tabular-nums">{prov ?? '—'}</td>
+                                                                    <td className="py-3 px-4 text-right tabular-nums">
+                                                                        {unusedCount !== null
+                                                                            ? <span className={`font-black ${unusedCount > 0 ? 'text-amber-500' : 'text-emerald-500'}`}>{unusedCount}</span>
+                                                                            : <span className="text-slate-300 text-xs">—</span>}
+                                                                    </td>
                                                                 </tr>
                                                                 {isExpanded && users.length > 0 && (
                                                                     <tr>
-                                                                        <td colSpan={2} className="px-4 pb-3 pt-0 bg-slate-50/40">
+                                                                        <td colSpan={4} className="px-4 pb-3 pt-0 bg-slate-50/40">
                                                                             <div className="pl-4 border-l-2 border-blue-100 space-y-1 pt-1">
                                                                                 {users.map(user => (
                                                                                     <p key={user} className="text-xs text-slate-500 font-medium">{user}</p>
@@ -406,12 +419,16 @@ export default function ClientDetailPage() {
                                                     })
                                                 ) : (
                                                     <tr>
-                                                        <td colSpan={2} className="py-8 text-center text-slate-400 font-medium text-xs">No licenses active for this client.</td>
+                                                        <td colSpan={4} className="py-8 text-center text-slate-400 font-medium text-xs">No licenses active for this client.</td>
                                                     </tr>
                                                 )}
                                                 <tr className="bg-slate-50">
                                                     <td className="py-3 px-4 font-black text-slate-800 text-right uppercase tracking-widest text-[10px]">Total Combined Access</td>
                                                     <td className="py-3 px-4 font-black text-blue-600 text-right tabular-nums text-lg">{actual}</td>
+                                                    <td className="py-3 px-4 font-bold text-slate-400 text-right tabular-nums">{provisioned ?? '—'}</td>
+                                                    <td className="py-3 px-4 font-black text-right tabular-nums">
+                                                        {unused !== null ? <span className={unused > 0 ? 'text-amber-500' : 'text-emerald-500'}>{unused}</span> : '—'}
+                                                    </td>
                                                 </tr>
                                             </tbody>
                                         </table>

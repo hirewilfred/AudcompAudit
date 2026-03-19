@@ -40,7 +40,7 @@ export default function AMSDashboardPage() {
 
             const { data } = await supabase
                 .from('ams_clients')
-                .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, premium_licensed_users, license_breakdown, snapshot_date, synced_at)`)
+                .select(`*, ams_user_snapshots(total_licensed_users, basic_licensed_users, premium_licensed_users, total_provisioned_seats, license_breakdown, snapshot_date, synced_at)`)
                 .order('company_name') as any;
 
             setClients(data || []);
@@ -307,7 +307,7 @@ export default function AMSDashboardPage() {
                                             ['Contracted', 'users_contracted'],
                                             ['$/Seat', 'price_per_user'],
                                             ['Total M365', null],
-                                            ['Basic Licenses', null],
+                                            ['Billable Std+', null],
                                             ['Missing Rev.', null],
                                             ['M365 Status', 'm365_connected'],
                                             ['Contract End', 'contract_end'],

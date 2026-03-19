@@ -18,17 +18,27 @@ const AMS_LICENSE_SKUS: Record<string, string> = {
     'c7df2760-2c81-4ef7-b578-5b5392b571df': 'Office 365 E5',
 };
 
-// "Basic" = entry-level plans at or below Business Standard.
-const BASIC_LICENSE_SKUS = new Set([
+// Entry-level plans — NOT counted for AMS billing.
+const ENTRY_LICENSE_SKUS = new Set([
     'f30db892-07e9-47e9-837c-80727f46fd3d', // Microsoft 365 F1
     '66b55226-6b4f-492c-910c-a3b7a3c9d993', // Microsoft 365 F3
     'b05e124f-c7cc-45a0-a6aa-8cf78c946968', // Microsoft 365 Business Basic
-    'f245ecc8-75af-4f8e-b61f-27d8114de5f3', // Microsoft 365 Business Standard
     '18181a46-0d4e-45cd-891e-60aabd171b4e', // Office 365 E1
 ]);
 
-// "Premium" = plans above Business Standard.
-const PREMIUM_LICENSE_SKUS = new Set([
+// AMS-billable: Business Standard and above (Standard, Premium, E3, E5).
+// These are compared against contracted seats to calculate missing revenue.
+const BILLABLE_LICENSE_SKUS = new Set([
+    'f245ecc8-75af-4f8e-b61f-27d8114de5f3', // Microsoft 365 Business Standard
+    'cbdc14ab-d96c-4c30-b9f4-6ada7cdc1d46', // Microsoft 365 Business Premium
+    '05e9a617-0261-4cee-bb44-138d3ef5d965', // Microsoft 365 E3
+    '06ebc4ee-1bb5-47dd-8120-11324bc54e06', // Microsoft 365 E5
+    '6fd2c87f-b296-42f0-b197-1e91e994b900', // Office 365 E3
+    'c7df2760-2c81-4ef7-b578-5b5392b571df', // Office 365 E5
+]);
+
+// Above-standard subset (Premium, E3, E5) — stored as premium_licensed_users.
+const ABOVE_STANDARD_SKUS = new Set([
     'cbdc14ab-d96c-4c30-b9f4-6ada7cdc1d46', // Microsoft 365 Business Premium
     '05e9a617-0261-4cee-bb44-138d3ef5d965', // Microsoft 365 E3
     '06ebc4ee-1bb5-47dd-8120-11324bc54e06', // Microsoft 365 E5
@@ -135,9 +145,11 @@ export async function POST(req: NextRequest) {
 
         // Count licensed users — active only (capabilityStatus Enabled/Warning), by tier
         let totalLicensedUsers = 0;
-        let basicLicensedUsers = 0;
-        let premiumLicensedUsers = 0;
+        let billableLicensedUsers = 0;   // Standard+ consumed → stored as basic_licensed_users
+        let aboveStandardUsers = 0;      // Premium/E3/E5 consumed → stored as premium_licensed_users
+        let totalProvisionedSeats = 0;   // Standard+ provisioned (what they pay Microsoft for)
         const licenseBreakdown: Record<string, number> = {};
+        const licenseBreakdownProvisioned: Record<string, number> = {};
 
         for (const sku of skus) {
             // Skip suspended, deleted, or locked-out subscriptions
@@ -145,16 +157,24 @@ export async function POST(req: NextRequest) {
 
             const skuName = AMS_LICENSE_SKUS[sku.skuId];
             if (skuName) {
-                // consumedUnits = assigned seats; only count enabled prepaid units
-                const count = sku.consumedUnits || 0;
-                if (count > 0) {
-                    licenseBreakdown[skuName] = count;
-                    totalLicensedUsers += count;
-                    if (BASIC_LICENSE_SKUS.has(sku.skuId)) {
-                        basicLicensedUsers += count;
-                    } else if (PREMIUM_LICENSE_SKUS.has(sku.skuId)) {
-                        premiumLicensedUsers += count;
+                const consumed = sku.consumedUnits || 0;
+                const provisioned = sku.prepaidUnits?.enabled || 0;
+
+                if (consumed > 0) {
+                    licenseBreakdown[skuName] = consumed;
+                    totalLicensedUsers += consumed;
+                    if (BILLABLE_LICENSE_SKUS.has(sku.skuId)) {
+                        billableLicensedUsers += consumed;
+                        if (ABOVE_STANDARD_SKUS.has(sku.skuId)) {
+                            aboveStandardUsers += consumed;
+                        }
                     }
+                }
+
+                // Track provisioned seats for billable SKUs (what they're paying for)
+                if (BILLABLE_LICENSE_SKUS.has(sku.skuId) && provisioned > 0) {
+                    licenseBreakdownProvisioned[skuName] = provisioned;
+                    totalProvisionedSeats += provisioned;
                 }
             }
         }
@@ -194,9 +214,11 @@ export async function POST(req: NextRequest) {
             client_id: clientId,
             snapshot_date: new Date().toISOString().split('T')[0],
             total_licensed_users: totalLicensedUsers,
-            basic_licensed_users: basicLicensedUsers,
-            premium_licensed_users: premiumLicensedUsers,
+            basic_licensed_users: billableLicensedUsers,       // Standard+ consumed
+            premium_licensed_users: aboveStandardUsers,         // Premium/E3/E5 consumed
+            total_provisioned_seats: totalProvisionedSeats,     // Standard+ paid for
             license_breakdown: licenseBreakdown,
+            license_breakdown_provisioned: licenseBreakdownProvisioned,
             license_users: licenseUsers,
         });
 
@@ -210,7 +232,7 @@ export async function POST(req: NextRequest) {
             m365_last_synced_at: new Date().toISOString(),
         }).eq('id', clientId);
 
-        return NextResponse.json({ success: true, totalLicensedUsers, basicLicensedUsers, premiumLicensedUsers, licenseBreakdown, licenseUsers });
+        return NextResponse.json({ success: true, totalLicensedUsers, billableLicensedUsers, aboveStandardUsers, totalProvisionedSeats, licenseBreakdown, licenseBreakdownProvisioned, licenseUsers });
 
     } catch (err: any) {
         console.error('M365 sync error:', err);
