@@ -15,6 +15,7 @@ const AMS_LICENSE_SKUS: Record<string, string> = {
     '18181a46-0d4e-45cd-891e-60aabd171b4e': 'Office 365 E1',
     '6fd2c87f-b296-42f0-b197-1e91e994b900': 'Office 365 E3',
     'c7df2760-2c81-4ef7-b578-5b5392b571df': 'Office 365 E5',
+    '639dec6b-bb19-468b-871c-c5c441c4b0cb': 'Microsoft 365 Copilot',
 };
 
 // Entry-level plans — NOT counted for AMS billing.
@@ -24,7 +25,7 @@ const ENTRY_LICENSE_SKUS = new Set([
     '18181a46-0d4e-45cd-891e-60aabd171b4e', // Office 365 E1
 ]);
 
-// AMS-billable: Business Standard and above (Standard, Premium, E3, E5).
+// AMS-billable: Business Standard and above (Standard, Premium, E3, E5, Copilot).
 // These are compared against contracted seats to calculate missing revenue.
 const BILLABLE_LICENSE_SKUS = new Set([
     'f245ecc8-75af-4f8e-b61f-27d8114de5f3', // Microsoft 365 Business Standard
@@ -33,15 +34,17 @@ const BILLABLE_LICENSE_SKUS = new Set([
     '06ebc4ee-1bb5-47dd-8120-11324bc54e06', // Microsoft 365 E5
     '6fd2c87f-b296-42f0-b197-1e91e994b900', // Office 365 E3
     'c7df2760-2c81-4ef7-b578-5b5392b571df', // Office 365 E5
+    '639dec6b-bb19-468b-871c-c5c441c4b0cb', // Microsoft 365 Copilot
 ]);
 
-// Above-standard subset (Premium, E3, E5) — stored as premium_licensed_users.
+// Above-standard subset (Premium, E3, E5, Copilot) — stored as premium_licensed_users.
 const ABOVE_STANDARD_SKUS = new Set([
     'cbdc14ab-d96c-4c30-b9f4-6ada7cdc1d46', // Microsoft 365 Business Premium
     '05e9a617-0261-4cee-bb44-138d3ef5d965', // Microsoft 365 E3
     '06ebc4ee-1bb5-47dd-8120-11324bc54e06', // Microsoft 365 E5
     '6fd2c87f-b296-42f0-b197-1e91e994b900', // Office 365 E3
     'c7df2760-2c81-4ef7-b578-5b5392b571df', // Office 365 E5
+    '639dec6b-bb19-468b-871c-c5c441c4b0cb', // Microsoft 365 Copilot
 ]);
 
 async function refreshAccessToken(refreshToken: string, tenantId?: string | null): Promise<{ accessToken: string; newRefreshToken: string; expiresAt: string }> {

@@ -348,7 +348,7 @@ export default function ClientDetailPage() {
                                         <div className="p-5 rounded-2xl border border-slate-100 bg-slate-50">
                                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Billable Licenses</p>
                                             <p className="text-3xl font-black text-blue-600 tabular-nums">{basic !== null ? basic : '—'}</p>
-                                            <p className="text-[9px] text-slate-400 font-medium mt-1">Standard, Premium, E3, E5</p>
+                                            <p className="text-[9px] text-slate-400 font-medium mt-1">Standard, Premium, E3, E5, Copilot</p>
                                         </div>
                                         <div className={`p-5 rounded-2xl border ${unused !== null && unused > 0 ? 'border-amber-100 bg-amber-50' : 'border-slate-100 bg-slate-50'}`}>
                                             <p className={`text-[10px] font-black uppercase tracking-widest mb-1 flex items-center gap-1.5 ${unused !== null && unused > 0 ? 'text-amber-400' : 'text-slate-400'}`}>
