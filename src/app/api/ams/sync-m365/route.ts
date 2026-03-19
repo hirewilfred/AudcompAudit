@@ -6,7 +6,6 @@ const AZURE_CLIENT_SECRET = process.env.AZURE_CLIENT_SECRET!;
 
 // All AMS-relevant M365 license SKUs
 const AMS_LICENSE_SKUS: Record<string, string> = {
-    'f30db892-07e9-47e9-837c-80727f46fd3d': 'Microsoft 365 F1',
     '66b55226-6b4f-492c-910c-a3b7a3c9d993': 'Microsoft 365 F3',
     'b05e124f-c7cc-45a0-a6aa-8cf78c946968': 'Microsoft 365 Business Basic',
     'cbdc14ab-d96c-4c30-b9f4-6ada7cdc1d46': 'Microsoft 365 Business Premium',
@@ -20,7 +19,6 @@ const AMS_LICENSE_SKUS: Record<string, string> = {
 
 // Entry-level plans — NOT counted for AMS billing.
 const ENTRY_LICENSE_SKUS = new Set([
-    'f30db892-07e9-47e9-837c-80727f46fd3d', // Microsoft 365 F1
     '66b55226-6b4f-492c-910c-a3b7a3c9d993', // Microsoft 365 F3
     'b05e124f-c7cc-45a0-a6aa-8cf78c946968', // Microsoft 365 Business Basic
     '18181a46-0d4e-45cd-891e-60aabd171b4e', // Office 365 E1
