@@ -990,17 +990,15 @@
             <!-- Carousel screen -->
             <div class="insta-screen">
               <div class="insta-track" id="instaTrack">
-                <!-- Slides injected by JS -->
-                <div class="insta-slide" id="emptySlide" onclick="document.getElementById('instaUpload').click()">
-                  <div class="insta-empty">
-                    <span class="insta-empty-icon">📷</span>
-                    <span>Tap to add photos</span>
-                  </div>
-                </div>
+                <div class="insta-slide"><img src="Images/ocean-blue-1.jpg" alt="Ocean Blue Reveal"></div>
+                <div class="insta-slide"><img src="Images/ocean-blue-2.jpg" alt="Ocean Blue Unboxing"></div>
               </div>
               <button class="insta-arrow left hidden" id="instaLeft" onclick="instaNav(-1)">‹</button>
-              <button class="insta-arrow right hidden" id="instaRight" onclick="instaNav(1)">›</button>
-              <div class="insta-dots" id="instaDots"></div>
+              <button class="insta-arrow right" id="instaRight" onclick="instaNav(1)">›</button>
+              <div class="insta-dots" id="instaDots">
+                <div class="insta-dot active"></div>
+                <div class="insta-dot"></div>
+              </div>
             </div>
             <!-- Bottom bar -->
             <div class="insta-bottombar">
@@ -1012,15 +1010,12 @@
               </div>
               <div class="insta-likes">2,481 likes</div>
               <div class="insta-caption"><b>bargainballoons</b> New Ocean Blue colour drop 🌊🎈 Shop now → link in bio</div>
-              <div class="insta-counter" id="instaCounter">0 photos · slide to pick</div>
+              <div class="insta-counter" id="instaCounter">photo 1 of 2 · use arrows to pick</div>
             </div>
           </div>
           <!-- Controls -->
           <div class="insta-controls">
-            <input type="file" id="instaUpload" accept="image/*" multiple style="display:none" onchange="instaAddImages(this)">
-            <button class="studio-btn btn-insta btn-sm" onclick="document.getElementById('instaUpload').click()">+ Add Photos</button>
-            <button class="studio-btn btn-primary btn-sm" onclick="instaUse()">✓ Use This</button>
-            <button class="studio-btn btn-ghost btn-sm" onclick="instaClear()">✕ Clear</button>
+            <button class="studio-btn btn-insta btn-sm" onclick="instaUse()">✓ Select for Campaign</button>
           </div>
           <div id="instaSelected" style="font-size:10px;color:var(--green);font-weight:700;min-height:16px;text-align:center;"></div>
         </div>
@@ -1087,92 +1082,23 @@
     btn.textContent = vid.muted ? '🔇' : '🔊';
   }
 
-  // ── Instagram carousel ──
-  let instaImages = []; // [{dataUrl, name}]
+  // ── Instagram carousel (static 2-photo mockup) ──
   let instaIdx = 0;
-
-  function instaRender() {
-    const track = document.getElementById('instaTrack');
-    const dots = document.getElementById('instaDots');
-    const counter = document.getElementById('instaCounter');
-    const leftBtn = document.getElementById('instaLeft');
-    const rightBtn = document.getElementById('instaRight');
-
-    if (instaImages.length === 0) {
-      track.innerHTML = `<div class="insta-slide" id="emptySlide" onclick="document.getElementById('instaUpload').click()"><div class="insta-empty"><span class="insta-empty-icon">📷</span><span>Tap to add photos</span></div></div>`;
-      dots.innerHTML = ''; leftBtn.classList.add('hidden'); rightBtn.classList.add('hidden');
-      counter.textContent = '0 photos · slide to pick'; return;
-    }
-
-    track.innerHTML = instaImages.map((img, i) =>
-      `<div class="insta-slide"><img src="${img.dataUrl}" alt="${img.name}"></div>`
-    ).join('');
-    track.style.transform = `translateX(-${instaIdx * 100}%)`;
-
-    dots.innerHTML = instaImages.map((_, i) =>
-      `<div class="insta-dot ${i === instaIdx ? 'active' : ''}"></div>`
-    ).join('');
-
-    leftBtn.classList.toggle('hidden', instaIdx === 0);
-    rightBtn.classList.toggle('hidden', instaIdx === instaImages.length - 1);
-    counter.textContent = `${instaImages.length} photo${instaImages.length>1?'s':''} · photo ${instaIdx+1} of ${instaImages.length}`;
-
-    try {
-      localStorage.setItem('bb_insta_imgs', JSON.stringify(instaImages));
-      localStorage.setItem('bb_insta_idx', instaIdx);
-    } catch(_) {}
-  }
+  const instaTotalSlides = 2;
 
   function instaNav(dir) {
-    instaIdx = Math.max(0, Math.min(instaImages.length - 1, instaIdx + dir));
+    instaIdx = Math.max(0, Math.min(instaTotalSlides - 1, instaIdx + dir));
     document.getElementById('instaTrack').style.transform = `translateX(-${instaIdx * 100}%)`;
     document.querySelectorAll('.insta-dot').forEach((d,i) => d.classList.toggle('active', i === instaIdx));
     document.getElementById('instaLeft').classList.toggle('hidden', instaIdx === 0);
-    document.getElementById('instaRight').classList.toggle('hidden', instaIdx === instaImages.length - 1);
-    document.getElementById('instaCounter').textContent = `${instaImages.length} photos · photo ${instaIdx+1} of ${instaImages.length}`;
-    try { localStorage.setItem('bb_insta_idx', instaIdx); } catch(_) {}
-  }
-
-  function instaAddImages(input) {
-    const files = Array.from(input.files);
-    let loaded = 0;
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        instaImages.push({ dataUrl: e.target.result, name: file.name });
-        loaded++;
-        if (loaded === files.length) { instaIdx = instaImages.length - 1; instaRender(); }
-      };
-      reader.readAsDataURL(file);
-    });
-    input.value = '';
+    document.getElementById('instaRight').classList.toggle('hidden', instaIdx === instaTotalSlides - 1);
+    document.getElementById('instaCounter').textContent = `photo ${instaIdx+1} of ${instaTotalSlides} · use arrows to pick`;
   }
 
   function instaUse() {
-    if (!instaImages.length) return;
-    const sel = document.getElementById('instaSelected');
-    sel.textContent = `✓ Photo ${instaIdx+1} selected for campaign`;
-    try { localStorage.setItem('bb_insta_selected', instaIdx); } catch(_) {}
+    const names = ['Ocean Blue Reveal', 'Ocean Blue Unboxing'];
+    document.getElementById('instaSelected').textContent = `✓ "${names[instaIdx]}" selected for campaign`;
   }
-
-  function instaClear() {
-    instaImages = []; instaIdx = 0;
-    document.getElementById('instaSelected').textContent = '';
-    try { localStorage.removeItem('bb_insta_imgs'); localStorage.removeItem('bb_insta_idx'); localStorage.removeItem('bb_insta_selected'); } catch(_) {}
-    instaRender();
-  }
-
-  // Restore on load
-  try {
-    const saved = localStorage.getItem('bb_insta_imgs');
-    if (saved) {
-      instaImages = JSON.parse(saved);
-      instaIdx = parseInt(localStorage.getItem('bb_insta_idx') || '0');
-      instaRender();
-      const selIdx = localStorage.getItem('bb_insta_selected');
-      if (selIdx !== null) document.getElementById('instaSelected').textContent = `✓ Photo ${parseInt(selIdx)+1} selected for campaign`;
-    }
-  } catch(_) {}
 
   // Animate platform card progress bars
   document.querySelectorAll('.pc-bar-fill').forEach(bar => {
