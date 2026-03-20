@@ -328,6 +328,138 @@
   .aud-logo { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: .06em; }
   .aud-sub { font-size: 10px; color: rgba(255,255,255,.55); margin-top: 5px; line-height: 1.6; }
 
+  /* ── SOCIAL CONTENT STUDIO ── */
+  .studio-grid   { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; align-items: start; }
+  .studio-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .studio-panel { background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); }
+  .studio-panel-label { font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: .06em; font-family: 'DM Mono', monospace; }
+
+  /* Phone frame */
+  .phone-wrap { display: flex; justify-content: center; }
+  .phone-shell {
+    background: #1a1a2e; border-radius: 40px; padding: 10px;
+    box-shadow: 0 0 0 2px #444, 0 0 0 4px #222, 0 28px 64px rgba(0,0,0,.5);
+    width: 200px; flex-shrink: 0;
+  }
+  .phone-notch {
+    width: 60px; height: 8px; background: #111; border-radius: 999px;
+    margin: 0 auto 8px;
+  }
+  .phone-screen {
+    position: relative; border-radius: 26px; overflow: hidden;
+    background: #000; aspect-ratio: 9/16;
+  }
+  .phone-screen video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* Custom TikTok-style inline controls — no native browser UI, no fullscreen */
+  .vid-tap {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 5;
+  }
+  .vid-play-icon {
+    width: 52px; height: 52px; background: rgba(0,0,0,.55); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: #fff; opacity: 0; transition: opacity .2s;
+    backdrop-filter: blur(6px); pointer-events: none;
+  }
+  .vid-tap:hover .vid-play-icon,
+  .vid-play-icon.visible { opacity: 1; }
+  .vid-mute-btn {
+    position: absolute; top: 10px; left: 10px; z-index: 10;
+    background: rgba(0,0,0,.55); border: none; border-radius: 50%;
+    width: 30px; height: 30px; cursor: pointer; color: #fff; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(6px); transition: background .2s;
+  }
+  .vid-mute-btn:hover { background: rgba(0,0,0,.85); }
+
+  .tt-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 10px;
+    background: linear-gradient(0deg, rgba(0,0,0,.8) 0%, transparent 100%);
+    pointer-events: none; z-index: 4;
+  }
+  .tt-username { font-size: 11px; color: #fff; font-weight: 800; }
+  .tt-caption  { font-size: 9px; color: rgba(255,255,255,.85); margin-top: 4px; line-height: 1.5; }
+  .tt-music    { font-size: 9px; color: rgba(255,255,255,.7); margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+
+  .tt-actions {
+    position: absolute; right: 6px; bottom: 70px;
+    display: flex; flex-direction: column; gap: 14px; align-items: center; z-index: 6;
+  }
+  .tt-btn { text-align: center; color: #fff; cursor: pointer; }
+  .tt-btn .icon { font-size: 20px; line-height: 1; }
+  .tt-btn .cnt  { font-size: 9px; font-weight: 700; margin-top: 2px; color: rgba(255,255,255,.9); }
+
+  .tt-avatar-ring {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 2px solid #fff; overflow: hidden; margin-bottom: 14px;
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+  }
+
+  /* Video tags below phone */
+  .phone-tags { display: flex; gap: 6px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+  .phone-tag {
+    font-size: 10px; font-weight: 700; padding: 4px 11px; border-radius: 999px;
+  }
+
+  /* Image Upload */
+  .upload-slots { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .upload-slot {
+    border: 2px dashed rgba(108,92,231,.35); border-radius: 16px;
+    padding: 16px 10px; text-align: center; cursor: pointer;
+    transition: all .2s; min-height: 130px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(108,92,231,.03); position: relative;
+    overflow: hidden;
+  }
+  .upload-slot:hover { border-color: var(--purple); background: var(--purple-lt); }
+  .upload-slot.has-img { border-style: solid; border-color: var(--purple); padding: 0; }
+  .upload-slot.has-img img { width: 100%; height: 100%; object-fit: cover; border-radius: 14px; display: block; }
+  .upload-slot input[type=file] { display: none; }
+  .upload-icon { font-size: 26px; margin-bottom: 8px; }
+  .upload-txt { font-size: 10px; color: var(--muted); font-weight: 600; line-height: 1.5; }
+  .upload-lbl { font-size: 11px; font-weight: 800; color: var(--navy); margin-bottom: 4px; }
+  .slot-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(108,92,231,.75); display: none; align-items: center; justify-content: center;
+    border-radius: 14px; flex-direction: column; gap: 6px;
+  }
+  .upload-slot.has-img:hover .slot-overlay { display: flex; }
+  .slot-overlay span { font-size: 11px; color: #fff; font-weight: 700; }
+
+  .save-bar { margin-top: 14px; display: flex; gap: 8px; }
+  .save-btn {
+    flex: 1; padding: 11px; border-radius: 13px; font-size: 12px; font-weight: 700;
+    font-family: inherit; cursor: pointer; border: none; transition: all .2s;
+  }
+  .save-btn-primary {
+    background: linear-gradient(135deg, var(--purple) 0%, var(--blue) 100%);
+    color: #fff; box-shadow: 0 4px 16px rgba(108,92,231,.32);
+  }
+  .save-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(108,92,231,.42); }
+  .save-btn-sec { background: #f6f5ff; color: var(--text); border: 1px solid rgba(200,195,240,.5); }
+  .save-btn-sec:hover { background: var(--purple-lt); color: var(--purple); }
+
+  .save-confirm {
+    display: none; margin-top: 10px;
+    background: var(--green-lt); color: var(--green); font-size: 11px; font-weight: 700;
+    padding: 9px 14px; border-radius: 12px; text-align: center;
+  }
+
+  /* Upcoming posts */
+  .post-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid rgba(210,208,238,.25); }
+  .post-row:last-child { border-bottom: none; }
+  .post-thumb {
+    width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+    object-fit: cover; background: var(--purple-lt);
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .post-info { flex: 1; }
+  .post-title { font-size: 11px; color: var(--navy); font-weight: 700; }
+  .post-meta  { font-size: 10px; color: var(--muted); margin-top: 2px; font-family: 'DM Mono', monospace; }
+  .post-plat  { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+
   /* ── FOOTER ── */
   footer {
     background: #ffffff;
@@ -353,6 +485,7 @@
       <a class="nav-link active">Dashboard</a>
       <a class="nav-link" href="agents.html">Manage Agents</a>
       <a class="nav-link">Analytics</a>
+      <a class="nav-link" href="#social-studio" onclick="document.getElementById('social-studio').scrollIntoView({behavior:'smooth'});return false;">Social Content</a>
       <a class="nav-link">Campaigns</a>
       <a class="nav-link">Reports</a>
     </nav>
@@ -784,6 +917,227 @@
 
     </div><!-- /side-col -->
   </div><!-- /main-layout -->
+
+  <!-- ══════════════════════════════════════════
+       SOCIAL CONTENT STUDIO
+  ══════════════════════════════════════════ -->
+  <div id="social-studio" style="margin-top: 22px;">
+    <div class="section-hdr">
+      <div>
+        <div class="section-title" style="font-size:18px;">📱 Social Content Studio</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px;font-family:'DM Mono',monospace;">Agent 02 · TikTok · Instagram · Facebook</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="status-chip chip-green" style="font-size:11px;"><span class="live-dot dot-green"></span>Publishing Active</div>
+        <button class="new-agent-btn" style="padding:8px 16px;font-size:12px;">+ Schedule Post</button>
+      </div>
+    </div>
+
+    <!-- ROW 1: 3 TikTok phone previews -->
+    <div class="studio-grid">
+
+      <!-- ── VIDEO 1 ── -->
+      <div class="studio-panel">
+        <div class="studio-panel-label">🎬 TikTok Preview — Video 1</div>
+        <div class="phone-wrap">
+          <div class="phone-shell">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <video id="vid1" muted loop autoplay playsinline disablepictureinpicture
+                style="width:100%;height:100%;object-fit:cover;display:block;">
+                <source src="Videos/New_Colour_ocean_202603192002 (1).mp4" type="video/mp4">
+              </video>
+              <div class="vid-tap" onclick="togglePlay('vid1')">
+                <div class="vid-play-icon" id="play-vid1">▶</div>
+              </div>
+              <button class="vid-mute-btn" id="mute-vid1"
+                onclick="event.stopPropagation();toggleMute('vid1')">🔇</button>
+              <div class="tt-actions">
+                <div class="tt-avatar-ring">🎈</div>
+                <div class="tt-btn"><div class="icon">❤️</div><div class="cnt">2.4K</div></div>
+                <div class="tt-btn"><div class="icon">💬</div><div class="cnt">84</div></div>
+                <div class="tt-btn"><div class="icon">🔖</div><div class="cnt">312</div></div>
+                <div class="tt-btn"><div class="icon">↗️</div><div class="cnt">Share</div></div>
+              </div>
+              <div class="tt-overlay">
+                <div class="tt-username">@bargainballoons</div>
+                <div class="tt-caption">✨ New Colour Collection — Ocean Series 🌊🎈 Perfect for beach &amp; tropical parties!</div>
+                <div class="tt-music">🎵 <span>Original Sound · bargainballoons</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="phone-tags">
+          <span class="phone-tag" style="background:var(--purple-lt);color:var(--purple);">TikTok Ready</span>
+          <span class="phone-tag" style="background:var(--blue-lt);color:var(--blue);">9:16</span>
+          <span class="phone-tag" style="background:var(--green-lt);color:var(--green);">Auto-caption</span>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button class="save-btn save-btn-primary" style="font-size:11px;">⬆ Post to TikTok</button>
+          <button class="save-btn save-btn-sec" style="font-size:11px;flex:none;padding:11px 12px;">✏ Caption</button>
+        </div>
+      </div>
+
+      <!-- ── VIDEO 2 ── -->
+      <div class="studio-panel">
+        <div class="studio-panel-label">🎬 TikTok Preview — Video 2</div>
+        <div class="phone-wrap">
+          <div class="phone-shell">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <video id="vid2" muted loop autoplay playsinline disablepictureinpicture
+                style="width:100%;height:100%;object-fit:cover;display:block;">
+                <source src="Videos/New_Colour_ocean_202603192002 (2).mp4" type="video/mp4">
+              </video>
+              <div class="vid-tap" onclick="togglePlay('vid2')">
+                <div class="vid-play-icon" id="play-vid2">▶</div>
+              </div>
+              <button class="vid-mute-btn" id="mute-vid2"
+                onclick="event.stopPropagation();toggleMute('vid2')">🔇</button>
+              <div class="tt-actions">
+                <div class="tt-avatar-ring">🎈</div>
+                <div class="tt-btn"><div class="icon">❤️</div><div class="cnt">1.8K</div></div>
+                <div class="tt-btn"><div class="icon">💬</div><div class="cnt">61</div></div>
+                <div class="tt-btn"><div class="icon">🔖</div><div class="cnt">247</div></div>
+                <div class="tt-btn"><div class="icon">↗️</div><div class="cnt">Share</div></div>
+              </div>
+              <div class="tt-overlay">
+                <div class="tt-username">@bargainballoons</div>
+                <div class="tt-caption">🎨 Which colour is your fave? 💙💛💚 Drop it below! Shop at bargainballoons.ca</div>
+                <div class="tt-music">🎵 <span>Original Sound · bargainballoons</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="phone-tags">
+          <span class="phone-tag" style="background:var(--purple-lt);color:var(--purple);">TikTok Ready</span>
+          <span class="phone-tag" style="background:var(--blue-lt);color:var(--blue);">9:16</span>
+          <span class="phone-tag" style="background:var(--amber-lt);color:var(--amber);">Scheduled</span>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button class="save-btn save-btn-primary" style="font-size:11px;">⬆ Post to TikTok</button>
+          <button class="save-btn save-btn-sec" style="font-size:11px;flex:none;padding:11px 12px;">✏ Caption</button>
+        </div>
+      </div>
+
+      <!-- ── VIDEO 3 ── -->
+      <div class="studio-panel">
+        <div class="studio-panel-label">🎬 TikTok Preview — Video 3</div>
+        <div class="phone-wrap">
+          <div class="phone-shell">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <video id="vid3" muted loop autoplay playsinline disablepictureinpicture
+                style="width:100%;height:100%;object-fit:cover;display:block;">
+                <source src="Videos/New_Colour_Ocean_202603192002.mp4" type="video/mp4">
+              </video>
+              <div class="vid-tap" onclick="togglePlay('vid3')">
+                <div class="vid-play-icon" id="play-vid3">▶</div>
+              </div>
+              <button class="vid-mute-btn" id="mute-vid3"
+                onclick="event.stopPropagation();toggleMute('vid3')">🔇</button>
+              <div class="tt-actions">
+                <div class="tt-avatar-ring">🎈</div>
+                <div class="tt-btn"><div class="icon">❤️</div><div class="cnt">3.1K</div></div>
+                <div class="tt-btn"><div class="icon">💬</div><div class="cnt">102</div></div>
+                <div class="tt-btn"><div class="icon">🔖</div><div class="cnt">418</div></div>
+                <div class="tt-btn"><div class="icon">↗️</div><div class="cnt">Share</div></div>
+              </div>
+              <div class="tt-overlay">
+                <div class="tt-username">@bargainballoons</div>
+                <div class="tt-caption">🎈 The full Ocean Series is here! 8 stunning colours — link in bio to shop now.</div>
+                <div class="tt-music">🎵 <span>Original Sound · bargainballoons</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="phone-tags">
+          <span class="phone-tag" style="background:var(--purple-lt);color:var(--purple);">TikTok Ready</span>
+          <span class="phone-tag" style="background:var(--blue-lt);color:var(--blue);">9:16</span>
+          <span class="phone-tag" style="background:var(--green-lt);color:var(--green);">New</span>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button class="save-btn save-btn-primary" style="font-size:11px;">⬆ Post to TikTok</button>
+          <button class="save-btn save-btn-sec" style="font-size:11px;flex:none;padding:11px 12px;">✏ Caption</button>
+        </div>
+      </div>
+
+    </div><!-- /studio-grid -->
+
+    <!-- ROW 2: Image Upload + Upcoming Posts -->
+    <div class="studio-bottom">
+
+      <!-- Image Upload -->
+      <div class="studio-panel">
+        <div class="studio-panel-label">🖼 Image Assets — Upload &amp; Save</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
+          Click a slot to upload. Images auto-save in your browser and reload next visit.
+          Use <strong style="color:var(--navy);">Download</strong> to save a copy to your computer.
+        </div>
+        <div class="upload-slots">
+          <div class="upload-slot" id="slot1" onclick="document.getElementById('file1').click()">
+            <input type="file" id="file1" accept="image/*" onchange="handleUpload(this,'slot1',1)">
+            <div class="upload-icon">🖼</div>
+            <div class="upload-lbl">Image 1</div>
+            <div class="upload-txt">Click to upload<br>JPG · PNG · WEBP</div>
+            <div class="slot-overlay"><span>🔄 Replace</span></div>
+          </div>
+          <div class="upload-slot" id="slot2" onclick="document.getElementById('file2').click()">
+            <input type="file" id="file2" accept="image/*" onchange="handleUpload(this,'slot2',2)">
+            <div class="upload-icon">🖼</div>
+            <div class="upload-lbl">Image 2</div>
+            <div class="upload-txt">Click to upload<br>JPG · PNG · WEBP</div>
+            <div class="slot-overlay"><span>🔄 Replace</span></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;">
+          <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--purple-lt);color:var(--purple);">Square 1:1</span>
+          <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--blue-lt);color:var(--blue);">Story 9:16</span>
+          <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--coral-lt);color:var(--coral);">Landscape 16:9</span>
+        </div>
+        <div class="save-bar">
+          <button class="save-btn save-btn-primary" onclick="downloadImages()">⬇ Download Images</button>
+          <button class="save-btn save-btn-sec" onclick="clearImages()">🗑 Clear</button>
+        </div>
+        <div class="save-confirm" id="save-confirm">✓ Images saved — reloading this page will restore them!</div>
+      </div>
+
+      <!-- Upcoming Posts -->
+      <div class="studio-panel">
+        <div class="section-hdr" style="margin-bottom:12px;">
+          <div class="section-title" style="font-size:13px;">Upcoming Posts</div>
+          <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;">Next 5</div>
+        </div>
+        <div class="post-row">
+          <div class="post-thumb">🎬</div>
+          <div class="post-info"><div class="post-title">Ocean Colour Reveal #1</div><div class="post-meta">Today · 6:00 PM EST</div></div>
+          <span class="post-plat" style="background:#ff004f22;color:#ff004f;">TikTok</span>
+        </div>
+        <div class="post-row">
+          <div class="post-thumb">🎬</div>
+          <div class="post-info"><div class="post-title">Ocean Colour Reveal #2</div><div class="post-meta">Tomorrow · 10:00 AM EST</div></div>
+          <span class="post-plat" style="background:#ff004f22;color:#ff004f;">TikTok</span>
+        </div>
+        <div class="post-row">
+          <div class="post-thumb">🎬</div>
+          <div class="post-info"><div class="post-title">Ocean Colour Reveal #3</div><div class="post-meta">Mar 21 · 8:00 PM EST</div></div>
+          <span class="post-plat" style="background:#ff004f22;color:#ff004f;">TikTok</span>
+        </div>
+        <div class="post-row">
+          <div class="post-thumb">🖼</div>
+          <div class="post-info"><div class="post-title">New Arrivals Grid Post</div><div class="post-meta">Mar 22 · 9:00 AM EST</div></div>
+          <span class="post-plat" style="background:#e1306c22;color:#e1306c;">Instagram</span>
+        </div>
+        <div class="post-row">
+          <div class="post-thumb">🖼</div>
+          <div class="post-info"><div class="post-title">Ocean Series Story Set</div><div class="post-meta">Mar 23 · 11:00 AM EST</div></div>
+          <span class="post-plat" style="background:#e1306c22;color:#e1306c;">Instagram</span>
+        </div>
+      </div>
+
+    </div><!-- /studio-bottom -->
+  </div><!-- /social-studio -->
+
 </div><!-- /page -->
 
 <footer>
@@ -818,6 +1172,99 @@
       t.style.opacity = '1';
       t.style.transform = 'none';
     }, i * 70);
+  });
+
+  // ── TikTok Video Controls ──
+  function togglePlay(videoId) {
+    const vid = document.getElementById(videoId);
+    const icon = document.getElementById('play-' + videoId);
+    if (vid.paused) {
+      vid.play();
+      icon.textContent = '⏸';
+      icon.classList.add('visible');
+      setTimeout(() => icon.classList.remove('visible'), 700);
+    } else {
+      vid.pause();
+      icon.textContent = '▶';
+      icon.classList.add('visible');
+    }
+  }
+
+  function toggleMute(videoId) {
+    const vid = document.getElementById(videoId);
+    const btn = document.getElementById('mute-' + videoId);
+    vid.muted = !vid.muted;
+    btn.textContent = vid.muted ? '🔇' : '🔊';
+  }
+
+  // ── Image Upload Handlers ──
+  function buildSlot(slot, idx, dataUrl, filename) {
+    slot.innerHTML = '';
+    slot.classList.add('has-img');
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.id = 'file'+idx; inp.accept = 'image/*';
+    inp.onchange = function() { handleUpload(this, slot.id, idx); };
+    slot.appendChild(inp);
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.style.cssText = 'width:100%;height:140px;object-fit:cover;border-radius:14px;display:block;';
+    slot.appendChild(img);
+    const ov = document.createElement('div');
+    ov.className = 'slot-overlay';
+    ov.innerHTML = '<span>🔄 Replace</span>' + (filename ? '<span style="font-size:9px;color:rgba(255,255,255,.8);">'+filename+'</span>' : '');
+    slot.appendChild(ov);
+  }
+
+  function handleUpload(input, slotId, idx) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      buildSlot(document.getElementById(slotId), idx, e.target.result, file.name);
+      try { localStorage.setItem('bb_img_'+idx, e.target.result); localStorage.setItem('bb_img_'+idx+'_name', file.name); } catch(err) {}
+      const c = document.getElementById('save-confirm');
+      c.style.display = 'block';
+      setTimeout(() => { c.style.display = 'none'; }, 3000);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function downloadImages() {
+    [1,2].forEach(idx => {
+      try {
+        const data = localStorage.getItem('bb_img_'+idx);
+        const name = localStorage.getItem('bb_img_'+idx+'_name') || ('bb-image-'+idx+'.jpg');
+        if (data) {
+          const a = document.createElement('a');
+          a.href = data; a.download = name; a.click();
+        }
+      } catch(err) {}
+    });
+  }
+
+  function clearImages() {
+    [1,2].forEach(idx => {
+      const slotId = 'slot' + idx;
+      const slot = document.getElementById(slotId);
+      slot.className = 'upload-slot';
+      slot.innerHTML = `
+        <input type="file" id="file${idx}" accept="image/*" onchange="handleUpload(this,'${slotId}',${idx})">
+        <div class="upload-icon">🖼</div>
+        <div class="upload-lbl">Image ${idx}</div>
+        <div class="upload-txt">Click to upload<br>JPG · PNG · WEBP</div>
+        <div class="slot-overlay"><span>🔄 Replace</span></div>`;
+      try { localStorage.removeItem('bb_img_'+idx); localStorage.removeItem('bb_img_'+idx+'_name'); } catch(err) {}
+    });
+    document.getElementById('save-confirm').style.display = 'none';
+  }
+
+  // Restore saved images on page load
+  [1,2].forEach(idx => {
+    try {
+      const data = localStorage.getItem('bb_img_'+idx);
+      const name = localStorage.getItem('bb_img_'+idx+'_name') || '';
+      if (data) buildSlot(document.getElementById('slot'+idx), idx, data, name);
+    } catch(err) {}
   });
 
   // Animate progress bars on load
