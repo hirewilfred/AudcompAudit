@@ -336,13 +336,13 @@ function CaseStudyDetail({ study, onClose }: { study: typeof caseStudies[number]
         </button>
 
         <div className="relative h-[220px] sm:h-[280px] overflow-hidden rounded-t-2xl">
-          <img src={study.image} alt={study.business} className="h-full w-full object-cover" />
+          <img src={study.image} alt={study.industry} className="h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent" />
           <div className="absolute bottom-5 left-6 right-6">
             <div className="mb-2 inline-flex rounded-md px-2.5 py-1 text-[11px] font-semibold text-white bg-orange-500">
               {study.industry}
             </div>
-            <h2 className="text-[26px] sm:text-[32px] font-bold text-white leading-tight">{study.business}</h2>
+            <h2 className="text-[26px] sm:text-[32px] font-bold text-white leading-tight">{study.industry}</h2>
             <p className="mt-1 text-[13px] text-gray-300">{study.location} Â· {study.employees} employees</p>
           </div>
         </div>
@@ -765,14 +765,14 @@ export default function Home() {
                   className="group relative w-[380px] shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-xl hover:-translate-y-1 text-left"
                 >
                   <div className="relative h-[180px] overflow-hidden">
-                    <img src={study.image} alt={study.business}
+                    <img src={study.image} alt={study.industry}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                     <div className="absolute left-3 top-3 rounded-md bg-orange-500 px-2.5 py-1 text-[10px] font-semibold text-white">
                       {study.industry}
                     </div>
                     <div className="absolute bottom-3 left-4 right-4">
-                      <h3 className="text-[17px] font-bold text-white leading-tight">{study.business}</h3>
+                      <h3 className="text-[17px] font-bold text-white leading-tight">{study.industry}</h3>
                       <p className="mt-0.5 text-[11px] text-gray-300">{study.location}</p>
                     </div>
                   </div>
@@ -803,14 +803,14 @@ export default function Home() {
                   className="group relative w-[380px] shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-xl hover:-translate-y-1 text-left"
                 >
                   <div className="relative h-[180px] overflow-hidden">
-                    <img src={study.image} alt={study.business}
+                    <img src={study.image} alt={study.industry}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                     <div className="absolute left-3 top-3 rounded-md bg-orange-500 px-2.5 py-1 text-[10px] font-semibold text-white">
                       {study.industry}
                     </div>
                     <div className="absolute bottom-3 left-4 right-4">
-                      <h3 className="text-[17px] font-bold text-white leading-tight">{study.business}</h3>
+                      <h3 className="text-[17px] font-bold text-white leading-tight">{study.industry}</h3>
                       <p className="mt-0.5 text-[11px] text-gray-300">{study.location}</p>
                     </div>
                   </div>
