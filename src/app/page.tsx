@@ -679,40 +679,55 @@ export default function Home() {
           </div>
         </section>
 
-        {/* â•â• SERVICES (light, like audcomp.com cards) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-        <section className="bg-white py-20 sm:py-28">
-          <div className="mx-auto max-w-7xl px-6">
+        {/* SERVICES */}
+        <section className="bg-[#fafaf8] py-20 sm:py-28">
+          <div className="mx-auto max-w-6xl px-6">
             <motion.h2 variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
-              className="mb-4 text-center text-[30px] font-bold tracking-tight text-gray-900 sm:text-[40px]">
-              Our Services
+              className="mb-4 text-center text-[32px] font-bold tracking-tight text-gray-900 sm:text-[44px]">
+              Our <em className="not-italic font-bold" style={{ color: '#F97316' }}>Technology</em> Services
             </motion.h2>
             <motion.p variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={1}
-              className="mx-auto mb-14 max-w-lg text-center text-[15px] leading-relaxed text-gray-600">
-              We are more than a service provider. We are your partner.
+              className="mx-auto mb-14 max-w-xl text-center text-[15px] leading-relaxed text-gray-500">
+              We go beyond IT support — we become your long-term technology partner,
+              helping you modernize, secure, and scale at every stage.
             </motion.p>
-
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {services.map((s, i) => (
-                <motion.div key={s.title} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i}
-                  className="group overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-lg hover:border-orange-200 hover:-translate-y-1">
-                  <div className="relative h-[160px] overflow-hidden">
-                    <img src={s.image} alt={s.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                    <div className="absolute bottom-3 left-4 flex h-10 w-10 items-center justify-center rounded-lg bg-white/90 backdrop-blur-sm shadow-sm">
-                      <s.icon className="h-5 w-5 text-orange-500" />
+            <div className="flex items-end gap-4">
+              {services.map((s, i) => {
+                const isCenter = i === 1 || i === 2;
+                return (
+                  <motion.a
+                    key={s.title}
+                    href="#"
+                    variants={fadeUp}
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true }}
+                    custom={i}
+                    className={`group relative flex-1 overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-2 ${isCenter ? 'h-[440px]' : 'h-[360px]'}`}
+                  >
+                    <img
+                      src={s.image}
+                      alt={s.title}
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-950/95 via-gray-900/30 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-5">
+                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/20 ring-1 ring-orange-400/30">
+                        <s.icon className="h-5 w-5 text-orange-400" />
+                      </div>
+                      <h3 className="text-[17px] font-bold leading-snug text-white">
+                        {s.title}
+                      </h3>
+                      <p className="mt-1.5 max-h-0 overflow-hidden text-[12px] leading-relaxed text-gray-300 opacity-0 transition-all duration-300 group-hover:max-h-20 group-hover:opacity-100">
+                        {s.desc}
+                      </p>
                     </div>
-                  </div>
-                  <div className="p-6">
-                    <h3 className="mb-2 text-[16px] font-bold text-gray-900">{s.title}</h3>
-                    <p className="text-[13px] leading-relaxed text-gray-600">{s.desc}</p>
-                    <div className="mt-4 flex items-center gap-1 text-[13px] font-semibold text-orange-500 group-hover:gap-2 transition-all">
-                      Learn More <ArrowRight className="h-3.5 w-3.5" />
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.a>
+                );
+              })}
             </div>
           </div>
+        </section>
         </section>
 
         {/* â•â• SCROLLING CASE STUDIES (marquee) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
