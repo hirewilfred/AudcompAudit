@@ -258,6 +258,15 @@ const caseStudies = [
   }
 ];
 
+// Combine and interleave case studies for better distribution of new ones
+const displayCaseStudies: typeof caseStudies = [];
+for (let i = 0; i < 5; i++) {
+  displayCaseStudies.push(caseStudies[i]);
+  if (caseStudies[i+5]) {
+    displayCaseStudies.push(caseStudies[i+5]);
+  }
+}
+
 /* ─── Features ──────────────────────────────────────────────────── */
 const features = [
   {
@@ -718,7 +727,7 @@ export default function Home() {
           {/* ── Row 1: scrolls left ── */}
           <div className="relative mb-5">
             <div className="scroll-row-left flex w-max gap-5 px-4">
-              {[...caseStudies, ...caseStudies].map((study, idx) => (
+              {[...displayCaseStudies, ...displayCaseStudies].map((study, idx) => (
                 <button
                   key={`r1-${idx}`}
                   onClick={() => setSelectedStudy(study)}
@@ -756,7 +765,7 @@ export default function Home() {
           {/* ── Row 2: scrolls right ── */}
           <div className="relative">
             <div className="scroll-row-right flex w-max gap-5 px-4">
-              {[...caseStudies.slice(3), ...caseStudies.slice(0, 3), ...caseStudies.slice(3), ...caseStudies.slice(0, 3)].map((study, idx) => (
+              {[...displayCaseStudies.slice(5), ...displayCaseStudies.slice(0, 5), ...displayCaseStudies.slice(5), ...displayCaseStudies.slice(0, 5)].map((study, idx) => (
                 <button
                   key={`r2-${idx}`}
                   onClick={() => setSelectedStudy(study)}
