@@ -303,10 +303,10 @@ const features = [
 
 /* ─── Services (matching audcomp.com) ─────────────────────────── */
 const services = [
-  { icon: Monitor, title: 'Managed IT Services', desc: 'Proactive monitoring, maintenance, and support for your entire IT infrastructure.' },
-  { icon: Cloud, title: 'Cloud Solutions', desc: 'Migration, management, and optimization of cloud environments for maximum efficiency.' },
-  { icon: Shield, title: 'Cyber Security', desc: 'Multi-layered security solutions protecting your business from evolving threats.' },
-  { icon: BrainCircuit, title: 'AI Audit & Readiness', desc: 'Comprehensive assessment of your AI readiness with dollar-precise ROI projections.' },
+  { icon: Monitor, title: 'Managed IT Services', desc: 'Proactive monitoring, maintenance, and support for your entire IT infrastructure.', image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=500&fit=crop&q=90' },
+  { icon: Cloud, title: 'Cloud Solutions', desc: 'Migration, management, and optimization of cloud environments for maximum efficiency.', image: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&h=500&fit=crop&q=90' },
+  { icon: Shield, title: 'Cyber Security', desc: 'Multi-layered security solutions protecting your business from evolving threats.', image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&h=500&fit=crop&q=90' },
+  { icon: BrainCircuit, title: 'AI Audit & Readiness', desc: 'Comprehensive assessment of your AI readiness with dollar-precise ROI projections.', image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=500&fit=crop&q=90' },
 ];
 
 /* ─── Case study detail overlay ────────────────────────────────── */
@@ -690,14 +690,20 @@ export default function Home() {
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {services.map((s, i) => (
                 <motion.div key={s.title} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i}
-                  className="group rounded-xl border border-gray-200 bg-white p-7 shadow-sm transition-all hover:shadow-lg hover:border-blue-200 hover:-translate-y-1">
-                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50">
-                    <s.icon className="h-6 w-6 text-blue-600" />
+                  className="group overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-lg hover:border-blue-200 hover:-translate-y-1">
+                  <div className="relative h-[160px] overflow-hidden">
+                    <img src={s.image} alt={s.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                    <div className="absolute bottom-3 left-4 flex h-10 w-10 items-center justify-center rounded-lg bg-white/90 backdrop-blur-sm shadow-sm">
+                      <s.icon className="h-5 w-5 text-blue-600" />
+                    </div>
                   </div>
-                  <h3 className="mb-2 text-[16px] font-bold text-gray-900">{s.title}</h3>
-                  <p className="text-[13px] leading-relaxed text-gray-600">{s.desc}</p>
-                  <div className="mt-4 flex items-center gap-1 text-[13px] font-semibold text-blue-600 group-hover:gap-2 transition-all">
-                    Learn More <ArrowRight className="h-3.5 w-3.5" />
+                  <div className="p-6">
+                    <h3 className="mb-2 text-[16px] font-bold text-gray-900">{s.title}</h3>
+                    <p className="text-[13px] leading-relaxed text-gray-600">{s.desc}</p>
+                    <div className="mt-4 flex items-center gap-1 text-[13px] font-semibold text-blue-600 group-hover:gap-2 transition-all">
+                      Learn More <ArrowRight className="h-3.5 w-3.5" />
+                    </div>
                   </div>
                 </motion.div>
               ))}
