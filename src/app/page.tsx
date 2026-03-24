@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -679,55 +679,61 @@ export default function Home() {
           </div>
         </section>
 
-        {/* SERVICES */}
-        <section className="bg-[#fafaf8] py-20 sm:py-28">
-          <div className="mx-auto max-w-6xl px-6">
-            <motion.h2 variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
-              className="mb-4 text-center text-[32px] font-bold tracking-tight text-gray-900 sm:text-[44px]">
-              Our <em className="not-italic font-bold" style={{ color: '#F97316' }}>Technology</em> Services
-            </motion.h2>
-            <motion.p variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={1}
-              className="mx-auto mb-14 max-w-xl text-center text-[15px] leading-relaxed text-gray-500">
-              We go beyond IT support — we become your long-term technology partner,
-              helping you modernize, secure, and scale at every stage.
-            </motion.p>
-            <div className="flex items-end gap-4">
-              {services.map((s, i) => {
-                const isCenter = i === 1 || i === 2;
-                return (
-                  <motion.a
-                    key={s.title}
-                    href="#"
-                    variants={fadeUp}
-                    initial="hidden"
-                    whileInView="show"
-                    viewport={{ once: true }}
-                    custom={i}
-                    className={`group relative flex-1 overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-2 ${isCenter ? 'h-[440px]' : 'h-[360px]'}`}
-                  >
-                    <img
-                      src={s.image}
-                      alt={s.title}
-                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-gray-950/95 via-gray-900/30 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-5">
-                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/20 ring-1 ring-orange-400/30">
-                        <s.icon className="h-5 w-5 text-orange-400" />
+        {/* ══ SERVICES ═════════════════════════════════════════════════ */}
+        <section className="bg-[#faf9f6]/80 py-24 sm:py-32">
+          <div className="mx-auto max-w-7xl px-6">
+            
+            <div className="mb-16 text-center">
+              <motion.h2 variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
+                className="text-[40px] font-bold leading-tight tracking-tight text-gray-900 sm:text-[52px]">
+                Precision <span className="font-medium italic" style={{ color: '#F97316' }}>Technology</span> <br /> Solutions
+              </motion.h2>
+              <motion.p variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={1}
+                className="mx-auto mt-6 max-w-2xl text-[16px] leading-relaxed text-gray-400">
+                Tailored expertise to solve your organization's most complex digital challenges.
+                From infrastructure to intelligent automation.
+              </motion.p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+              {services.map((s, i) => (
+                <motion.div
+                  key={s.title}
+                  variants={fadeUp}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={{ once: true }}
+                  custom={i}
+                  className="group relative h-[520px] overflow-hidden rounded-[2.5rem] bg-gray-100 shadow-sm"
+                >
+                  {/* Full Background Photo */}
+                  <img
+                    src={s.image}
+                    alt={s.title}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                  />
+                  
+                  {/* Subtle Top Gradient for depth */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-transparent" />
+
+                  {/* Dark Floating Card (Reference Style) */}
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <div className="relative rounded-[1.75rem] bg-[#0c1221]/95 p-6 backdrop-blur-md transition-all duration-300 group-hover:bg-[#0c1221] group-hover:p-7 shadow-2xl">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 ring-1 ring-orange-400/20 mb-4 transition-transform group-hover:scale-110">
+                        <s.icon className="h-5 w-5 text-orange-500" />
                       </div>
-                      <h3 className="text-[17px] font-bold leading-snug text-white">
+                      <h3 className="text-[19px] font-black leading-tight text-white mb-2 tracking-tight">
                         {s.title}
                       </h3>
-                      <p className="mt-1.5 max-h-0 overflow-hidden text-[12px] leading-relaxed text-gray-300 opacity-0 transition-all duration-300 group-hover:max-h-20 group-hover:opacity-100">
+                      <p className="max-h-0 overflow-hidden text-[13px] leading-relaxed text-gray-400 opacity-0 transition-all duration-300 group-hover:max-h-24 group-hover:opacity-100 group-hover:mt-2">
                         {s.desc}
                       </p>
                     </div>
-                  </motion.a>
-                );
-              })}
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
-        </section>
         </section>
 
         {/* â•â• SCROLLING CASE STUDIES (marquee) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
