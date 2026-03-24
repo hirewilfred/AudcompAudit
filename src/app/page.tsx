@@ -151,6 +151,111 @@ const caseStudies = [
     tools: ['Perishable Forecasting', 'Dynamic Pricing Engine', 'Waste Analytics'],
     timeline: '5 weeks to full deployment',
   },
+  {
+    slug: 'meridian-logistics',
+    business: 'Meridian Logistics',
+    industry: 'Transportation & Logistics',
+    location: 'Halifax, NS',
+    employees: 185,
+    image: '/images/case-studies/logistics.png',
+    result: '18% reduction in fuel costs',
+    saving: '$120,400',
+    score: 82,
+    challenge: 'Inefficient route planning and unexpected maintenance downtime on a fleet of 80 trucks were severely impacting margins as fuel costs rose.',
+    solution: 'AI route optimization dynamically adjusts for traffic, weather, and delivery windows. Predictive analytics on vehicle sensor data schedules maintenance before breakdowns occur.',
+    results: [
+      { metric: '18%', label: 'Less fuel consumed' },
+      { metric: '30%', label: 'Fewer breakdowns' },
+      { metric: '$120.4k', label: 'Annual savings' },
+      { metric: '98%', label: 'On-time delivery' },
+    ],
+    tools: ['Route Optimization AI', 'Predictive Maintenance', 'Fleet Analytics'],
+    timeline: '6 weeks to full deployment',
+  },
+  {
+    slug: 'oakwood-medical',
+    business: 'Oakwood Medical Clinic',
+    industry: 'Healthcare Clinic',
+    location: 'Winnipeg, MB',
+    employees: 82,
+    image: '/images/case-studies/clinic.png',
+    result: '60% less patient intake time',
+    saving: '$85,200',
+    score: 85,
+    challenge: 'Clinic staff were overloaded with patient intake, triaging, and manual data entry, leading to an average waiting time of 40 minutes per patient.',
+    solution: 'AI-driven patient intake platform automatically collects and structures medical history via a secure chatbot before arrival, integrating directly into the EMR.',
+    results: [
+      { metric: '60%', label: 'Faster intake' },
+      { metric: '40 min', label: 'Wait time reduced' },
+      { metric: '$85.2k', label: 'Annual savings' },
+      { metric: '100%', label: 'EMR compliance' },
+    ],
+    tools: ['Patient Intake Bot', 'Automated Triaging', 'EMR Integration'],
+    timeline: '4 weeks to full deployment',
+  },
+  {
+    slug: 'urban-nest-realty',
+    business: 'Urban Nest Real Estate',
+    industry: 'Real Estate Brokerage',
+    location: 'Toronto, ON',
+    employees: 240,
+    image: '/images/case-studies/real_estate.png',
+    result: '20 hrs/week saved per agent',
+    saving: '$180,000',
+    score: 79,
+    challenge: 'Agents spent over 20 hours a week answering repetitive client queries and manually writing property descriptions, taking away from meaningful client interactions.',
+    solution: 'GenAI property description generator instantly drafts engaging MLS listings from basic specs. A 24/7 client concierge bot answers standard questions on open houses and neighborhoods.',
+    results: [
+      { metric: '20 hrs', label: 'Saved per agent/wk' },
+      { metric: '3x', label: 'Faster replies' },
+      { metric: '$180k', label: 'Annual savings' },
+      { metric: '24/7', label: 'Client support' },
+    ],
+    tools: ['GenAI Listing Generator', 'Client Concierge Bot', 'Market Analytics'],
+    timeline: '5 weeks to full deployment',
+  },
+  {
+    slug: 'apex-financial',
+    business: 'Apex Financial Partners',
+    industry: 'Wealth Management',
+    location: 'Montreal, QC',
+    employees: 110,
+    image: '/images/case-studies/financial.png',
+    result: '150% more personalized touchpoints',
+    saving: '$145,000',
+    score: 88,
+    challenge: 'Financial advisors struggled to personalize portfolios for hundreds of clients while keeping up with daily market changes and news.',
+    solution: 'AI-assisted market analysis engine scans global news and matches it with client portfolios, generating personalized briefs for advisors to share instantly with clients.',
+    results: [
+      { metric: '150%', label: 'More client touchpoints' },
+      { metric: '4 hrs', label: 'Research saved daily' },
+      { metric: '$145k', label: 'Annual savings' },
+      { metric: '12%', label: 'Higher client retention' },
+    ],
+    tools: ['Market Sentiment Analysis', 'Portfolio Personalization', 'Client Brief Generator'],
+    timeline: '8 weeks to full deployment',
+  },
+  {
+    slug: 'pioneers-education',
+    business: 'Pioneers Education',
+    industry: 'Education Technology',
+    location: 'Vancouver, BC',
+    employees: 150,
+    image: '/images/case-studies/education.png',
+    result: '40% reduction in grading time',
+    saving: '$90,000',
+    score: 84,
+    challenge: 'Tutors were spending too much time answering the exact same foundational questions and grading standard assignments.',
+    solution: 'GenAI tutor assistant answers basic student queries 24/7, and an automated grading system evaluates standard coursework instantly.',
+    results: [
+      { metric: '40%', label: 'Less grading time' },
+      { metric: '24/7', label: 'Tutor availability' },
+      { metric: '$90k', label: 'Annual savings' },
+      { metric: '95%', label: 'Student satisfaction' },
+    ],
+    tools: ['GenAI Tutor Assistant', 'Automated Grading Engine', 'Student Analytics'],
+    timeline: '7 weeks to full deployment',
+  }
 ];
 
 /* ─── Features ──────────────────────────────────────────────────── */
@@ -339,7 +444,7 @@ export default function Home() {
             {[
               { label: 'About', href: 'https://audcomp.com/about/' },
               { label: 'Services', href: 'https://audcomp.com/managed-it-services/' },
-              { label: 'AI Audit', href: '#features' },
+              { label: 'AI Audit', href: '#how-it-works' },
               { label: 'Case Studies', href: '#case-studies' },
               { label: 'Partners', href: 'https://audcomp.com/partners/' },
               { label: 'Contact', href: 'https://audcomp.com/contact/' },
@@ -687,55 +792,10 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ══ FEATURES (light background) ═════════════════════════════ */}
-        <section id="features" className="bg-white py-20 sm:py-28">
-          <div className="mx-auto max-w-7xl px-6">
-            <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
-              className="mb-3 text-center text-[12px] font-semibold uppercase tracking-widest text-blue-600">
-              Platform
-            </motion.div>
-
-            <motion.h2 variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={1}
-              className="mb-12 text-center text-[30px] font-bold tracking-tight text-gray-900 sm:text-[40px]">
-              Everything to Lead Your AI Transition
-            </motion.h2>
-
-            <div className="mb-4 grid gap-4 md:grid-cols-3">
-              {features.slice(0, 2).map((f, i) => (
-                <motion.div key={f.title} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i}
-                  className={`group rounded-xl border border-gray-200 bg-white p-7 shadow-sm transition-all hover:shadow-lg hover:border-blue-200 ${i === 0 ? 'md:col-span-2' : ''}`}>
-                  <span className="mb-4 inline-block rounded-full bg-blue-50 border border-blue-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-blue-700">
-                    {f.tag}
-                  </span>
-                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
-                    <f.icon className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <h3 className="mb-2 text-[17px] font-bold text-gray-900">{f.title}</h3>
-                  <p className="text-[13px] leading-relaxed text-gray-600">{f.desc}</p>
-                </motion.div>
-              ))}
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-3">
-              {features.slice(2).map((f, i) => (
-                <motion.div key={f.title} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i}
-                  className={`group rounded-xl border border-gray-200 bg-white p-7 shadow-sm transition-all hover:shadow-lg hover:border-blue-200 ${f.wide ? 'md:col-span-2' : ''}`}>
-                  <span className="mb-4 inline-block rounded-full bg-blue-50 border border-blue-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-blue-700">
-                    {f.tag}
-                  </span>
-                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
-                    <f.icon className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <h3 className="mb-2 text-[17px] font-bold text-gray-900">{f.title}</h3>
-                  <p className="text-[13px] leading-relaxed text-gray-600">{f.desc}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* ══ FEATURES SECTION REMOVED ══ */}
 
         {/* ══ HOW IT WORKS (light gray bg) ═════════════════════════════ */}
-        <section className="bg-gray-50 py-20 sm:py-28">
+        <section id="how-it-works" className="bg-gray-50 py-20 sm:py-28">
           <div className="mx-auto max-w-7xl px-6">
             <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
               className="mb-3 text-center text-[12px] font-semibold uppercase tracking-widest text-blue-600">
