@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-/* ─── Animation ─────────────────────────────────────────────────── */
+/* â”€â”€â”€ Animation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   show: (i = 0) => ({
@@ -19,11 +19,11 @@ const fadeUp = {
   }),
 };
 
-/* ─── Brand tokens (matching audcomp.com) ───────────────────────── */
+/* â”€â”€â”€ Brand tokens (matching audcomp.com) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const DARK  = '#1a1a2e';
-const BLUE  = '#2563EB';
+const ORANGE = '#F97316';
 
-/* ─── Case studies (6) ─────────────────────────────────────────── */
+/* â”€â”€â”€ Case studies (6) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const caseStudies = [
   {
     slug: 'niagara-winery',
@@ -98,7 +98,7 @@ const caseStudies = [
     result: '$131k annual savings found',
     saving: '$131,000',
     score: 91,
-    challenge: 'Senior accountants spent 15+ hours weekly on invoice processing, data entry, and tax research — high-value staff doing low-value repetitive work during a talent shortage.',
+    challenge: 'Senior accountants spent 15+ hours weekly on invoice processing, data entry, and tax research â€” high-value staff doing low-value repetitive work during a talent shortage.',
     solution: 'AI extracts and categorizes invoice data with 99.2% accuracy. Tax research assistant surfaces relevant rulings and precedents in seconds instead of hours of manual database searching.',
     results: [
       { metric: '$131k', label: 'Annual savings' },
@@ -267,12 +267,12 @@ for (let i = 0; i < 5; i++) {
   }
 }
 
-/* ─── Features ──────────────────────────────────────────────────── */
+/* â”€â”€â”€ Features â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const features = [
   {
     icon: BrainCircuit, tag: 'Assessment',
     title: 'Multi-Dimensional Readiness Score',
-    desc: 'Six scored categories — Strategy, Data, Technical, Governance, People, and Operations — benchmarked against 500+ similar Canadian organizations.',
+    desc: 'Six scored categories â€” Strategy, Data, Technical, Governance, People, and Operations â€” benchmarked against 500+ similar Canadian organizations.',
     wide: true,
   },
   {
@@ -284,7 +284,7 @@ const features = [
   {
     icon: DollarSign, tag: 'ROI Engine',
     title: 'Dollar-Precise ROI Calculator',
-    desc: 'Quantifies annual savings by role, department, and workflow — actual dollar figures tied to your headcount and cost structure.',
+    desc: 'Quantifies annual savings by role, department, and workflow â€” actual dollar figures tied to your headcount and cost structure.',
     wide: false,
   },
   {
@@ -296,12 +296,12 @@ const features = [
   {
     icon: Target, tag: 'Roadmap',
     title: 'Prioritized Implementation Roadmap',
-    desc: 'Quick wins in week one. Strategic projects sequenced by impact and implementation effort — calibrated for your exact team size.',
+    desc: 'Quick wins in week one. Strategic projects sequenced by impact and implementation effort â€” calibrated for your exact team size.',
     wide: true,
   },
 ];
 
-/* ─── Services (matching audcomp.com) ─────────────────────────── */
+/* â”€â”€â”€ Services (matching audcomp.com) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const services = [
   { icon: Monitor, title: 'Managed IT Services', desc: 'Proactive monitoring, maintenance, and support for your entire IT infrastructure.', image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=500&fit=crop&q=90' },
   { icon: Cloud, title: 'Cloud Solutions', desc: 'Migration, management, and optimization of cloud environments for maximum efficiency.', image: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&h=500&fit=crop&q=90' },
@@ -309,7 +309,7 @@ const services = [
   { icon: BrainCircuit, title: 'AI Audit & Readiness', desc: 'Comprehensive assessment of your AI readiness with dollar-precise ROI projections.', image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=500&fit=crop&q=90' },
 ];
 
-/* ─── Case study detail overlay ────────────────────────────────── */
+/* â”€â”€â”€ Case study detail overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function CaseStudyDetail({ study, onClose }: { study: typeof caseStudies[number]; onClose: () => void }) {
   return (
     <motion.div
@@ -339,11 +339,11 @@ function CaseStudyDetail({ study, onClose }: { study: typeof caseStudies[number]
           <img src={study.image} alt={study.business} className="h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent" />
           <div className="absolute bottom-5 left-6 right-6">
-            <div className="mb-2 inline-flex rounded-md px-2.5 py-1 text-[11px] font-semibold text-white bg-blue-600">
+            <div className="mb-2 inline-flex rounded-md px-2.5 py-1 text-[11px] font-semibold text-white bg-orange-500">
               {study.industry}
             </div>
             <h2 className="text-[26px] sm:text-[32px] font-bold text-white leading-tight">{study.business}</h2>
-            <p className="mt-1 text-[13px] text-gray-300">{study.location} · {study.employees} employees</p>
+            <p className="mt-1 text-[13px] text-gray-300">{study.location} Â· {study.employees} employees</p>
           </div>
         </div>
 
@@ -351,7 +351,7 @@ function CaseStudyDetail({ study, onClose }: { study: typeof caseStudies[number]
           <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {study.results.map(r => (
               <div key={r.label} className="rounded-xl bg-gray-50 border border-gray-100 p-4 text-center">
-                <div className="text-[24px] font-bold text-blue-600">{r.metric}</div>
+                <div className="text-[24px] font-bold text-orange-500">{r.metric}</div>
                 <div className="mt-1 text-[11px] text-gray-500">{r.label}</div>
               </div>
             ))}
@@ -367,7 +367,7 @@ function CaseStudyDetail({ study, onClose }: { study: typeof caseStudies[number]
             </div>
             <div>
               <h3 className="mb-2 text-[14px] font-semibold text-gray-900 flex items-center gap-2">
-                <span className="h-5 w-1 rounded-full bg-blue-600" />
+                <span className="h-5 w-1 rounded-full bg-orange-500" />
                 The AI Solution
               </h3>
               <p className="text-[13px] leading-relaxed text-gray-600">{study.solution}</p>
@@ -379,7 +379,7 @@ function CaseStudyDetail({ study, onClose }: { study: typeof caseStudies[number]
               <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-gray-400">AI Tools Deployed</div>
               <div className="flex flex-wrap gap-1.5">
                 {study.tools.map(t => (
-                  <span key={t} className="rounded-md bg-blue-50 border border-blue-100 px-2.5 py-1 text-[11px] font-medium text-blue-700">
+                  <span key={t} className="rounded-md bg-orange-50 border border-orange-100 px-2.5 py-1 text-[11px] font-medium text-orange-600">
                     {t}
                   </span>
                 ))}
@@ -395,7 +395,7 @@ function CaseStudyDetail({ study, onClose }: { study: typeof caseStudies[number]
             <div className="flex items-center gap-3">
               <svg width="52" height="52" viewBox="0 0 52 52">
                 <circle cx="26" cy="26" r="21" fill="none" stroke="#e5e7eb" strokeWidth="5" />
-                <circle cx="26" cy="26" r="21" fill="none" stroke={BLUE} strokeWidth="5" strokeLinecap="round"
+                <circle cx="26" cy="26" r="21"                  stroke={ORANGE} strokeWidth="5" strokeLinecap="round"
                   strokeDasharray={`${2 * Math.PI * 21 * (study.score / 100)} ${2 * Math.PI * 21 * (1 - study.score / 100)}`}
                   strokeDashoffset={2 * Math.PI * 21 * 0.25} transform="rotate(-90 26 26)" />
                 <text x="26" y="30" textAnchor="middle" fontSize="14" fontWeight="700" fill="#1f2937">{study.score}</text>
@@ -406,7 +406,7 @@ function CaseStudyDetail({ study, onClose }: { study: typeof caseStudies[number]
               </div>
             </div>
             <Link href="/auth"
-              className="group flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-[13px] font-semibold text-white transition-all hover:bg-blue-700">
+              className="group flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-3 text-[13px] font-semibold text-white transition-all hover:bg-orange-600">
               Get Your Own Audit
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
@@ -417,39 +417,24 @@ function CaseStudyDetail({ study, onClose }: { study: typeof caseStudies[number]
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 export default function Home() {
   const [selectedStudy, setSelectedStudy] = useState<typeof caseStudies[number] | null>(null);
 
   return (
     <div className="relative min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Open Sans', 'Arimo', system-ui, sans-serif" }}>
 
-      {/* ══ TOP BAR (dark, matching audcomp.com) ══════════════════════ */}
-      <div className="bg-gray-900 text-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-2 text-[12px]">
-          <div className="flex items-center gap-5 text-gray-300">
-            <a href="tel:905-304-1775" className="flex items-center gap-1.5 hover:text-white transition-colors">
-              <Phone className="h-3 w-3" /> 905-304-1775
-            </a>
-            <a href="mailto:info@audcomp.com" className="hidden sm:flex items-center gap-1.5 hover:text-white transition-colors">
-              <Mail className="h-3 w-3" /> info@audcomp.com
-            </a>
-          </div>
-          <a href="https://audcomp.myportallogin.com/" target="_blank" rel="noopener noreferrer"
-            className="rounded bg-blue-600 px-3.5 py-1.5 text-[11px] font-semibold text-white transition-colors hover:bg-blue-500">
-            My Audcomp
-          </a>
-        </div>
-      </div>
+      {/* ══ UNIFIED NAVIGATION ══════════════════════════════════════════ */}
+      <header className="sticky top-0 z-50 bg-gray-900 shadow-lg border-b border-gray-800">
+        <div className="mx-auto flex max-w-7xl items-center gap-5 px-6 py-3">
 
-      {/* ══ NAVIGATION (dark header like audcomp.com) ═════════════════ */}
-      <header className="sticky top-0 z-50 border-b border-gray-800 bg-gray-900 shadow-lg">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center">
+          {/* Logo */}
+          <Link href="/" className="shrink-0 flex items-center">
             <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP" className="h-10 w-auto" />
           </Link>
 
-          <nav className="hidden items-center gap-7 lg:flex">
+          {/* Nav links */}
+          <nav className="hidden items-center gap-5 lg:flex flex-1">
             {[
               { label: 'About', href: 'https://audcomp.com/about/' },
               { label: 'Services', href: 'https://audcomp.com/managed-it-services/' },
@@ -459,51 +444,70 @@ export default function Home() {
               { label: 'Contact', href: 'https://audcomp.com/contact/' },
             ].map(item => (
               <Link key={item.label} href={item.href}
-                className="text-[14px] font-medium text-gray-300 transition-colors hover:text-white">
+                className="text-[13px] font-medium text-gray-300 transition-colors hover:text-white whitespace-nowrap">
                 {item.label}
               </Link>
             ))}
           </nav>
 
-          <div className="flex items-center gap-3">
+          {/* Phone + Email */}
+          <div className="hidden xl:flex items-center gap-4 text-[12px] text-gray-400 shrink-0">
+            <a href="tel:905-304-1775" className="flex items-center gap-1.5 hover:text-white transition-colors whitespace-nowrap">
+              <Phone className="h-3.5 w-3.5" /> 905-304-1775
+            </a>
+            <span className="text-gray-700">|</span>
+            <a href="mailto:info@audcomp.com" className="flex items-center gap-1.5 hover:text-white transition-colors whitespace-nowrap">
+              <Mail className="h-3.5 w-3.5" /> info@audcomp.com
+            </a>
+          </div>
+
+          {/* Two buttons — different colours */}
+          <div className="hidden lg:flex items-center gap-2 shrink-0">
+            <a href="https://audcomp.myportallogin.com/" target="_blank" rel="noopener noreferrer"
+              className="rounded-lg px-4 py-2 text-[12px] font-semibold text-white bg-gray-600 hover:bg-gray-500 transition-colors whitespace-nowrap">
+              My Audcomp
+            </a>
             <Link href="/auth"
-              className="rounded-lg bg-blue-600 px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-blue-700">
+              className="rounded-lg px-4 py-2 text-[12px] font-semibold text-white transition-opacity hover:opacity-90 whitespace-nowrap"
+              style={{ backgroundColor: ORANGE }}>
               Free AI Audit
             </Link>
           </div>
+
         </div>
       </header>
 
       <main>
 
-        {/* ══ HERO (light background with image) ═══════════════════════ */}
+        {/* â•â• HERO (light background with image) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white py-20 sm:py-28">
           <div className="relative mx-auto max-w-7xl px-6">
             <div className="grid items-center gap-12 lg:grid-cols-2">
-              {/* Left — copy */}
+              {/* Left â€” copy */}
               <div>
                 <motion.div variants={fadeUp} initial="hidden" animate="show" custom={0}
-                  className="mb-5 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-[12px] font-semibold text-blue-700">
+                  className="mb-5 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-[12px] font-semibold text-orange-700">
                   Powered by AUDCOMP Information Technology Solutions
                 </motion.div>
 
                 <motion.h1 variants={fadeUp} initial="hidden" animate="show" custom={1}
                   className="text-[36px] font-bold leading-[1.15] tracking-tight text-gray-900 sm:text-[48px] lg:text-[54px]">
                   Know Exactly Where AI Will{' '}
-                  <span className="text-blue-600">Save Your Business Money</span>
+                  <span style={{ color: ORANGE }}>Save Your Business Money</span>
                 </motion.h1>
 
                 <motion.p variants={fadeUp} initial="hidden" animate="show" custom={2}
                   className="mb-8 mt-5 max-w-lg text-[16px] leading-relaxed text-gray-600">
                   A 10-minute assessment gives you a scored AI readiness report, a
-                  dollar-precise ROI breakdown, and a prioritized roadmap — free for
+                  dollar-precise ROI breakdown, and a prioritized roadmap â€” free for
                   Canadian businesses under 200 employees.
                 </motion.p>
 
                 <motion.div variants={fadeUp} initial="hidden" animate="show" custom={3}
                   className="flex flex-col gap-3 sm:flex-row">
                   <Link href="/auth"
-                    className="group flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-8 py-3.5 text-[14px] font-semibold text-white transition-all hover:bg-blue-700 shadow-lg shadow-blue-600/25">
+                    className="group flex items-center justify-center gap-2 rounded-lg px-8 py-3.5 text-[14px] font-semibold text-white transition-all shadow-lg"
+                    style={{ backgroundColor: ORANGE }}>
                     Start Your Free Audit
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                   </Link>
@@ -524,7 +528,7 @@ export default function Home() {
                 </motion.div>
               </div>
 
-              {/* Right — dashboard image */}
+              {/* Right â€” dashboard image */}
               <motion.div variants={fadeUp} initial="hidden" animate="show" custom={3}
                 className="relative">
                 <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl">
@@ -546,7 +550,7 @@ export default function Home() {
                       </div>
                       <div className="relative z-10 flex flex-col gap-3">
                         <div className="flex items-center gap-2">
-                          <div className="bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest flex items-center gap-1 shadow-sm">
+                          <div className="bg-orange-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest flex items-center gap-1 shadow-sm">
                             <Zap className="h-2 w-2" /> Action Required
                           </div>
                           <div className="bg-slate-100 text-slate-500 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
@@ -558,7 +562,7 @@ export default function Home() {
                           <div className="max-w-[55%]">
                             <h3 className="text-[18px] font-black text-slate-900 leading-[1.15] mb-2 tracking-tight">Audit Results Ready for Expert Review</h3>
                             <p className="text-[9px] text-slate-500 leading-relaxed font-medium">
-                              Your <span className="text-blue-600 font-bold">98%</span> readiness score is prepared for deep-dive validation. Book your session to review these metrics and capture the identified <span className="text-slate-900 font-bold">$131,719</span> in annual savings.
+                              Your <span className="text-orange-500 font-bold">98%</span> readiness score is prepared for deep-dive validation. Book your session to review these metrics and capture the identified <span className="text-slate-900 font-bold">$131,719</span> in annual savings.
                             </p>
                           </div>
                           
@@ -594,7 +598,7 @@ export default function Home() {
                       <div className="flex-1 bg-white rounded-2xl p-5 shadow-sm border border-slate-100/50 flex flex-col justify-between">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-2">
-                            <div className="bg-blue-600 h-6 w-6 rounded-lg flex items-center justify-center shadow-sm shadow-blue-600/30">
+                            <div className="bg-orange-500 h-6 w-6 rounded-lg flex items-center justify-center shadow-sm shadow-blue-600/30">
                               <TrendingUp className="h-3.5 w-3.5 text-white" />
                             </div>
                             <h4 className="text-[13px] font-black text-slate-900 tracking-tight">Recommended Services</h4>
@@ -605,7 +609,7 @@ export default function Home() {
                         <div className="flex gap-2.5 flex-1">
                           {[
                             { title: 'Advanced Co-pilot Agents', tag: 'Advanced', icon: Zap, bg: 'bg-sky-50', text: 'text-sky-800' },
-                            { title: 'Advanced Multi-agent Consulting', tag: 'Integration', icon: Sparkles, bg: 'bg-blue-50', text: 'text-blue-800' },
+                            { title: 'Advanced Multi-agent Consulting', tag: 'Integration', icon: Sparkles, bg: 'bg-orange-50', text: 'text-blue-800' },
                             { title: 'Org-wide AI Implementation', tag: 'Scale', icon: Target, bg: 'bg-indigo-50', text: 'text-indigo-800' }
                           ].map((s, i) => (
                             <div key={i} className={`flex-1 rounded-[14px] p-3 border border-slate-100 flex flex-col ${s.bg}`}>
@@ -640,9 +644,9 @@ export default function Home() {
                           <div className="absolute inset-0 flex flex-col items-center justify-center">
                             <div className="relative">
                               <span className="text-[34px] font-black text-slate-900 tracking-tighter">98</span>
-                              <span className="text-[12px] font-black text-blue-600/40 absolute top-1 -right-3.5">%</span>
+                              <span className="text-[12px] font-black text-orange-500/40 absolute top-1 -right-3.5">%</span>
                             </div>
-                            <div className="bg-blue-600 text-white text-[5.5px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest mt-0 shadow-sm shadow-blue-600/20">
+                            <div className="bg-orange-500 text-white text-[5.5px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest mt-0 shadow-sm shadow-orange-500/20">
                               AI Verified
                             </div>
                           </div>
@@ -656,7 +660,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ══ STATS (dark bar like audcomp.com) ════════════════════════ */}
+        {/* â•â• STATS (dark bar like audcomp.com) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         <section className="bg-gray-900 py-10">
           <div className="mx-auto max-w-7xl px-6">
             <div className="grid grid-cols-2 gap-y-6 text-center lg:grid-cols-4">
@@ -675,7 +679,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ══ SERVICES (light, like audcomp.com cards) ═════════════════ */}
+        {/* â•â• SERVICES (light, like audcomp.com cards) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         <section className="bg-white py-20 sm:py-28">
           <div className="mx-auto max-w-7xl px-6">
             <motion.h2 variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
@@ -690,18 +694,18 @@ export default function Home() {
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {services.map((s, i) => (
                 <motion.div key={s.title} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i}
-                  className="group overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-lg hover:border-blue-200 hover:-translate-y-1">
+                  className="group overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-lg hover:border-orange-200 hover:-translate-y-1">
                   <div className="relative h-[160px] overflow-hidden">
                     <img src={s.image} alt={s.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                     <div className="absolute bottom-3 left-4 flex h-10 w-10 items-center justify-center rounded-lg bg-white/90 backdrop-blur-sm shadow-sm">
-                      <s.icon className="h-5 w-5 text-blue-600" />
+                      <s.icon className="h-5 w-5 text-orange-500" />
                     </div>
                   </div>
                   <div className="p-6">
                     <h3 className="mb-2 text-[16px] font-bold text-gray-900">{s.title}</h3>
                     <p className="text-[13px] leading-relaxed text-gray-600">{s.desc}</p>
-                    <div className="mt-4 flex items-center gap-1 text-[13px] font-semibold text-blue-600 group-hover:gap-2 transition-all">
+                    <div className="mt-4 flex items-center gap-1 text-[13px] font-semibold text-orange-500 group-hover:gap-2 transition-all">
                       Learn More <ArrowRight className="h-3.5 w-3.5" />
                     </div>
                   </div>
@@ -711,11 +715,11 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ══ SCROLLING CASE STUDIES (marquee) ═════════════════════════ */}
+        {/* â•â• SCROLLING CASE STUDIES (marquee) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         <section id="case-studies" className="bg-gray-50 py-20 sm:py-28 overflow-hidden">
           <div className="mx-auto max-w-7xl px-6">
             <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
-              className="mb-3 text-center text-[12px] font-semibold uppercase tracking-widest text-blue-600">
+              className="mb-3 text-center text-[12px] font-semibold uppercase tracking-widest text-orange-500">
               Case Studies
             </motion.div>
 
@@ -730,7 +734,7 @@ export default function Home() {
             </motion.p>
           </div>
 
-          {/* ── Row 1: scrolls left ── */}
+          {/* â”€â”€ Row 1: scrolls left â”€â”€ */}
           <div className="relative mb-5">
             <div className="scroll-row-left flex w-max gap-5 px-4">
               {[...displayCaseStudies, ...displayCaseStudies].map((study, idx) => (
@@ -743,7 +747,7 @@ export default function Home() {
                     <img src={study.image} alt={study.business}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                    <div className="absolute left-3 top-3 rounded-md bg-blue-600 px-2.5 py-1 text-[10px] font-semibold text-white">
+                    <div className="absolute left-3 top-3 rounded-md bg-orange-500 px-2.5 py-1 text-[10px] font-semibold text-white">
                       {study.industry}
                     </div>
                     <div className="absolute bottom-3 left-4 right-4">
@@ -759,7 +763,7 @@ export default function Home() {
                       </div>
                       <span className="text-[12px] font-bold text-green-600">{study.saving}/yr</span>
                     </div>
-                    <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-medium text-blue-600 group-hover:text-blue-700 transition-colors">
+                    <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-medium text-orange-500 group-hover:text-orange-600 transition-colors">
                       View full case study <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
                     </div>
                   </div>
@@ -768,7 +772,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* ── Row 2: scrolls right ── */}
+          {/* â”€â”€ Row 2: scrolls right â”€â”€ */}
           <div className="relative">
             <div className="scroll-row-right flex w-max gap-5 px-4">
               {[...displayCaseStudies.slice(5), ...displayCaseStudies.slice(0, 5), ...displayCaseStudies.slice(5), ...displayCaseStudies.slice(0, 5)].map((study, idx) => (
@@ -781,7 +785,7 @@ export default function Home() {
                     <img src={study.image} alt={study.business}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                    <div className="absolute left-3 top-3 rounded-md bg-blue-600 px-2.5 py-1 text-[10px] font-semibold text-white">
+                    <div className="absolute left-3 top-3 rounded-md bg-orange-500 px-2.5 py-1 text-[10px] font-semibold text-white">
                       {study.industry}
                     </div>
                     <div className="absolute bottom-3 left-4 right-4">
@@ -797,7 +801,7 @@ export default function Home() {
                       </div>
                       <span className="text-[12px] font-bold text-green-600">{study.saving}/yr</span>
                     </div>
-                    <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-medium text-blue-600 group-hover:text-blue-700 transition-colors">
+                    <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-medium text-orange-500 group-hover:text-orange-600 transition-colors">
                       View full case study <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
                     </div>
                   </div>
@@ -807,14 +811,14 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ══ FEATURES SECTION REMOVED ══ */}
+        {/* â•â• FEATURES SECTION REMOVED â•â• */}
 
-        {/* ══ HOW IT WORKS (light gray bg) ═════════════════════════════ */}
+        {/* â•â• HOW IT WORKS (light gray bg) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         <section id="how-it-works" className="bg-gray-50 py-20 sm:py-28">
           <div className="mx-auto max-w-7xl px-6">
             <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
-              className="mb-3 text-center text-[12px] font-semibold uppercase tracking-widest text-blue-600">
-              Process — 10 Minutes
+              className="mb-3 text-center text-[12px] font-semibold uppercase tracking-widest text-orange-500">
+              Process â€” 10 Minutes
             </motion.div>
 
             <motion.h2 variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={1}
@@ -824,14 +828,14 @@ export default function Home() {
 
             <div className="grid gap-5 md:grid-cols-3">
               {[
-                { n: '01', title: 'Complete the Audit Survey', body: 'Answer 28 questions about your team, workflows, existing tools, and goals. No technical knowledge required — designed for owners and operations leaders.' },
+                { n: '01', title: 'Complete the Audit Survey', body: 'Answer 28 questions about your team, workflows, existing tools, and goals. No technical knowledge required â€” designed for owners and operations leaders.' },
                 { n: '02', title: 'Receive Your Scored Report', body: 'Our engine scores your readiness across 6 dimensions and benchmarks you against 500+ Canadian SMBs in your sector.' },
                 { n: '03', title: 'Execute Your Roadmap', body: 'A prioritized, week-by-week action plan with tool recommendations, ROI projections, and quick wins you can start this week.' },
               ].map((step, i) => (
                 <motion.div key={step.n} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i}
                   className="rounded-xl border border-gray-200 bg-white p-7 shadow-sm">
                   <div className="mb-5 flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-[16px] font-bold text-white">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-500 text-[16px] font-bold text-white">
                       {step.n}
                     </div>
                     <div className="h-px flex-1 bg-gray-200" />
@@ -844,10 +848,10 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ══ BOTTOM CTA (dark section like audcomp.com) ═══════════════ */}
+        {/* â•â• BOTTOM CTA (dark section like audcomp.com) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         <section className="bg-gray-900 py-20 sm:py-28">
           <div className="mx-auto max-w-3xl px-6 text-center">
-            <div className="mb-4 text-[12px] font-semibold uppercase tracking-widest text-blue-400">
+            <div className="mb-4 text-[12px] font-semibold uppercase tracking-widest text-orange-400">
               Free for Canadian businesses under 200 employees
             </div>
 
@@ -861,7 +865,7 @@ export default function Home() {
             </p>
 
             <Link href="/auth"
-              className="group inline-flex items-center gap-2 rounded-lg bg-blue-600 px-8 py-4 text-[14px] font-semibold text-white transition-all hover:bg-blue-700 shadow-lg shadow-blue-600/25">
+              className="group inline-flex items-center gap-2 rounded-lg bg-orange-500 px-8 py-4 text-[14px] font-semibold text-white transition-all hover:bg-orange-600 shadow-lg shadow-orange-500/25">
               Get Your Free AI Audit
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
@@ -869,7 +873,7 @@ export default function Home() {
         </section>
       </main>
 
-      {/* ══ FOOTER (dark, matching audcomp.com) ═══════════════════════ */}
+      {/* â•â• FOOTER (dark, matching audcomp.com) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <footer className="border-t border-gray-800 bg-gray-950 py-10">
         <div className="mx-auto max-w-7xl px-6">
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
@@ -888,12 +892,12 @@ export default function Home() {
             </div>
           </div>
           <div className="mt-6 border-t border-gray-800 pt-6 text-center text-[11px] text-gray-500">
-            © 2026 Audcomp Information Technology Solutions · #100, 611 Tradewind Dr, Ancaster, Ontario L9G 4V5 · 905-304-1775
+            Â© 2026 Audcomp Information Technology Solutions Â· #100, 611 Tradewind Dr, Ancaster, Ontario L9G 4V5 Â· 905-304-1775
           </div>
         </div>
       </footer>
 
-      {/* ══ CASE STUDY MODAL ════════════════════════════════════════ */}
+      {/* â•â• CASE STUDY MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <AnimatePresence>
         {selectedStudy && (
           <CaseStudyDetail study={selectedStudy} onClose={() => setSelectedStudy(null)} />
@@ -903,3 +907,4 @@ export default function Home() {
     </div>
   );
 }
+
