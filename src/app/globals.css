@@ -112,6 +112,26 @@
   animation: float 3s ease-in-out infinite;
 }
 
+/* ── Infinite horizontal scroll marquee ── */
+@keyframes scroll-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes scroll-right {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+.scroll-row-left {
+  animation: scroll-left 60s linear infinite;
+}
+.scroll-row-right {
+  animation: scroll-right 60s linear infinite;
+}
+.scroll-row-left:hover,
+.scroll-row-right:hover {
+  animation-play-state: paused;
+}
+
 @media print {
 
   /* Hide everything on the page */
