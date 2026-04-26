@@ -48,6 +48,7 @@ export default function DemoPage() {
   }, [running]);
 
   const liveAgents = DEMO_AGENTS.filter(x => x.status === 'running').slice(0, 6);
+  const offAgents = DEMO_AGENTS.filter(x => x.status !== 'running').slice(0, 6);
   const totalAgents = DEMO_AGENTS.length;
   const humanCost = 6346;
   const saved = Math.max(0, Math.round((1 - ops.cost / humanCost) * 100));
@@ -90,7 +91,7 @@ export default function DemoPage() {
 
       <div className="px-8 py-6 space-y-4 max-w-screen-2xl mx-auto">
 
-        {/* ── AGENTS RUNNING NOW ── */}
+        {/* ── AGENTS — LIVE + IDLE ── */}
         <section>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -113,6 +114,34 @@ export default function DemoPage() {
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="flex items-center justify-between mb-3 mt-5">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-slate-500" />
+              <span className="text-xs font-black uppercase tracking-widest text-slate-400">Standing By · Idle &amp; Queued</span>
+            </div>
+            <span className="text-xs text-slate-600">spin up on trigger — no idle cost</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+            {offAgents.map(agent => {
+              const isQueued = agent.status === 'queued';
+              return (
+                <div key={agent.name} className="bg-[#0a1322] rounded-xl border border-white/5 p-3 opacity-90">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <span className={`w-1.5 h-1.5 rounded-full ${isQueued ? 'bg-amber-400 animate-pulse' : 'bg-slate-500'}`} />
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${isQueued ? 'text-amber-400' : 'text-slate-500'}`}>
+                      {isQueued ? 'Queued' : 'Idle'}
+                    </span>
+                  </div>
+                  <div className="font-black text-slate-200 text-sm mb-1 leading-tight">{agent.label}</div>
+                  <div className="text-[10px] text-slate-500 mb-3 leading-relaxed">{agent.outcomeMetric}</div>
+                  <div className="bg-white/5 border border-white/5 text-slate-400 text-[10px] font-black px-2 py-1 rounded-lg text-center">
+                    saves {agent.weeklyHoursSaved}h/wk
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
 
