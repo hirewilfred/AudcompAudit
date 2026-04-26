@@ -303,10 +303,10 @@ const features = [
 
 /* â”€â”€â”€ Services (matching audcomp.com) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const services = [
-  { icon: Monitor, title: 'Managed IT Services', desc: 'Proactive monitoring, maintenance, and support for your entire IT infrastructure.', image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=500&fit=crop&q=90' },
-  { icon: Cloud, title: 'Cloud Solutions', desc: 'Migration, management, and optimization of cloud environments for maximum efficiency.', image: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&h=500&fit=crop&q=90' },
-  { icon: Shield, title: 'Cyber Security', desc: 'Multi-layered security solutions protecting your business from evolving threats.', image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&h=500&fit=crop&q=90' },
-  { icon: BrainCircuit, title: 'AI Audit & Readiness', desc: 'Comprehensive assessment of your AI readiness with dollar-precise ROI projections.', image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=500&fit=crop&q=90' },
+  { icon: Monitor, title: 'Managed IT Services', desc: 'Proactive monitoring, maintenance, and support for your entire IT infrastructure.', image: '/images/services/managed-it.png' },
+  { icon: Cloud, title: 'Cloud Solutions', desc: 'Migration, management, and optimization of cloud environments for maximum efficiency.', image: '/images/services/cloud.png' },
+  { icon: Shield, title: 'Cyber Security', desc: 'Multi-layered security solutions protecting your business from evolving threats.', image: '/images/services/cybersecurity.png' },
+  { icon: BrainCircuit, title: 'AI Audit & Readiness', desc: 'Comprehensive assessment of your AI readiness with dollar-precise ROI projections.', image: '/images/services/ai-audit.png' },
 ];
 
 /* â”€â”€â”€ Case study detail overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
