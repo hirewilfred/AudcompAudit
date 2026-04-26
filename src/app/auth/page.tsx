@@ -75,8 +75,8 @@ export default function AuthPage() {
             <div className="relative hidden w-[38%] shrink-0 lg:flex flex-col overflow-hidden">
                 {/* Background image */}
                 <img
-                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=900&h=1200&fit=crop&q=85"
-                    alt="Professional"
+                    src="/images/office-team.png"
+                    alt="Audcomp Team"
                     className="absolute inset-0 h-full w-full object-cover"
                 />
                 {/* Dark gradient overlay */}
