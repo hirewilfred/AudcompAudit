@@ -135,6 +135,7 @@ function AdvisorResultsContent() {
     const [loadingNarrative, setLoadingNarrative] = useState(true);
     const [roiDefaults, setRoiDefaults] = useState<RoiDefaults | null>(null);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+    const [assignedExpert, setAssignedExpert] = useState<{ full_name: string | null; bookings_url: string | null } | null>(null);
 
     // ROI Calculator state
     const [numUsers, setNumUsers] = useState(20);
@@ -173,6 +174,26 @@ function AdvisorResultsContent() {
                 return;
             }
             setIsCheckingAuth(false);
+
+            // Load the assigned expert (if any) for the booking CTA
+            try {
+                const targetUid = adminUserId || session.user.id;
+                const { data: profileData } = await (supabase
+                    .from('profiles') as any)
+                    .select('assigned_expert_id')
+                    .eq('id', targetUid)
+                    .single();
+                if (profileData?.assigned_expert_id) {
+                    const { data: expertData } = await (supabase
+                        .from('experts') as any)
+                        .select('full_name, bookings_url')
+                        .eq('id', profileData.assigned_expert_id)
+                        .single();
+                    if (expertData) setAssignedExpert(expertData);
+                }
+            } catch {
+                // No expert assigned yet — CTA will fall back to /select-expert
+            }
 
             let parsed: AdvisorResponses | null = null;
             let loadedNarrative = '';
@@ -592,15 +613,36 @@ function AdvisorResultsContent() {
                                     <div className="mt-6 flex flex-col md:flex-row md:items-center justify-between gap-3 p-5 rounded-2xl bg-slate-900 text-white">
                                         <div>
                                             <div className="text-[10px] font-black uppercase tracking-widest text-violet-300 mb-1">Next step</div>
-                                            <div className="text-sm font-bold">Meet with an Audcomp AI Expert to scope the right package and the order we ship the agents in.</div>
+                                            <div className="text-sm font-bold">
+                                                {assignedExpert?.bookings_url
+                                                    ? `Meet with ${assignedExpert.full_name} to scope the right package and the order we ship the agents in.`
+                                                    : 'Meet with an Audcomp AI Expert to scope the right package and the order we ship the agents in.'}
+                                            </div>
                                         </div>
-                                        <Link
-                                            href="/select-expert"
-                                            className="inline-flex items-center justify-center gap-2 bg-violet-500 hover:bg-violet-400 text-white font-black text-xs uppercase tracking-widest px-5 py-3 rounded-xl transition-colors shrink-0"
-                                        >
-                                            Book Free Discovery Call
-                                            <ArrowRight className="h-3.5 w-3.5" />
-                                        </Link>
+                                        {assignedExpert?.bookings_url ? (
+                                            <button
+                                                onClick={() => {
+                                                    let finalUrl = assignedExpert.bookings_url || '';
+                                                    if (finalUrl.includes('microsoft.com') || finalUrl.includes('bookings')) {
+                                                        const sep = finalUrl.includes('?') ? '&' : '?';
+                                                        finalUrl = `${finalUrl}${sep}anonymous=true`;
+                                                    }
+                                                    window.open(finalUrl, '_blank', 'noopener,noreferrer');
+                                                }}
+                                                className="inline-flex items-center justify-center gap-2 bg-violet-500 hover:bg-violet-400 text-white font-black text-xs uppercase tracking-widest px-5 py-3 rounded-xl transition-colors shrink-0"
+                                            >
+                                                Book with {assignedExpert.full_name?.split(' ')[0] ?? 'Expert'}
+                                                <ArrowRight className="h-3.5 w-3.5" />
+                                            </button>
+                                        ) : (
+                                            <Link
+                                                href="/select-expert"
+                                                className="inline-flex items-center justify-center gap-2 bg-violet-500 hover:bg-violet-400 text-white font-black text-xs uppercase tracking-widest px-5 py-3 rounded-xl transition-colors shrink-0"
+                                            >
+                                                Choose Your AI Expert
+                                                <ArrowRight className="h-3.5 w-3.5" />
+                                            </Link>
+                                        )}
                                     </div>
                                 </section>
                             );
