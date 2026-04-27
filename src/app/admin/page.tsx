@@ -8,7 +8,7 @@ import {
     Users, ArrowRight, TrendingUp, Eye, Plus, Loader2, CheckCircle2,
     ShieldAlert, LogOut, Bot, Zap, Play, Pause, Activity, Sparkles,
     ClipboardList, UserCircle, LayoutDashboard, RefreshCw, ChevronRight,
-    DollarSign, Briefcase
+    DollarSign, Briefcase, RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -49,6 +49,36 @@ export default function AdminPage() {
     const handleLogout = async () => {
         await supabase.auth.signOut();
         router.push('/auth');
+    };
+
+    const [resetting, setResetting] = useState(false);
+    const handleResetMyAudit = async () => {
+        const ok = window.confirm(
+            'Reset YOUR audit?\n\n' +
+            'This will:\n' +
+            '• Delete your audit_scores rows\n' +
+            '• Delete your ai_advisor_reports rows\n' +
+            '• Set has_completed_audit = false\n' +
+            '• Send you back to the survey to retake it\n\n' +
+            'Continue?'
+        );
+        if (!ok) return;
+        setResetting(true);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { router.push('/auth'); return; }
+            const uid = session.user.id;
+            await Promise.all([
+                supabase.from('audit_scores').delete().eq('user_id', uid),
+                (supabase.from('ai_advisor_reports') as any).delete().eq('user_id', uid),
+                (supabase.from('profiles') as any).update({ has_completed_audit: false }).eq('id', uid),
+            ]);
+            router.push('/survey');
+        } catch (err) {
+            console.error('Reset failed', err);
+            alert('Reset failed — see console.');
+            setResetting(false);
+        }
     };
 
     useEffect(() => {
@@ -139,6 +169,15 @@ export default function AdminPage() {
                         >
                             <Play className="h-4 w-4" />
                             Florist Live Demo
+                        </button>
+                        <button
+                            onClick={handleResetMyAudit}
+                            disabled={resetting}
+                            title="Wipe your own audit_scores + ai_advisor_reports and re-take the survey to test new questions / recommendations"
+                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:text-amber-300 border border-white/10 hover:border-amber-500/30 disabled:opacity-50"
+                        >
+                            {resetting ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+                            {resetting ? 'Resetting…' : 'Reset My Audit'}
                         </button>
                         <button onClick={() => router.push('/admin/experts/new')} className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-xl transition-colors shadow-lg shadow-blue-600/20">
                             <Plus className="h-4 w-4" /> Add Expert
