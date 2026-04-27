@@ -23,7 +23,7 @@ const BILLING_CYCLES = ['Monthly', 'Quarterly', 'Annual'];
 
 export default function EditAMSClientPage() {
     const params = useParams();
-    const clientId = params.id as string;
+    const clientId = params?.id as string;
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);

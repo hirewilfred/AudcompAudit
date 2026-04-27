@@ -156,14 +156,17 @@ function ExpertForm({ expertId, onBack, onSaved }: { expertId?: string, onBack: 
     useEffect(() => {
         if (expertId) {
             supabase.from('experts').select('*').eq('id', expertId).single().then(({ data }) => {
-                if (data) setFormData({
-                    full_name: data.full_name || '',
-                    email: data.email || '',
-                    linkedin_url: data.linkedin_url || '',
-                    bookings_url: data.bookings_url || '',
-                    photo_url: data.photo_url || '',
-                    is_bdm: data.is_bdm || false
-                });
+                if (data) {
+                    const d = data as any;
+                    setFormData({
+                        full_name: d.full_name || '',
+                        email: d.email || '',
+                        linkedin_url: d.linkedin_url || '',
+                        bookings_url: d.bookings_url || '',
+                        photo_url: d.photo_url || '',
+                        is_bdm: d.is_bdm || false
+                    });
+                }
             });
         }
     }, [expertId]);

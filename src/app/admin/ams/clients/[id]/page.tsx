@@ -42,8 +42,8 @@ export default function ClientDetailPage() {
     };
 
     // Messages from OAuth redirect
-    const m365Connected = searchParams.get('m365_connected');
-    const m365Error = searchParams.get('m365_error');
+    const m365Connected = searchParams?.get('m365_connected');
+    const m365Error = searchParams?.get('m365_error');
 
     const fetchClient = async () => {
         const { data, error } = await (supabase
