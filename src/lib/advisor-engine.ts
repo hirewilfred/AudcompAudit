@@ -564,6 +564,80 @@ export function generateRecommendations(responses: AdvisorResponses): Recommenda
     }
 
     // ──────────────────────────────────────────────
+    // DEPARTMENT GAP AGENTS — concrete custom AI agents to scope with an Expert
+    // ──────────────────────────────────────────────
+
+    const gapMap: Record<string, { dept: string; tool: string; category: string; description: string; tags: string[]; icon: string }> = {
+        // Sales
+        lead_qualification:    { dept: 'Sales',   tool: 'Sales — Lead Qualification Agent',     category: 'Sales AI',           description: 'Custom agent that scores inbound leads in real time, routes high-fit ones to your reps with full company context, and auto-disqualifies poor matches. Plugs into your existing CRM.', tags: ['Sales', 'Lead Scoring', 'Custom Agent'],     icon: 'TrendingUp' },
+        outreach:              { dept: 'Sales',   tool: 'Sales — Outreach & Follow-up Agent',   category: 'Sales AI',           description: 'AI agent that drafts personalized cold emails and LinkedIn messages, runs multi-touch follow-up sequences, and pauses when a prospect replies — keeping reps focused on closing.', tags: ['Sales', 'Outreach', 'Custom Agent'],          icon: 'TrendingUp' },
+        crm_hygiene:           { dept: 'Sales',   tool: 'Sales — CRM Hygiene Agent',            category: 'Sales AI',           description: 'Captures call notes, extracts next steps, and updates CRM records automatically from email and meeting transcripts. Eliminates manual logging.',                                  tags: ['Sales', 'CRM', 'Custom Agent'],                icon: 'TrendingUp' },
+        forecasting:           { dept: 'Sales',   tool: 'Sales — Pipeline Forecasting Agent',   category: 'Sales AI',           description: 'Reviews deal age, activity signals, and historical conversion patterns to predict close probability — flags slipping deals early.',                                              tags: ['Sales', 'Forecasting', 'Custom Agent'],        icon: 'TrendingUp' },
+        proposal_writing:      { dept: 'Sales',   tool: 'Sales — Proposal & Quote Agent',       category: 'Sales AI',           description: 'Generates first-pass proposals, SOWs, and quotes from your templates and historical wins — turns RFPs around in hours instead of days.',                                       tags: ['Sales', 'Proposals', 'Custom Agent'],          icon: 'FileText' },
+        // Marketing
+        content_creation:      { dept: 'Marketing', tool: 'Marketing — Content Production Agent', category: 'Marketing AI',     description: 'Writes blogs, ad copy, captions, and email body content in your brand voice — drafts queued for human review before publish.',                                                tags: ['Marketing', 'Content', 'Custom Agent'],        icon: 'Sparkles'   },
+        social_scheduling:     { dept: 'Marketing', tool: 'Marketing — Social Scheduler Agent',  category: 'Marketing AI',     description: 'Creates and queues platform-native posts across Instagram, TikTok, LinkedIn, and Facebook — replies to DMs and comments after hours.',                                       tags: ['Marketing', 'Social', 'Custom Agent'],         icon: 'Sparkles'   },
+        email_campaigns:       { dept: 'Marketing', tool: 'Marketing — Lifecycle Email Agent',   category: 'Marketing AI',     description: 'Designs, drafts, and runs onboarding / nurture / win-back email sequences — segmenting on behavior and A/B testing subject lines automatically.',                            tags: ['Marketing', 'Email', 'Custom Agent'],          icon: 'Sparkles'   },
+        seo:                   { dept: 'Marketing', tool: 'Marketing — SEO & GEO Agent',         category: 'Marketing AI',     description: 'Keyword research, topic clusters, on-page audits, and AI-search (GEO) optimization — keeps your site cited by ChatGPT and Google AI Overviews.',                              tags: ['Marketing', 'SEO', 'Custom Agent'],            icon: 'BookOpen'   },
+        analytics:             { dept: 'Marketing', tool: 'Marketing — Performance Analyst Agent', category: 'Marketing AI',   description: 'Pulls data from Google Ads, Meta, GA4, and your CRM into a single weekly summary — flags channels under/over baseline and recommends reallocations.',                       tags: ['Marketing', 'Analytics', 'Custom Agent'],      icon: 'BarChart3'  },
+        // Customer Service
+        tier1_tickets:         { dept: 'Customer Service', tool: 'Service — Tier-1 Ticket Agent',  category: 'Customer Service', description: 'Answers FAQs and handles common requests instantly using your help docs — escalates only the cases that genuinely need a human.',                                          tags: ['Service', 'Tickets', 'Custom Agent'],          icon: 'Bot'        },
+        after_hours:           { dept: 'Customer Service', tool: 'Service — After-Hours Concierge Agent', category: 'Customer Service', description: 'Always-on agent that captures questions overnight and weekends, resolves what it can, and queues the rest with full context for first thing Monday.',           tags: ['Service', '24/7', 'Custom Agent'],             icon: 'Bot'        },
+        live_chat:             { dept: 'Customer Service', tool: 'Service — Website Concierge Agent', category: 'Customer Service', description: 'Live chat agent on your site that qualifies visitors, books meetings, and captures leads even when no rep is available.',                                            tags: ['Service', 'Chatbot', 'Custom Agent'],          icon: 'Bot'        },
+        feedback_analysis:     { dept: 'Customer Service', tool: 'Service — Voice-of-Customer Agent', category: 'Customer Service', description: 'Reads reviews, support tickets, NPS comments, and surfaces recurring themes weekly — turns open-text feedback into a prioritized backlog.',                          tags: ['Service', 'VOC', 'Custom Agent'],              icon: 'BarChart3'  },
+        escalation_routing:    { dept: 'Customer Service', tool: 'Service — Smart Routing Agent',  category: 'Customer Service', description: 'Reads incoming tickets, classifies severity and topic, and routes to the right team member — collapsing first-response time.',                                            tags: ['Service', 'Routing', 'Custom Agent'],          icon: 'Bot'        },
+        // Operations
+        data_entry:            { dept: 'Operations', tool: 'Ops — Data-Entry Bridge Agent',      category: 'Process Automation', description: 'Replaces copy-paste between systems by reading source records, transforming the fields, and writing them into the target — with logs and exception flags.',              tags: ['Operations', 'Automation', 'Custom Agent'],    icon: 'Zap'        },
+        document_extraction:   { dept: 'Operations', tool: 'Ops — Document Extraction Agent',    category: 'Document Automation', description: 'Pulls structured data out of invoices, POs, contracts, and claims with 95%+ accuracy — pushes the result straight into accounting or your line-of-business system.',     tags: ['Operations', 'Documents', 'Custom Agent'],     icon: 'FileText'   },
+        scheduling:            { dept: 'Operations', tool: 'Ops — Scheduling & Dispatch Agent',  category: 'Process Automation', description: 'Optimizes bookings, dispatch, or inventory schedules in real time using your constraints — surfaces conflicts before they become problems.',                              tags: ['Operations', 'Scheduling', 'Custom Agent'],    icon: 'Zap'        },
+        sop_knowledge:         { dept: 'Operations', tool: 'Ops — SOP & Knowledge Agent',        category: 'Knowledge Management', description: 'Internal AI agent that answers "how do we…" questions instantly using your SOPs and past tickets — onboarding hours drop dramatically.',                              tags: ['Operations', 'Knowledge', 'Custom Agent'],     icon: 'BookOpen'   },
+        compliance_audits:     { dept: 'Operations', tool: 'Ops — Compliance & Audit Agent',     category: 'Data Governance',    description: 'Tracks compliance evidence continuously, flags missing artifacts, and assembles audit packets on demand — slashes prep time before reviews.',                                tags: ['Operations', 'Compliance', 'Custom Agent'],    icon: 'Shield'     },
+        // Finance / HR
+        ap_invoice:            { dept: 'Finance',   tool: 'Finance — AP Invoice Agent',          category: 'Finance AI',         description: 'Reads inbound invoices, matches to POs and receipts, flags exceptions, and queues clean invoices for one-click approval — eliminates manual AP work.',                          tags: ['Finance', 'AP', 'Custom Agent'],              icon: 'BarChart3'  },
+        cashflow_forecast:     { dept: 'Finance',   tool: 'Finance — Cash Flow Forecasting Agent', category: 'Finance AI',       description: 'Continuously refreshes a rolling cash forecast from accounting, AR, AP, and payroll data — alerts on shortfalls weeks ahead.',                                              tags: ['Finance', 'Forecasting', 'Custom Agent'],     icon: 'BarChart3'  },
+        expense_review:        { dept: 'Finance',   tool: 'Finance — Expense Review Agent',      category: 'Finance AI',         description: 'Reviews every expense against policy in real time, flags anomalies, and auto-approves the clean ones — no more month-end queues.',                                            tags: ['Finance', 'Expenses', 'Custom Agent'],         icon: 'BarChart3'  },
+        recruiting_screen:     { dept: 'HR',        tool: 'HR — Recruiting & Screening Agent',    category: 'HR AI',              description: 'Screens inbound resumes against your role criteria, ranks candidates, drafts outreach, and books first-round calls — talent team focuses only on top matches.',              tags: ['HR', 'Recruiting', 'Custom Agent'],            icon: 'Users'      },
+        onboarding_offboarding:{ dept: 'HR',        tool: 'HR — Onboarding / Offboarding Agent', category: 'HR AI',              description: 'Drives the end-to-end on/offboarding workflow: provisioning, paperwork, training assignments, and access removal — saves 10+ hours per employee transition.',                tags: ['HR', 'Onboarding', 'Custom Agent'],           icon: 'Users'      },
+    };
+
+    const gapKeys = ['gap_sales', 'gap_marketing', 'gap_customer_service', 'gap_operations', 'gap_finance_hr'];
+    const flaggedGaps: { dept: string; gapKey: string; gapValue: string; entry: (typeof gapMap)[string] }[] = [];
+
+    for (const k of gapKeys) {
+        const v = responses[k] as string | undefined;
+        if (!v || v === 'none') continue;
+        const entry = gapMap[v];
+        if (entry) flaggedGaps.push({ dept: entry.dept, gapKey: k, gapValue: v, entry });
+    }
+
+    for (const g of flaggedGaps) {
+        recs.push({
+            tool: g.entry.tool,
+            category: g.entry.category,
+            description: g.entry.description + ' Build is scoped on a free 30-minute call with an Audcomp AI Expert.',
+            monthlyEstimate: 'Custom build — typical retainer $600–$1,500/mo',
+            annualEstimate: 'One-time build $4k–$12k + ongoing optimization',
+            priority: 'high',
+            icon: g.entry.icon,
+            tags: [...g.entry.tags, 'Meet with AI Expert'],
+        });
+    }
+
+    // Always surface the AI Expert consultation when at least one gap is flagged.
+    if (flaggedGaps.length > 0) {
+        recs.push({
+            tool: 'Meet with an Audcomp AI Expert',
+            category: 'Strategy',
+            description: `You flagged ${flaggedGaps.length} department gap${flaggedGaps.length === 1 ? '' : 's'} (${flaggedGaps.map(g => g.dept).filter((d, i, a) => a.indexOf(d) === i).join(', ')}). Book a free 30-minute call — we map the highest-ROI agent first, scope the build, and show you a real example we've shipped for a similar business.`,
+            monthlyEstimate: 'Free 30-minute discovery call',
+            annualEstimate: 'No cost — strategy session before any build',
+            priority: 'high',
+            icon: 'Target',
+            tags: ['Strategy', 'AI Expert', 'Custom Agents'],
+        });
+    }
+
+    // ──────────────────────────────────────────────
     // FALLBACK — ensure at least 3 recommendations
     // ──────────────────────────────────────────────
 
@@ -580,9 +654,9 @@ export function generateRecommendations(responses: AdvisorResponses): Recommenda
         });
     }
 
-    // Sort by priority and cap at 6
+    // Sort by priority and cap at 12 (department gap agents need room to surface)
     const priorityOrder = { high: 0, medium: 1, low: 2 };
-    return recs.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]).slice(0, 6);
+    return recs.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]).slice(0, 12);
 }
 
 export function generateRoadmap(responses: AdvisorResponses): RoadmapPhase[] {
@@ -640,32 +714,76 @@ export function generateRoadmap(responses: AdvisorResponses): RoadmapPhase[] {
         ? 'Build custom AI agent with Copilot Studio for your top internal use case'
         : 'Build a custom AI agent tailored to your highest-volume business process';
 
+    // Department-gap derived agents to schedule in Phase 2
+    const gapAgentLabels: Record<string, string> = {
+        lead_qualification: 'Sales Lead Qualification agent',
+        outreach: 'Sales Outreach & Follow-up agent',
+        crm_hygiene: 'Sales CRM Hygiene agent',
+        forecasting: 'Sales Pipeline Forecasting agent',
+        proposal_writing: 'Sales Proposal & Quote agent',
+        content_creation: 'Marketing Content Production agent',
+        social_scheduling: 'Marketing Social Scheduler agent',
+        email_campaigns: 'Marketing Lifecycle Email agent',
+        seo: 'Marketing SEO & GEO agent',
+        analytics: 'Marketing Performance Analyst agent',
+        tier1_tickets: 'Service Tier-1 Ticket agent',
+        after_hours: 'Service After-Hours Concierge agent',
+        live_chat: 'Service Website Concierge agent',
+        feedback_analysis: 'Voice-of-Customer agent',
+        escalation_routing: 'Service Smart Routing agent',
+        data_entry: 'Ops Data-Entry Bridge agent',
+        document_extraction: 'Ops Document Extraction agent',
+        scheduling: 'Ops Scheduling & Dispatch agent',
+        sop_knowledge: 'Ops SOP & Knowledge agent',
+        compliance_audits: 'Ops Compliance & Audit agent',
+        ap_invoice: 'Finance AP Invoice agent',
+        cashflow_forecast: 'Finance Cash Flow Forecasting agent',
+        expense_review: 'Finance Expense Review agent',
+        recruiting_screen: 'HR Recruiting & Screening agent',
+        onboarding_offboarding: 'HR Onboarding / Offboarding agent',
+    };
+    const gapValues = (['gap_sales', 'gap_marketing', 'gap_customer_service', 'gap_operations', 'gap_finance_hr']
+        .map(k => responses[k] as string)
+        .filter(v => v && v !== 'none'));
+    const gapAgents = gapValues.map(v => gapAgentLabels[v]).filter(Boolean);
+
+    const phase1Items: string[] = [
+        isBeginnerAI ? quickWinItem : 'Audit existing AI tool utilization and measure actual ROI',
+        'Conduct data readiness review — map where your business data lives',
+        painPoints.includes('reporting') ? `Set up ${biTool} connected to your live accounting data` : 'Identify and document your top 3 highest-value automation opportunities',
+        'Establish AI acceptable use policy and data governance framework',
+    ];
+    if (gapAgents.length > 0) {
+        phase1Items.push('Book a 30-minute scoping call with an Audcomp AI Expert to lock the priority order of your custom agents');
+    }
+
+    const phase2Items: string[] = [
+        `Roll out ${productivityTool} company-wide with structured training program`,
+        crmItem,
+        painPoints.includes('manual_data_entry')
+            ? `Deploy ${automationTool} to eliminate your top manual data entry workflows`
+            : `Automate your top 3 repetitive workflows with ${automationTool}`,
+    ];
+    if (gapAgents.length > 0) {
+        const top = gapAgents.slice(0, 2).join(' and ');
+        phase2Items.push(`Ship the first custom agents from your gap audit: ${top}`);
+    }
+    phase2Items.push('Build internal AI champion network to sustain and accelerate adoption');
+
     return [
         {
             phase: 1,
             title: 'Quick Wins',
             timeline: wantsQuick ? 'Weeks 1–4' : 'Month 1–2',
             color: 'blue',
-            items: [
-                isBeginnerAI ? quickWinItem : 'Audit existing AI tool utilization and measure actual ROI',
-                'Conduct data readiness review — map where your business data lives',
-                painPoints.includes('reporting') ? `Set up ${biTool} connected to your live accounting data` : 'Identify and document your top 3 highest-value automation opportunities',
-                'Establish AI acceptable use policy and data governance framework',
-            ],
+            items: phase1Items,
         },
         {
             phase: 2,
             title: 'Core Adoption',
             timeline: wantsQuick ? 'Month 2–3' : 'Month 3–5',
             color: 'indigo',
-            items: [
-                `Roll out ${productivityTool} company-wide with structured training program`,
-                crmItem,
-                painPoints.includes('manual_data_entry')
-                    ? `Deploy ${automationTool} to eliminate your top manual data entry workflows`
-                    : `Automate your top 3 repetitive workflows with ${automationTool}`,
-                'Build internal AI champion network to sustain and accelerate adoption',
-            ],
+            items: phase2Items,
         },
         {
             phase: 3,
@@ -776,6 +894,18 @@ export function buildPromptSummary(responses: AdvisorResponses): string {
 
     const namedPainPoints = painPoints.map(p => painPointLabels[p] || p).join(', ');
 
+    const gapEntries: { dept: string; key: string; value: string }[] = [
+        { dept: 'Sales',            key: 'gap_sales',             value: (responses.gap_sales as string) || 'none' },
+        { dept: 'Marketing',        key: 'gap_marketing',         value: (responses.gap_marketing as string) || 'none' },
+        { dept: 'Customer Service', key: 'gap_customer_service',  value: (responses.gap_customer_service as string) || 'none' },
+        { dept: 'Operations',       key: 'gap_operations',        value: (responses.gap_operations as string) || 'none' },
+        { dept: 'Finance / HR',     key: 'gap_finance_hr',        value: (responses.gap_finance_hr as string) || 'none' },
+    ];
+    const flaggedGaps = gapEntries.filter(g => g.value !== 'none');
+    const gapLines = flaggedGaps.length === 0
+        ? '  - No major department gaps flagged'
+        : flaggedGaps.map(g => `  - ${g.dept}: ${g.value.replace(/_/g, ' ')}`).join('\n');
+
     return `
 Company Profile:
 - Size: ${size} employees
@@ -793,6 +923,9 @@ Business Tools in Use:
 AI Readiness:
 - Current AI Usage: ${aiUsage}
 - Key Pain Points: ${namedPainPoints || 'not specified'}
+
+Department Gaps (best fit for custom AI agents — to scope with an AI Expert):
+${gapLines}
 
 Budget & Timeline:
 - Monthly Budget: ${budget}
