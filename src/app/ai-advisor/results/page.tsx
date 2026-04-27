@@ -482,6 +482,130 @@ function AdvisorResultsContent() {
                     {/* Left: Recommendations + Roadmap */}
                     <div className="col-span-12 lg:col-span-8 space-y-8">
 
+                        {/* ── Recommended AI Agent Package ── */}
+                        {(() => {
+                            const gapKeys = ['gap_sales', 'gap_marketing', 'gap_customer_service', 'gap_operations', 'gap_finance_hr'];
+                            const flagged = gapKeys
+                                .map(k => ({ key: k, value: (responses?.[k] as string) || 'none' }))
+                                .filter(g => g.value !== 'none');
+                            const flaggedCount = flagged.length;
+                            const recommendedSize = flaggedCount >= 4 ? 6 : flaggedCount >= 2 ? 4 : 2;
+
+                            const PACKAGES = [
+                                {
+                                    size: 2,
+                                    label: 'Starter',
+                                    tagline: 'Two custom AI agents to prove the model and ship a quick win.',
+                                    bullets: [
+                                        '2 production-ready agents built for your top gaps',
+                                        'Onboarding + training for your team',
+                                        '30 days of post-launch tuning',
+                                        'Quarterly performance review',
+                                    ],
+                                    accent: 'from-blue-600/10 to-blue-600/0',
+                                    border: 'border-blue-200',
+                                    badge: 'bg-blue-600 text-white',
+                                    headline: 'text-blue-700',
+                                },
+                                {
+                                    size: 4,
+                                    label: 'Growth',
+                                    tagline: 'Four agents covering the departments where you bleed the most time.',
+                                    bullets: [
+                                        '4 agents across Sales, Marketing, Service, or Ops',
+                                        'Cross-agent orchestration & shared memory',
+                                        'Onboarding + change-management playbook',
+                                        '60 days of post-launch tuning',
+                                        'Monthly performance review',
+                                    ],
+                                    accent: 'from-indigo-600/10 to-indigo-600/0',
+                                    border: 'border-indigo-200',
+                                    badge: 'bg-indigo-600 text-white',
+                                    headline: 'text-indigo-700',
+                                },
+                                {
+                                    size: 6,
+                                    label: 'Enterprise',
+                                    tagline: 'Six-agent operating system covering every department gap you flagged.',
+                                    bullets: [
+                                        '6 agents covering all five departments end-to-end',
+                                        'Full orchestration layer + Mission Control dashboard',
+                                        'Dedicated AI Expert + change-management team',
+                                        '90 days of post-launch tuning',
+                                        'Quarterly business reviews + roadmap refresh',
+                                    ],
+                                    accent: 'from-emerald-600/10 to-emerald-600/0',
+                                    border: 'border-emerald-200',
+                                    badge: 'bg-emerald-600 text-white',
+                                    headline: 'text-emerald-700',
+                                },
+                            ];
+
+                            return (
+                                <section className="bg-white rounded-[48px] p-10 shadow-sm border border-slate-100/50">
+                                    <div className="flex items-center justify-between mb-8">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 rounded-2xl bg-violet-600 flex items-center justify-center text-white shadow-lg shadow-violet-600/20">
+                                                <Bot className="h-5 w-5" />
+                                            </div>
+                                            <div>
+                                                <h2 className="text-2xl font-black tracking-tight text-slate-900">Recommended AI Agent Package</h2>
+                                                <p className="text-xs text-slate-500 font-bold mt-1">
+                                                    Based on the {flaggedCount} department gap{flaggedCount === 1 ? '' : 's'} you flagged · scoped on a free call with an AI Expert
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <span className="text-slate-400 text-sm font-black uppercase tracking-widest">{recommendedSize}-Agent fit</span>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                        {PACKAGES.map(pkg => {
+                                            const isRecommended = pkg.size === recommendedSize;
+                                            return (
+                                                <div
+                                                    key={pkg.size}
+                                                    className={`relative rounded-3xl border-2 p-6 bg-gradient-to-br ${pkg.accent} ${pkg.border} transition-all ${isRecommended ? 'ring-4 ring-violet-200 scale-[1.02] shadow-xl' : 'opacity-90 hover:opacity-100'}`}
+                                                >
+                                                    {isRecommended && (
+                                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-violet-600 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">
+                                                            Recommended for You
+                                                        </div>
+                                                    )}
+                                                    <div className={`inline-flex items-center gap-1.5 ${pkg.badge} text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full mb-4`}>
+                                                        <Bot className="h-3 w-3" /> {pkg.size}-Agent · {pkg.label}
+                                                    </div>
+                                                    <h3 className={`text-xl font-black leading-tight mb-2 ${pkg.headline}`}>{pkg.size} Custom AI Agents</h3>
+                                                    <p className="text-xs text-slate-600 font-bold leading-relaxed mb-4">{pkg.tagline}</p>
+                                                    <ul className="space-y-2">
+                                                        {pkg.bullets.map((b, i) => (
+                                                            <li key={i} className="flex items-start gap-2 text-[12px] text-slate-700 leading-snug">
+                                                                <CheckCircle2 className={`h-3.5 w-3.5 shrink-0 mt-0.5 ${pkg.headline}`} />
+                                                                <span>{b}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <div className="mt-6 flex flex-col md:flex-row md:items-center justify-between gap-3 p-5 rounded-2xl bg-slate-900 text-white">
+                                        <div>
+                                            <div className="text-[10px] font-black uppercase tracking-widest text-violet-300 mb-1">Next step</div>
+                                            <div className="text-sm font-bold">Meet with an Audcomp AI Expert to scope the right package and the order we ship the agents in.</div>
+                                        </div>
+                                        <Link
+                                            href="/select-expert"
+                                            className="inline-flex items-center justify-center gap-2 bg-violet-500 hover:bg-violet-400 text-white font-black text-xs uppercase tracking-widest px-5 py-3 rounded-xl transition-colors shrink-0"
+                                        >
+                                            Book Free Discovery Call
+                                            <ArrowRight className="h-3.5 w-3.5" />
+                                        </Link>
+                                    </div>
+                                </section>
+                            );
+                        })()}
+
                         {/* Tool Recommendations */}
                         <section className="bg-white rounded-[48px] p-10 shadow-sm border border-slate-100/50">
                             <div className="flex items-center justify-between mb-10">
