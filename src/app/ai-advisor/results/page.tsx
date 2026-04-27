@@ -162,7 +162,7 @@ function AdvisorResultsContent() {
     const supabase = createClient();
 
     const searchParams = useSearchParams();
-    const adminUserId = searchParams.get('userId');
+    const adminUserId = searchParams?.get('userId') ?? null;
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
@@ -177,7 +177,7 @@ function AdvisorResultsContent() {
             let parsed: AdvisorResponses | null = null;
             let loadedNarrative = '';
 
-            const searchOrg = searchParams.get('search');
+            const searchOrg = searchParams?.get('search') ?? null;
 
             // Admin view: always use server-side API (bypasses RLS)
             if (adminUserId) {

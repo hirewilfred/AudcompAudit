@@ -968,7 +968,7 @@ const AdminPortal: React.FC = () => {
                                                             ev.type === 'wedding' ? 'text-pink-300 bg-pink-500/10 border-pink-500/20' :
                                                             ev.type === 'corporate' ? 'text-blue-300 bg-blue-500/10 border-blue-500/20' :
                                                             ev.type === 'funeral' ? 'text-slate-300 bg-slate-500/10 border-slate-500/20' :
-                                                            ev.type === 'showcase' ? 'text-violet-300 bg-violet-500/10 border-violet-500/20' :
+                                                            ev.type === 'custom' ? 'text-violet-300 bg-violet-500/10 border-violet-500/20' :
                                                             'text-amber-300 bg-amber-500/10 border-amber-500/20';
                                                         return (
                                                             <div key={ev.id} className="px-6 py-3 flex items-center gap-3">
@@ -1008,7 +1008,7 @@ const AdminPortal: React.FC = () => {
                                                         p.platform === 'instagram' ? 'bg-pink-500/15 text-pink-200 border-pink-500/30' :
                                                         p.platform === 'tiktok' ? 'bg-slate-500/20 text-white border-white/20' :
                                                         p.platform === 'facebook' ? 'bg-blue-500/15 text-blue-200 border-blue-500/30' :
-                                                        p.platform === 'pinterest' ? 'bg-rose-500/15 text-rose-200 border-rose-500/30' :
+                                                        p.platform === 'youtube' ? 'bg-rose-500/15 text-rose-200 border-rose-500/30' :
                                                         'bg-emerald-500/15 text-emerald-200 border-emerald-500/30';
                                                     return (
                                                         <div key={p.id} className="px-6 py-3 flex items-center gap-3">
@@ -1047,7 +1047,7 @@ const AdminPortal: React.FC = () => {
                                                             className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-90 group-hover:scale-105 transition-transform duration-500" />
                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                                         <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-                                                            <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded backdrop-blur-md ${r.platform === 'tiktok' ? 'bg-black/50 text-white border border-white/20' : 'bg-pink-500/30 text-white border border-pink-300/40'}`}>{r.platform}</span>
+                                                            <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded backdrop-blur-md ${r.platform === 'youtube' ? 'bg-black/50 text-white border border-white/20' : 'bg-pink-500/30 text-white border border-pink-300/40'}`}>{r.platform}</span>
                                                             <span className="text-[9px] font-black bg-black/50 text-white px-2 py-0.5 rounded backdrop-blur-md">{r.duration}</span>
                                                         </div>
                                                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -1545,8 +1545,8 @@ const AdminPortal: React.FC = () => {
                                                         <td className="px-4 py-4">
                                                             <div className="text-sm text-slate-400">{lead.location || 'Unknown Location'}</div>
                                                             <div className="mt-1 flex gap-1">
-                                                                {lead.linkedin && (
-                                                                    <a href={lead.linkedin} target="_blank" rel="noreferrer" className="p-1 rounded bg-blue-600/10 text-blue-400 hover:bg-blue-600 hover:text-white transition-colors">
+                                                                {(lead as any).linkedin && (
+                                                                    <a href={(lead as any).linkedin} target="_blank" rel="noreferrer" className="p-1 rounded bg-blue-600/10 text-blue-400 hover:bg-blue-600 hover:text-white transition-colors">
                                                                         <Users className="h-3 w-3" />
                                                                     </a>
                                                                 )}

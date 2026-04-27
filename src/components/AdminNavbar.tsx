@@ -40,7 +40,7 @@ export default function AdminNavbar() {
     ];
 
     const isActive = (href: string) =>
-        href === '/admin' ? pathname === '/admin' : pathname.startsWith(href);
+        href === '/admin' ? pathname === '/admin' : (pathname?.startsWith(href) ?? false);
 
     return (
         <nav className="w-64 bg-[#060C1C] text-white min-h-screen p-5 flex flex-col gap-5 fixed left-0 top-0 z-50 shadow-2xl border-r border-white/5">
