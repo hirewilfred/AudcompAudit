@@ -562,15 +562,31 @@ export default function DashboardPage() {
                             <div className="mt-6 flex flex-col md:flex-row md:items-center justify-between gap-3 p-5 rounded-2xl bg-slate-900 text-white">
                                 <div>
                                     <div className="text-[10px] font-black uppercase tracking-widest text-violet-300 mb-1">Next step</div>
-                                    <div className="text-sm font-bold">Meet with an Audcomp AI Expert to scope the right package and the order we ship the agents in.</div>
+                                    <div className="text-sm font-bold">
+                                        {assignedExpert?.bookings_url
+                                            ? `Meet with ${assignedExpert.full_name} to scope the right package and the order we ship the agents in.`
+                                            : assignedExpert
+                                                ? `${assignedExpert.full_name} will reach out to scope the right package — or pick another expert below.`
+                                                : 'Pick an Audcomp AI Expert below to scope the right package and the order we ship the agents in.'}
+                                    </div>
                                 </div>
-                                <Link
-                                    href="/select-expert"
-                                    className="inline-flex items-center justify-center gap-2 bg-violet-500 hover:bg-violet-400 text-white font-black text-xs uppercase tracking-widest px-5 py-3 rounded-xl transition-colors shrink-0"
-                                >
-                                    Book Free Discovery Call
-                                    <ArrowRight className="h-3.5 w-3.5" />
-                                </Link>
+                                {assignedExpert?.bookings_url ? (
+                                    <button
+                                        onClick={() => handleBooking(assignedExpert.bookings_url)}
+                                        className="inline-flex items-center justify-center gap-2 bg-violet-500 hover:bg-violet-400 text-white font-black text-xs uppercase tracking-widest px-5 py-3 rounded-xl transition-colors shrink-0"
+                                    >
+                                        Book with {assignedExpert.full_name?.split(' ')[0] ?? 'Expert'}
+                                        <ArrowRight className="h-3.5 w-3.5" />
+                                    </button>
+                                ) : (
+                                    <Link
+                                        href="/select-expert"
+                                        className="inline-flex items-center justify-center gap-2 bg-violet-500 hover:bg-violet-400 text-white font-black text-xs uppercase tracking-widest px-5 py-3 rounded-xl transition-colors shrink-0"
+                                    >
+                                        Choose Your AI Expert
+                                        <ArrowRight className="h-3.5 w-3.5" />
+                                    </Link>
+                                )}
                             </div>
                         </motion.section>
                     );
