@@ -66,20 +66,6 @@ export const ADVISOR_STEPS: AdvisorStep[] = [
                     { value: 'unsure', label: 'Not sure', description: 'We use what works' },
                 ],
             },
-            {
-                id: 'm365_tier',
-                label: 'Which Microsoft 365 plan are you on?',
-                type: 'radio',
-                options: [
-                    { value: 'none', label: 'We don\'t use Microsoft 365', description: 'Google Workspace or other' },
-                    { value: 'basic', label: 'Microsoft 365 Business Basic', description: 'Email, Teams, web apps only' },
-                    { value: 'standard', label: 'Microsoft 365 Business Standard', description: 'Desktop Office apps included' },
-                    { value: 'premium', label: 'Microsoft 365 Business Premium', description: 'Includes Defender & Intune' },
-                    { value: 'e3', label: 'Microsoft 365 E3', description: 'Enterprise compliance & security' },
-                    { value: 'e5', label: 'Microsoft 365 E5', description: 'Full suite with advanced analytics' },
-                    { value: 'unsure', label: 'Not sure / Mixed', description: 'Different plans across users' },
-                ],
-            },
         ],
     },
     {

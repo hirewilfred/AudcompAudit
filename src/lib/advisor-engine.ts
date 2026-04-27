@@ -29,7 +29,6 @@ export interface RoiDefaults {
 
 export function generateRecommendations(responses: AdvisorResponses): Recommendation[] {
     const recs: Recommendation[] = [];
-    const tier = responses.m365_tier as string;
     const size = responses.company_size as string;
     const painPoints = (responses.pain_points as string[]) || [];
     const accounting = responses.accounting as string;
@@ -42,11 +41,12 @@ export function generateRecommendations(responses: AdvisorResponses): Recommenda
     const aiUsage = responses.ai_usage as string;
     const industry = responses.industry as string;
 
-    const isM365User = tier && tier !== 'none' && tier !== 'unsure';
-    const isGoogleUser = storage === 'google_drive' || tier === 'none';
+    // Platform inferred from file storage choice (the M365 license question was removed)
+    const isM365User = storage === 'sharepoint' || storage === 'mixed';
+    const isGoogleUser = storage === 'google_drive';
     const isEnterprise = ['201-1000', '1000+'].includes(size);
     const isSmall = ['1-10', '11-50'].includes(size);
-    const hasCopilotTier = ['premium', 'e3', 'e5'].includes(tier);
+    const hasCopilotTier = isM365User; // assume Copilot-eligible when on Microsoft cloud
     const budgetConstrained = budget === '0-500';
     const budgetMid = ['500-2000', '2000-5000'].includes(budget);
     const budgetHigh = budget === '5000+';
@@ -61,7 +61,7 @@ export function generateRecommendations(responses: AdvisorResponses): Recommenda
         recs.push({
             tool: 'Microsoft 365 Copilot',
             category: 'Productivity',
-            description: `Built directly into Word, Excel, Teams, Outlook, and PowerPoint — your team already knows these apps. Copilot summarizes meetings, drafts emails, generates reports from your data, and explains complex spreadsheets in seconds. Your existing M365 ${tier.toUpperCase()} plan is the perfect foundation to unlock it.`,
+            description: `Built directly into Word, Excel, Teams, Outlook, and PowerPoint — your team already knows these apps. Copilot summarizes meetings, drafts emails, generates reports from your data, and explains complex spreadsheets in seconds. Since your files already live in the Microsoft cloud, Copilot plugs in without migration.`,
             monthlyEstimate: '$30/user/mo',
             annualEstimate: '~$360/user/yr',
             priority: 'high',
@@ -345,8 +345,8 @@ export function generateRecommendations(responses: AdvisorResponses): Recommenda
                 tool: 'Microsoft Purview',
                 category: 'Data Governance',
                 description: 'With regulated or sensitive data, you can\'t deploy AI without first knowing where your data lives. Purview automatically scans, classifies, and applies protection policies across your M365 environment — essential before any AI rollout in healthcare, finance, or legal.',
-                monthlyEstimate: tier === 'e5' ? 'Included in your E5 plan' : '~$7/user/mo (add-on)',
-                annualEstimate: tier === 'e5' ? 'Included in your E5 plan' : '~$84/user/yr',
+                monthlyEstimate: '~$7/user/mo (add-on)',
+                annualEstimate: '~$84/user/yr',
                 priority: 'high',
                 icon: 'Shield',
                 tags: ['Compliance', 'Data Protection', 'PIPEDA', 'Governance'],
@@ -663,7 +663,6 @@ export function generateRoadmap(responses: AdvisorResponses): RoadmapPhase[] {
     const timeline = responses.timeline as string;
     const aiUsage = responses.ai_usage as string;
     const painPoints = (responses.pain_points as string[]) || [];
-    const tier = responses.m365_tier as string;
     const crm = responses.crm as string;
     const storage = responses.file_storage as string;
     const industry = responses.industry as string;
@@ -671,8 +670,8 @@ export function generateRoadmap(responses: AdvisorResponses): RoadmapPhase[] {
     const isBeginnerAI = aiUsage === 'none' || aiUsage === 'personal';
     const isAdvancedAI = aiUsage === 'strategy' || aiUsage === 'advanced';
     const wantsQuick = timeline === 'asap' || timeline === '1-3m';
-    const isM365 = tier && tier !== 'none' && tier !== 'unsure';
-    const isGoogleUser = storage === 'google_drive' || tier === 'none';
+    const isM365 = storage === 'sharepoint' || storage === 'mixed';
+    const isGoogleUser = storage === 'google_drive';
 
     // Pick stack-specific tool names for roadmap items
     const productivityTool = isM365 ? 'Microsoft 365 Copilot' : isGoogleUser ? 'Google Gemini Workspace' : 'Claude for Work';
@@ -806,9 +805,10 @@ export function generateRoadmap(responses: AdvisorResponses): RoadmapPhase[] {
 
 export function generateRoiDefaults(responses: AdvisorResponses): RoiDefaults {
     const size = responses.company_size as string;
-    const tier = responses.m365_tier as string;
+    const storage = responses.file_storage as string;
     const industry = responses.industry as string;
     const painPoints = (responses.pain_points as string[]) || [];
+    const isM365 = storage === 'sharepoint' || storage === 'mixed';
 
     const sizeMap: Record<string, number> = {
         '1-10': 5,
@@ -847,9 +847,9 @@ export function generateRoiDefaults(responses: AdvisorResponses): RoiDefaults {
     if (painPoints.includes('it_support')) timeSaved += 3;
 
     // Efficiency multiplier for deep M365 integration
-    if (['premium', 'e3', 'e5'].includes(tier)) timeSaved += 2;
+    if (isM365) timeSaved += 2;
 
-    const annualCostPerUser = tier === 'none' ? 120 : 360;
+    const annualCostPerUser = isM365 ? 360 : 120;
     const monthlyPages = painPoints.includes('document_processing') ? 5000 : 0;
 
     return {
@@ -864,7 +864,6 @@ export function generateRoiDefaults(responses: AdvisorResponses): RoiDefaults {
 export function buildPromptSummary(responses: AdvisorResponses): string {
     const size = responses.company_size || 'unknown';
     const industry = responses.industry || 'unknown';
-    const tier = responses.m365_tier || 'unknown';
     const storage = responses.file_storage || 'unknown';
     const accounting = responses.accounting || 'unknown';
     const crm = responses.crm || 'none';
@@ -875,9 +874,9 @@ export function buildPromptSummary(responses: AdvisorResponses): string {
     const painPoints = (responses.pain_points as string[]) || [];
     const infra = responses.infrastructure || 'unknown';
 
-    const isM365 = tier !== 'none' && tier !== 'unsure' && tier !== 'unknown';
-    const isGoogle = storage === 'google_drive' || tier === 'none';
-    const platform = isM365 ? `Microsoft 365 (${(tier as string).toUpperCase()})` : isGoogle ? 'Google Workspace' : 'non-Microsoft / on-premises stack';
+    const isM365 = storage === 'sharepoint' || storage === 'mixed';
+    const isGoogle = storage === 'google_drive';
+    const platform = isM365 ? 'Microsoft 365 / SharePoint' : isGoogle ? 'Google Workspace' : 'non-Microsoft / on-premises stack';
 
     const painPointLabels: Record<string, string> = {
         document_processing: 'manual document processing',
