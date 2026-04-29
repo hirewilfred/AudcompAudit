@@ -279,7 +279,7 @@ export default function DashboardPage() {
         let finalUrl =
             bookingUrl ||
             assignedExpert?.bookings_url ||
-            experts.find((e) => e.bookings_url)?.bookings_url;
+            experts.find((e) => e.bookings_url && !e.is_bdm)?.bookings_url;
         if (!finalUrl) {
             router.push('/select-expert');
             return;
@@ -433,7 +433,7 @@ export default function DashboardPage() {
                             {displayExperts.map((exp, i) => {
                                 const isAssigned = exp.id === assignedExpert?.id;
                                 const isBdm = exp.is_bdm;
-                                const canBook = !!exp.bookings_url;
+                                const canBook = !!exp.bookings_url && !exp.is_bdm;
                                 const roleLabel = isAssigned ? 'Assigned Expert' : isBdm ? 'BDM' : 'Expert';
                                 const titleText = `${roleLabel}: ${exp.full_name}${canBook ? ' — click to book' : ''}`;
                                 const className = `h-10 w-10 rounded-full bg-slate-200 overflow-hidden shadow-sm hover:scale-110 transition-transform z-${20 - i} ${isAssigned ? 'border-4 border-blue-600 scale-110 border-solid' : 'border-4 border-[#F4F7FE]'} ${canBook ? 'cursor-pointer' : 'cursor-help'}`;
@@ -577,17 +577,27 @@ export default function DashboardPage() {
                             viewport={{ once: true }}
                             className="mb-12 bg-white rounded-[40px] p-8 md:p-10 shadow-sm border border-slate-100/50"
                         >
-                            <div className="flex flex-col md:flex-row md:items-center justify-between mb-7 gap-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-violet-600/30">
-                                        <Bot className="h-5 w-5" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-2xl font-black tracking-tight text-slate-900">Your AI Agent Team</h2>
-                                        <p className="text-xs text-slate-500 font-bold mt-1">Recommended {aaPackage}-agent package · based on your assessment</p>
-                                    </div>
-                                </div>
-                                <Link href="/ai-agents/assessment" className="text-[10px] font-black uppercase tracking-widest text-violet-600 hover:text-violet-500 transition-colors">
+                            <div className="flex flex-col md:flex-row md:items-end justify-between mb-7 gap-3">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 8 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.4 }}
+                                >
+                                    <h2 className="text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] relative inline-block">
+                                        Your AI Agent Team
+                                        <motion.span
+                                            initial={{ scaleX: 0 }}
+                                            whileInView={{ scaleX: 1 }}
+                                            viewport={{ once: true }}
+                                            transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
+                                            style={{ originX: 0 }}
+                                            className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
+                                        />
+                                    </h2>
+                                    <p className="text-xs text-slate-500 font-bold mt-3">Recommended {aaPackage}-agent package · based on your assessment</p>
+                                </motion.div>
+                                <Link href="/ai-agents/assessment" className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-500 transition-colors">
                                     Re-take Assessment
                                 </Link>
                             </div>
@@ -674,19 +684,29 @@ export default function DashboardPage() {
                             className="mb-12 bg-white rounded-[48px] p-8 md:p-10 shadow-sm border border-slate-100/50"
                         >
                             <div className="flex flex-col md:flex-row md:items-center justify-between mb-7 gap-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-2xl bg-violet-600 flex items-center justify-center text-white shadow-lg shadow-violet-600/20">
-                                        <Bot className="h-5 w-5" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-2xl font-black tracking-tight text-slate-900">Recommended AI Agent Package</h2>
-                                        <p className="text-xs text-slate-500 font-bold mt-1">
-                                            {flaggedCount > 0
-                                                ? `Based on the ${flaggedCount} department gap${flaggedCount === 1 ? '' : 's'} you flagged · scoped on a free call with an AI Expert`
-                                                : 'Three custom-build packages — your AI Expert will recommend the right size on a free discovery call'}
-                                        </p>
-                                    </div>
-                                </div>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 8 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.4 }}
+                                >
+                                    <h2 className="text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] relative inline-block">
+                                        Recommended AI Agent Package
+                                        <motion.span
+                                            initial={{ scaleX: 0 }}
+                                            whileInView={{ scaleX: 1 }}
+                                            viewport={{ once: true }}
+                                            transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
+                                            style={{ originX: 0 }}
+                                            className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
+                                        />
+                                    </h2>
+                                    <p className="text-xs text-slate-500 font-bold mt-3">
+                                        {flaggedCount > 0
+                                            ? `Based on the ${flaggedCount} department gap${flaggedCount === 1 ? '' : 's'} you flagged · scoped on a free call with an AI Expert`
+                                            : 'Three custom-build packages — your AI Expert will recommend the right size on a free discovery call'}
+                                    </p>
+                                </motion.div>
                                 <span className="text-slate-400 text-sm font-black uppercase tracking-widest">{recommendedSize}-Agent fit</span>
                             </div>
 
@@ -776,7 +796,23 @@ export default function DashboardPage() {
                             </div>
                         </div>
                         
-                        <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-4 tracking-tight">Audit Results Ready for Expert Review</h2>
+                        <motion.h2
+                            initial={{ opacity: 0, y: 8 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.4 }}
+                            className="text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] relative inline-block mb-4"
+                        >
+                            Audit Results Ready for Expert Review
+                            <motion.span
+                                initial={{ scaleX: 0 }}
+                                whileInView={{ scaleX: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
+                                style={{ originX: 0 }}
+                                className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
+                            />
+                        </motion.h2>
                         <p className="text-lg font-medium text-slate-500 max-w-2xl leading-relaxed mb-8">
                             Your <span className="text-blue-600 font-black">{displayData.overall_score}%</span> readiness score is prepared for deep-dive validation. Book your session to review these metrics and capture the identified <span className="text-slate-900 font-black">${Math.round(annualSavings).toLocaleString()}</span> in annual savings.
                         </p>
@@ -811,14 +847,25 @@ export default function DashboardPage() {
                     {/* Left Panel - High Impact Recommendations */}
                     <div className="col-span-12 lg:col-span-8 space-y-8">
                         <section className="bg-white rounded-[48px] p-10 shadow-sm border border-slate-100/50">
-                            <div className="flex items-center justify-between mb-10">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/20">
-                                        <TrendingUp className="h-5 w-5" />
-                                    </div>
-                                    <h2 className="text-2xl font-black tracking-tight text-slate-900">Recommended Services</h2>
-                                </div>
-                                <button className="text-slate-400 text-sm font-black hover:text-blue-600 uppercase tracking-widest transition-colors">See All Recommendations</button>
+                            <div className="flex items-end justify-between mb-10 gap-3">
+                                <motion.h2
+                                    initial={{ opacity: 0, y: 8 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.4 }}
+                                    className="text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] relative inline-block"
+                                >
+                                    Recommended Services
+                                    <motion.span
+                                        initial={{ scaleX: 0 }}
+                                        whileInView={{ scaleX: 1 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
+                                        style={{ originX: 0 }}
+                                        className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
+                                    />
+                                </motion.h2>
+                                <button className="text-slate-400 text-sm font-black hover:text-blue-600 uppercase tracking-widest transition-colors shrink-0">See All Recommendations</button>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -864,12 +911,23 @@ export default function DashboardPage() {
 
                             {/* AI Training Programs */}
                             <div className="mt-12 pt-10 border-t border-slate-100/50">
-                                <div className="flex items-center gap-3 mb-8">
-                                    <div className="h-8 w-8 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600">
-                                        <BookOpen className="h-4 w-4" />
-                                    </div>
-                                    <h3 className="text-xl font-black tracking-tight text-slate-900">AI Training Programs</h3>
-                                </div>
+                                <motion.h3
+                                    initial={{ opacity: 0, y: 8 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.4 }}
+                                    className="text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-slate-900 mb-8 relative inline-block"
+                                >
+                                    AI Training Programs
+                                    <motion.span
+                                        initial={{ scaleX: 0 }}
+                                        whileInView={{ scaleX: 1 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
+                                        style={{ originX: 0 }}
+                                        className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
+                                    />
+                                </motion.h3>
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     {[
@@ -944,14 +1002,25 @@ export default function DashboardPage() {
 
                         {/* Implementation Roadmap Timeline */}
                         <section className="bg-white rounded-[48px] p-10 shadow-sm border border-slate-100/50">
-                            <div className="flex items-center justify-between mb-10">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
-                                        <Compass className="h-5 w-5" />
-                                    </div>
-                                    <h2 className="text-2xl font-black tracking-tight text-slate-900">Your AI Implementation Roadmap</h2>
-                                </div>
-                                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 border border-indigo-100">
+                            <div className="flex items-end justify-between mb-10 gap-3">
+                                <motion.h2
+                                    initial={{ opacity: 0, y: 8 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.4 }}
+                                    className="text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] relative inline-block"
+                                >
+                                    Your AI Implementation Roadmap
+                                    <motion.span
+                                        initial={{ scaleX: 0 }}
+                                        whileInView={{ scaleX: 1 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
+                                        style={{ originX: 0 }}
+                                        className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
+                                    />
+                                </motion.h2>
+                                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 border border-indigo-100 shrink-0">
                                     <div className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
                                     <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Active Phase</span>
                                 </div>
@@ -1052,15 +1121,26 @@ export default function DashboardPage() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <article className="bg-white rounded-[48px] p-10 shadow-sm border border-slate-100/50">
-                                <h3 className="text-xl font-black mb-10 flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                                            <Layout className="h-5 w-5" />
-                                        </div>
+                                <div className="flex items-end justify-between mb-10 gap-3">
+                                    <motion.h3
+                                        initial={{ opacity: 0, y: 8 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        viewport={{ once: true }}
+                                        transition={{ duration: 0.4 }}
+                                        className="text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] relative inline-block"
+                                    >
                                         Metric Breakdown
-                                    </div>
-                                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Live Data</span>
-                                </h3>
+                                        <motion.span
+                                            initial={{ scaleX: 0 }}
+                                            whileInView={{ scaleX: 1 }}
+                                            viewport={{ once: true }}
+                                            transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
+                                            style={{ originX: 0 }}
+                                            className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
+                                        />
+                                    </motion.h3>
+                                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] shrink-0">Live Data</span>
+                                </div>
                                 <div className="space-y-5">
                                     {displayData.category_scores.map((cat: any, i: number) => {
                                         const configMap: Record<string, any> = {
@@ -1105,10 +1185,23 @@ export default function DashboardPage() {
                             </article>
 
                             <article className="bg-white rounded-[48px] p-10 shadow-sm border border-slate-100/50">
-                                <h3 className="text-xl font-black mb-8 flex items-center gap-3">
-                                    <ShieldCheck className="h-5 w-5 text-emerald-500" />
+                                <motion.h3
+                                    initial={{ opacity: 0, y: 8 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.4 }}
+                                    className="text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] relative inline-block mb-8"
+                                >
                                     Industry Comparison
-                                </h3>
+                                    <motion.span
+                                        initial={{ scaleX: 0 }}
+                                        whileInView={{ scaleX: 1 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
+                                        style={{ originX: 0 }}
+                                        className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
+                                    />
+                                </motion.h3>
                                 <div className="h-[210px] w-full mt-4">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <RadarChart cx="50%" cy="50%" outerRadius="75%" data={displayData.category_scores}>
@@ -1137,11 +1230,24 @@ export default function DashboardPage() {
                             </div>
 
                             <div className="relative z-10">
-                                <div className="flex items-center justify-between mb-2">
-                                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">Overall Score</h2>
-                                    <CheckCircle2 className="h-6 w-6 text-emerald-500" />
-                                </div>
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-10">Verified Readiness Rank</p>
+                                <motion.h2
+                                    initial={{ opacity: 0, y: 8 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.4 }}
+                                    className="text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] relative inline-block mb-2"
+                                >
+                                    Overall Score
+                                    <motion.span
+                                        initial={{ scaleX: 0 }}
+                                        whileInView={{ scaleX: 1 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
+                                        style={{ originX: 0 }}
+                                        className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
+                                    />
+                                </motion.h2>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-3 mb-10">Verified Readiness Rank</p>
 
                                 <div className="relative flex items-center justify-center mb-10">
                                     <div className="relative h-64 w-64">
@@ -1385,15 +1491,24 @@ export default function DashboardPage() {
                                 <BrainCircuit className="h-32 w-32" />
                             </div>
                             <div className="relative z-10">
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-600/10 text-purple-600 shadow-inner">
-                                        <BrainCircuit className="h-6 w-6" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-lg font-black text-slate-900 tracking-tight leading-none">AI Strategic Advisor</h3>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">Custom Roadmap Ready</p>
-                                    </div>
-                                </div>
+                                <motion.h3
+                                    initial={{ opacity: 0, y: 8 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.4 }}
+                                    className="text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] relative inline-block"
+                                >
+                                    AI Strategic Advisor
+                                    <motion.span
+                                        initial={{ scaleX: 0 }}
+                                        whileInView={{ scaleX: 1 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
+                                        style={{ originX: 0 }}
+                                        className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
+                                    />
+                                </motion.h3>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-3 mb-6">Custom Roadmap Ready</p>
                                 <p className="text-xs font-bold text-slate-500 leading-relaxed mb-8">
                                     Your business requirements have been analyzed. You can view your current roadmap or re-run the assessment.
                                 </p>
