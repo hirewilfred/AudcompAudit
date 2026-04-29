@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Sparkles, Loader2, CheckCircle2 } from 'lucide-react';
 import { AGENT_ASSESSMENT_STEPS, AgentAssessmentResponses, recommendAgents } from '@/lib/agent-assessment';
 import { createClient } from '@/lib/supabase/client';
+import SiteNav from '@/components/SiteNav';
 
 export default function AgentAssessmentPage() {
     const router = useRouter();
@@ -102,21 +103,20 @@ export default function AgentAssessmentPage() {
             <div className="fixed top-[-15%] right-[-10%] h-[500px] w-[500px] rounded-full bg-blue-300/30 blur-[140px] pointer-events-none" />
             <div className="fixed bottom-[-15%] left-[-10%] h-[400px] w-[400px] rounded-full bg-indigo-200/40 blur-[140px] pointer-events-none" />
 
-            {/* Header */}
-            <header className="relative z-10 px-8 py-5 flex items-center justify-between border-b border-slate-200/60 backdrop-blur bg-white/70 sticky top-0">
-                <Link href="/ai-agents" className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-600/20">
-                        <Sparkles className="h-4 w-4 text-white" />
+            <SiteNav activeCta="agents" />
+
+            {/* Sub-header — step counter */}
+            <div className="relative z-10 border-b border-slate-200/60 bg-white/70 backdrop-blur">
+                <div className="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                        <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                        AI Agent Assessment · 5 questions · ~5 minutes
                     </div>
-                    <div>
-                        <div className="font-black text-sm text-slate-900 tracking-tight">AI Agent Assessment</div>
-                        <div className="text-[10px] font-bold text-slate-500 -mt-0.5">5 questions · ~5 minutes</div>
+                    <div className="text-xs font-bold text-slate-500">
+                        Step <span className="text-slate-900 font-black">{step + 1}</span> of {totalSteps}
                     </div>
-                </Link>
-                <div className="text-xs font-bold text-slate-500">
-                    Step <span className="text-slate-900 font-black">{step + 1}</span> of {totalSteps}
                 </div>
-            </header>
+            </div>
 
             <main className="relative z-10 max-w-3xl mx-auto px-6 py-12">
 

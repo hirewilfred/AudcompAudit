@@ -1,13 +1,17 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { createClient } from '@/lib/supabase/client';
 import {
     ArrowRight, Sparkles, Target, Database, MessageSquare, MessageCircle,
     Calendar, BookOpen, PenLine, Camera, CalendarDays, Search, Bot, ClipboardCheck,
     BarChart3, Users, FileText, Play, Zap, ShieldCheck,
 } from 'lucide-react';
 import { AGENT_CATALOG, AgentCatalogEntry } from '@/lib/agent-catalog';
+import SiteNav from '@/components/SiteNav';
 
 const ICON_MAP: Record<string, React.ElementType> = {
     Sparkles, Target, Database, MessageSquare, MessageCircle, Calendar, BookOpen,
@@ -32,6 +36,19 @@ const HERO_AGENTS = [
 ].map(id => AGENT_CATALOG.find(a => a.id === id)!).filter(Boolean);
 
 export default function AIAgentsLandingPage() {
+    const router = useRouter();
+    const supabase = createClient();
+    const [authReady, setAuthReady] = useState(false);
+    const [signedIn, setSignedIn] = useState(false);
+
+    useEffect(() => {
+        (async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            setSignedIn(!!session);
+            setAuthReady(true);
+        })();
+    }, []);
+
     return (
         <div className="min-h-screen bg-[#F4F7FE] text-slate-800 selection:bg-blue-600/10">
 
@@ -39,28 +56,7 @@ export default function AIAgentsLandingPage() {
             <div className="fixed top-[-15%] right-[-10%] h-[600px] w-[600px] rounded-full bg-blue-300/30 blur-[140px] pointer-events-none" />
             <div className="fixed bottom-[-15%] left-[-10%] h-[500px] w-[500px] rounded-full bg-indigo-200/40 blur-[140px] pointer-events-none" />
 
-            {/* Header */}
-            <header className="relative z-10 px-8 py-5 flex items-center justify-between border-b border-slate-200/60 backdrop-blur bg-white/70 sticky top-0">
-                <Link href="/" className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-600/20">
-                        <Sparkles className="h-4 w-4 text-white" />
-                    </div>
-                    <div>
-                        <div className="font-black text-sm text-slate-900 tracking-tight">Audcomp · AI Agents</div>
-                        <div className="text-[10px] font-bold text-slate-500 -mt-0.5">Custom AI agent assessment</div>
-                    </div>
-                </Link>
-                <nav className="flex items-center gap-5 text-xs font-bold text-slate-500">
-                    <Link href="/dashboard" className="hover:text-slate-900 transition-colors hidden sm:block">Dashboard</Link>
-                    <Link href="/ai-advisor" className="hover:text-slate-900 transition-colors hidden sm:block">AI Audit</Link>
-                    <Link
-                        href="/ai-agents/assessment"
-                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest px-4 py-2 rounded-xl shadow-md shadow-blue-600/20 transition-all"
-                    >
-                        <Play className="h-3 w-3" /> Start Assessment
-                    </Link>
-                </nav>
-            </header>
+            <SiteNav activeCta="agents" />
 
             <main className="relative z-10 max-w-7xl mx-auto px-6 md:px-8 pt-20 pb-24">
 
@@ -105,7 +101,7 @@ export default function AIAgentsLandingPage() {
                         className="flex flex-col sm:flex-row items-center justify-center gap-3"
                     >
                         <Link
-                            href="/ai-agents/assessment"
+                            href={signedIn ? "/ai-agents/assessment" : "/auth?next=/ai-agents/assessment"}
                             className="group inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black uppercase tracking-widest text-sm px-7 py-4 rounded-2xl shadow-xl shadow-blue-600/30 transition-all hover:scale-[1.02]"
                         >
                             <Sparkles className="h-4 w-4" />
@@ -278,7 +274,7 @@ export default function AIAgentsLandingPage() {
                                 </p>
                             </div>
                             <Link
-                                href="/ai-agents/assessment"
+                                href={signedIn ? "/ai-agents/assessment" : "/auth?next=/ai-agents/assessment"}
                                 className="group inline-flex items-center justify-center gap-3 bg-white hover:bg-blue-50 text-blue-700 font-black uppercase tracking-widest text-sm px-8 py-4 rounded-2xl shadow-xl transition-all hover:scale-[1.03] shrink-0"
                             >
                                 <Sparkles className="h-4 w-4" />

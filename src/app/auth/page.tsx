@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
@@ -18,7 +18,12 @@ export default function AuthPage() {
     const [remember, setRemember] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const nextParam = searchParams?.get('next') ?? null;
     const supabase = createClient();
+
+    // Only allow same-origin paths in `next` to prevent open-redirect.
+    const safeNext = nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -38,7 +43,7 @@ export default function AuthPage() {
                         .eq('id', user.id)
                         .single() as any;
 
-                    router.push(profile?.has_completed_audit ? '/dashboard' : '/survey');
+                    router.push(safeNext ?? (profile?.has_completed_audit ? '/dashboard' : '/survey'));
                 }
             } else {
                 const { data: signUpData, error: authError } = await supabase.auth.signUp({
@@ -59,7 +64,7 @@ export default function AuthPage() {
                     });
                 }
 
-                router.push('/survey');
+                router.push(safeNext ?? '/survey');
             }
         } catch (err: any) {
             setError(err.message || 'An error occurred during authentication.');

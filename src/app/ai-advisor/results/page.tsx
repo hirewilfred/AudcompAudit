@@ -503,6 +503,106 @@ function AdvisorResultsContent() {
                     {/* Left: Recommendations + Roadmap */}
                     <div className="col-span-12 lg:col-span-8 space-y-8">
 
+                        {/* ── Agent Assessment Snapshot (expert/admin review surface) ── */}
+                        {(() => {
+                            const r = (responses ?? {}) as Record<string, any>;
+                            const agentIds = (r.aa_recommended_agent_ids as string[]) || [];
+                            const aaPkg = (r.aa_recommended_package as number) || null;
+                            if (agentIds.length === 0) return null;
+
+                            const { AGENT_CATALOG } = require('@/lib/agent-catalog');
+                            const agents = agentIds
+                                .map((id: string) => AGENT_CATALOG.find((a: any) => a.id === id))
+                                .filter(Boolean);
+
+                            const dept = r.aa_priority_dept;
+                            const outcomes = (r.aa_outcomes as string[]) || [];
+                            const stack = (r.aa_stack as string[]) || [];
+                            const hours = r.aa_repetitive_hours;
+                            const pace = r.aa_pace;
+                            const fmt = (s: string) => s ? s.replace(/_/g, ' ') : '—';
+
+                            return (
+                                <section className="bg-white rounded-[48px] p-10 shadow-sm border border-slate-100/50">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/20">
+                                                <Bot className="h-5 w-5" />
+                                            </div>
+                                            <div>
+                                                <h2 className="text-2xl font-black tracking-tight text-slate-900">AI Agent Assessment</h2>
+                                                <p className="text-xs text-slate-500 font-bold mt-1">{aaPkg}-agent package · expert review</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-full">{agents.length} recommended</span>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+                                        {[
+                                            { label: 'Priority Dept', value: fmt(dept) },
+                                            { label: 'Repetitive hrs/wk', value: hours || '—' },
+                                            { label: 'Pace', value: fmt(pace) },
+                                            { label: 'Outcomes',  value: outcomes.length ? `${outcomes.length} flagged` : '—' },
+                                            { label: 'Stack items', value: stack.length ? `${stack.length} integrated` : '—' },
+                                        ].map(k => (
+                                            <div key={k.label} className="border-l-2 border-blue-100 pl-3">
+                                                <div className="text-[9px] font-black uppercase tracking-widest text-slate-500">{k.label}</div>
+                                                <div className="text-sm font-black text-slate-900 capitalize tabular-nums truncate">{k.value}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {(outcomes.length > 0 || stack.length > 0) && (
+                                        <div className="grid md:grid-cols-2 gap-4 mb-6">
+                                            {outcomes.length > 0 && (
+                                                <div>
+                                                    <div className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Outcomes flagged</div>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {outcomes.map(o => (
+                                                            <span key={o} className="text-[10px] font-bold bg-blue-50 text-blue-700 rounded-full px-2 py-0.5 capitalize">{fmt(o)}</span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {stack.length > 0 && (
+                                                <div>
+                                                    <div className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Existing stack</div>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {stack.map(s => (
+                                                            <span key={s} className="text-[10px] font-bold bg-indigo-50 text-indigo-700 rounded-full px-2 py-0.5 capitalize">{fmt(s)}</span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <div className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Recommended agent roster</div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                        {agents.map((a: any) => (
+                                            <div key={a.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                                <div className="flex items-start gap-2 mb-2">
+                                                    <div className="h-8 w-8 rounded-lg bg-blue-100 text-blue-700 font-black text-sm flex items-center justify-center shrink-0">
+                                                        {a.name.charAt(0)}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="text-sm font-black text-slate-900 leading-tight">{a.name}</div>
+                                                        <div className="text-[10px] font-mono text-slate-400">{a.slug}</div>
+                                                    </div>
+                                                </div>
+                                                <p className="text-[11px] text-slate-600 leading-relaxed line-clamp-2 mb-2">{a.description}</p>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {a.tools.slice(0, 3).map((t: string) => (
+                                                        <span key={t} className="text-[9px] font-bold bg-white text-slate-600 border border-slate-200 rounded-full px-2 py-0.5">{t}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            );
+                        })()}
+
                         {/* ── Recommended AI Agent Package ── */}
                         {(() => {
                             const gapKeys = ['gap_sales', 'gap_marketing', 'gap_customer_service', 'gap_operations', 'gap_finance_hr'];
