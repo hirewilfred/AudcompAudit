@@ -273,9 +273,17 @@ export default function DashboardPage() {
     ];
 
     const handleBooking = (bookingUrl?: string) => {
-        // MS Bookings blocks iframes — open directly in a new tab
-        let finalUrl = bookingUrl || assignedExpert?.bookings_url;
-        if (!finalUrl) return;
+        // MS Bookings blocks iframes — open directly in a new tab.
+        // Fall back to assigned expert, then any other expert with a bookings URL,
+        // so a missing assigned-expert link doesn't leave the user stranded.
+        let finalUrl =
+            bookingUrl ||
+            assignedExpert?.bookings_url ||
+            experts.find((e) => e.bookings_url)?.bookings_url;
+        if (!finalUrl) {
+            router.push('/select-expert');
+            return;
+        }
         // Append anonymous=true so users don't need to sign into Microsoft
         if (finalUrl.includes('microsoft.com') || finalUrl.includes('bookings')) {
             const separator = finalUrl.includes('?') ? '&' : '?';
@@ -425,14 +433,35 @@ export default function DashboardPage() {
                             {displayExperts.map((exp, i) => {
                                 const isAssigned = exp.id === assignedExpert?.id;
                                 const isBdm = exp.is_bdm;
+                                const canBook = !!exp.bookings_url;
+                                const roleLabel = isAssigned ? 'Assigned Expert' : isBdm ? 'BDM' : 'Expert';
+                                const titleText = `${roleLabel}: ${exp.full_name}${canBook ? ' — click to book' : ''}`;
+                                const className = `h-10 w-10 rounded-full bg-slate-200 overflow-hidden shadow-sm hover:scale-110 transition-transform z-${20 - i} ${isAssigned ? 'border-4 border-blue-600 scale-110 border-solid' : 'border-4 border-[#F4F7FE]'} ${canBook ? 'cursor-pointer' : 'cursor-help'}`;
+                                const inner = (
+                                    <img src={exp.photo_url || `/images/experts/expert-${(i % 10) + 1}.jpg`} alt={exp.full_name} className="h-full w-full object-cover" />
+                                );
+
+                                if (canBook) {
+                                    return (
+                                        <button
+                                            key={`exp-${exp.id}`}
+                                            type="button"
+                                            onClick={() => handleBooking(exp.bookings_url)}
+                                            className={className}
+                                            title={titleText}
+                                        >
+                                            {inner}
+                                        </button>
+                                    );
+                                }
 
                                 return (
                                     <div
                                         key={`exp-${exp.id}`}
-                                        className={`h-10 w-10 rounded-full bg-slate-200 overflow-hidden shadow-sm hover:scale-110 transition-transform cursor-help z-${20 - i} ${isAssigned ? 'border-4 border-blue-600 scale-110 border-solid' : 'border-4 border-[#F4F7FE]'}`}
-                                        title={`${isAssigned ? 'Assigned Expert' : isBdm ? 'BDM' : 'Expert'}: ${exp.full_name}`}
+                                        className={className}
+                                        title={titleText}
                                     >
-                                        <img src={exp.photo_url || `/images/experts/expert-${(i % 10) + 1}.jpg`} alt={exp.full_name} className="h-full w-full object-cover" />
+                                        {inner}
                                     </div>
                                 );
                             })}
@@ -485,6 +514,139 @@ export default function DashboardPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* ── Your AI Agent Team (from agent assessment) ── */}
+                {(() => {
+                    const agentIds = (advisorResponses?.aa_recommended_agent_ids as string[]) || [];
+                    const aaPackage = (advisorResponses?.aa_recommended_package as number) || null;
+                    const hasAssessment = agentIds.length > 0;
+
+                    if (!hasAssessment) {
+                        return (
+                            <motion.section
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                className="mb-12 rounded-[40px] p-8 md:p-10 relative overflow-hidden border-2 border-violet-200 bg-gradient-to-br from-violet-50 via-white to-cyan-50"
+                            >
+                                <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-violet-300/30 blur-3xl pointer-events-none" />
+                                <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-cyan-300/30 blur-3xl pointer-events-none" />
+                                <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                                    <div className="flex-1">
+                                        <div className="inline-flex items-center gap-2 bg-violet-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg shadow-violet-600/30 mb-4">
+                                            <Bot className="h-3 w-3" /> New · AI Agent Assessment
+                                        </div>
+                                        <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-3">Build the AI Agents your business is missing.</h2>
+                                        <p className="text-sm text-slate-600 max-w-xl">
+                                            Five focused questions and we'll map your departments to the right agents — Lead Hunter, Marketing Orchestrator,
+                                            Engagement Responder, and more — and recommend a 2 / 4 / 6-agent package.
+                                        </p>
+                                    </div>
+                                    <Link
+                                        href="/ai-agents/assessment"
+                                        className="group inline-flex items-center gap-3 bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-black uppercase tracking-widest text-xs px-6 py-4 rounded-2xl shadow-xl shadow-violet-500/30 transition-all hover:scale-[1.03] shrink-0"
+                                    >
+                                        <Sparkles className="h-4 w-4" />
+                                        Start AI Agent Assessment
+                                        <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                                    </Link>
+                                </div>
+                            </motion.section>
+                        );
+                    }
+
+                    const { AGENT_CATALOG } = require('@/lib/agent-catalog');
+                    const COLOR_MAP: Record<string, { glow: string; ring: string; bg: string; border: string; text: string }> = {
+                        violet:  { glow: 'shadow-[0_0_40px_-10px_rgba(167,139,250,0.6)]', ring: 'ring-violet-300', bg: 'bg-violet-100', border: 'border-violet-200', text: 'text-violet-700' },
+                        cyan:    { glow: 'shadow-[0_0_40px_-10px_rgba(34,211,238,0.6)]',  ring: 'ring-cyan-300',   bg: 'bg-cyan-100',   border: 'border-cyan-200',   text: 'text-cyan-700'   },
+                        emerald: { glow: 'shadow-[0_0_40px_-10px_rgba(52,211,153,0.6)]',  ring: 'ring-emerald-300',bg: 'bg-emerald-100',border: 'border-emerald-200',text: 'text-emerald-700'},
+                        amber:   { glow: 'shadow-[0_0_40px_-10px_rgba(251,191,36,0.6)]',  ring: 'ring-amber-300',  bg: 'bg-amber-100',  border: 'border-amber-200',  text: 'text-amber-700'  },
+                        rose:    { glow: 'shadow-[0_0_40px_-10px_rgba(251,113,133,0.6)]', ring: 'ring-rose-300',   bg: 'bg-rose-100',   border: 'border-rose-200',   text: 'text-rose-700'   },
+                        sky:     { glow: 'shadow-[0_0_40px_-10px_rgba(56,189,248,0.6)]',  ring: 'ring-sky-300',    bg: 'bg-sky-100',    border: 'border-sky-200',    text: 'text-sky-700'    },
+                        pink:    { glow: 'shadow-[0_0_40px_-10px_rgba(244,114,182,0.6)]', ring: 'ring-pink-300',   bg: 'bg-pink-100',   border: 'border-pink-200',   text: 'text-pink-700'   },
+                        lime:    { glow: 'shadow-[0_0_40px_-10px_rgba(163,230,53,0.6)]',  ring: 'ring-lime-300',   bg: 'bg-lime-100',   border: 'border-lime-200',   text: 'text-lime-700'   },
+                    };
+                    const recommended = agentIds
+                        .map((id: string) => AGENT_CATALOG.find((a: any) => a.id === id))
+                        .filter(Boolean);
+
+                    return (
+                        <motion.section
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="mb-12 bg-white rounded-[40px] p-8 md:p-10 shadow-sm border border-slate-100/50"
+                        >
+                            <div className="flex flex-col md:flex-row md:items-center justify-between mb-7 gap-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-violet-600/30">
+                                        <Bot className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-2xl font-black tracking-tight text-slate-900">Your AI Agent Team</h2>
+                                        <p className="text-xs text-slate-500 font-bold mt-1">Recommended {aaPackage}-agent package · based on your assessment</p>
+                                    </div>
+                                </div>
+                                <Link href="/ai-agents/assessment" className="text-[10px] font-black uppercase tracking-widest text-violet-600 hover:text-violet-500 transition-colors">
+                                    Re-take Assessment
+                                </Link>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {recommended.map((agent: any) => {
+                                    const c = COLOR_MAP[agent.color] || COLOR_MAP.violet;
+                                    return (
+                                        <div key={agent.id} className={`relative rounded-2xl bg-white p-5 border-2 ${c.border} ring-1 ${c.ring} ${c.glow} transition-all hover:scale-[1.02]`}>
+                                            <div className="flex items-start gap-3 mb-3">
+                                                <div className={`h-10 w-10 rounded-xl ${c.bg} flex items-center justify-center shrink-0 ${c.text} font-black text-lg`}>
+                                                    {agent.name.charAt(0)}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div className="font-black text-sm text-slate-900 leading-tight">{agent.name}</div>
+                                                    <div className="text-[10px] font-mono text-slate-400 mt-0.5">{agent.slug}</div>
+                                                </div>
+                                            </div>
+                                            <p className="text-[11px] text-slate-600 leading-relaxed mb-3 line-clamp-3">{agent.description}</p>
+                                            <div className="flex flex-wrap gap-1">
+                                                {agent.tools.slice(0, 3).map((t: string) => (
+                                                    <span key={t} className={`text-[9px] font-bold ${c.bg} ${c.text} rounded-full px-2 py-0.5`}>{t}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="mt-6 flex flex-col md:flex-row md:items-center justify-between gap-3 p-5 rounded-2xl bg-slate-900 text-white">
+                                <div>
+                                    <div className="text-[10px] font-black uppercase tracking-widest text-violet-300 mb-1">Next step</div>
+                                    <div className="text-sm font-bold">
+                                        {assignedExpert?.bookings_url
+                                            ? `Meet with ${assignedExpert.full_name} to lock the build order and ship the first agent inside 30 days.`
+                                            : 'Pick an AI Expert to lock the build order and ship the first agent inside 30 days.'}
+                                    </div>
+                                </div>
+                                {assignedExpert?.bookings_url ? (
+                                    <button
+                                        onClick={() => handleBooking(assignedExpert.bookings_url)}
+                                        className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-cyan-500 hover:from-violet-400 hover:to-cyan-400 text-white font-black text-xs uppercase tracking-widest px-5 py-3 rounded-xl transition-colors shrink-0"
+                                    >
+                                        Book with {assignedExpert.full_name?.split(' ')[0] ?? 'Expert'}
+                                        <ArrowRight className="h-3.5 w-3.5" />
+                                    </button>
+                                ) : (
+                                    <Link
+                                        href="/select-expert"
+                                        className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-cyan-500 hover:from-violet-400 hover:to-cyan-400 text-white font-black text-xs uppercase tracking-widest px-5 py-3 rounded-xl transition-colors shrink-0"
+                                    >
+                                        Choose Your AI Expert
+                                        <ArrowRight className="h-3.5 w-3.5" />
+                                    </Link>
+                                )}
+                            </div>
+                        </motion.section>
+                    );
+                })()}
 
                 {/* Recommended AI Agent Package */}
                 {(() => {
