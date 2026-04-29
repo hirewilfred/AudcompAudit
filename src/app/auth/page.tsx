@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -8,6 +8,16 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
 export default function AuthPage() {
+    // useSearchParams must sit inside a Suspense boundary when this page is
+    // statically prerendered.
+    return (
+        <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-white"><Loader2 className="h-6 w-6 text-blue-600 animate-spin" /></div>}>
+            <AuthPageContent />
+        </Suspense>
+    );
+}
+
+function AuthPageContent() {
     const [isLogin, setIsLogin] = useState(true);
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
