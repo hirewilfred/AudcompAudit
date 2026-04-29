@@ -50,7 +50,6 @@ export default function AgentAssessmentPage() {
 
             const recommendation = recommendAgents(responses);
 
-            // Read any existing report so we don't overwrite the audit data.
             const { data: existing } = await (supabase
                 .from('ai_advisor_reports') as any)
                 .select('responses')
@@ -59,9 +58,13 @@ export default function AgentAssessmentPage() {
                 .limit(1)
                 .maybeSingle();
 
-            const merged = { ...(existing?.responses ?? {}), ...responses, aa_recommended_agent_ids: recommendation.agents.map(a => a.id), aa_recommended_package: recommendation.package };
+            const merged = {
+                ...(existing?.responses ?? {}),
+                ...responses,
+                aa_recommended_agent_ids: recommendation.agents.map(a => a.id),
+                aa_recommended_package: recommendation.package,
+            };
 
-            // Try upsert; fall back to insert if no row exists yet.
             const { error: upsertErr } = await (supabase.from('ai_advisor_reports') as any)
                 .upsert({
                     user_id: session.user.id,
@@ -86,51 +89,57 @@ export default function AgentAssessmentPage() {
 
     if (!authChecked) {
         return (
-            <div className="min-h-screen bg-[#050B1A] flex items-center justify-center">
-                <Loader2 className="h-8 w-8 text-violet-400 animate-spin" />
+            <div className="min-h-screen bg-[#F4F7FE] flex items-center justify-center">
+                <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#050B1A] text-white relative overflow-hidden" style={{ fontFamily: 'Inter, sans-serif' }}>
-            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
-            <div className="fixed top-0 right-0 h-[600px] w-[600px] rounded-full bg-violet-600/15 blur-[140px] pointer-events-none" />
-            <div className="fixed bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-cyan-500/10 blur-[140px] pointer-events-none" />
+        <div className="min-h-screen bg-[#F4F7FE] text-slate-800 selection:bg-blue-600/10">
+
+            {/* Soft brand glow */}
+            <div className="fixed top-[-15%] right-[-10%] h-[500px] w-[500px] rounded-full bg-blue-300/30 blur-[140px] pointer-events-none" />
+            <div className="fixed bottom-[-15%] left-[-10%] h-[400px] w-[400px] rounded-full bg-indigo-200/40 blur-[140px] pointer-events-none" />
 
             {/* Header */}
-            <header className="relative z-10 px-8 py-5 flex items-center justify-between border-b border-white/5">
-                <Link href="/ai-agents" className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center">
+            <header className="relative z-10 px-8 py-5 flex items-center justify-between border-b border-slate-200/60 backdrop-blur bg-white/70 sticky top-0">
+                <Link href="/ai-agents" className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-600/20">
                         <Sparkles className="h-4 w-4 text-white" />
                     </div>
-                    <span className="font-black text-sm">AI Agent Assessment</span>
+                    <div>
+                        <div className="font-black text-sm text-slate-900 tracking-tight">AI Agent Assessment</div>
+                        <div className="text-[10px] font-bold text-slate-500 -mt-0.5">5 questions · ~5 minutes</div>
+                    </div>
                 </Link>
                 <div className="text-xs font-bold text-slate-500">
-                    Step <span className="text-white">{step + 1}</span> of {totalSteps}
+                    Step <span className="text-slate-900 font-black">{step + 1}</span> of {totalSteps}
                 </div>
             </header>
 
             <main className="relative z-10 max-w-3xl mx-auto px-6 py-12">
+
                 {/* Progress bar */}
-                <div className="h-1.5 rounded-full bg-white/5 overflow-hidden mb-10">
+                <div className="h-1.5 rounded-full bg-slate-200 overflow-hidden mb-12">
                     <motion.div
                         animate={{ width: `${progress}%` }}
                         transition={{ duration: 0.4, ease: 'easeOut' }}
-                        className="h-full bg-gradient-to-r from-violet-500 to-cyan-400"
+                        className="h-full bg-gradient-to-r from-blue-600 to-indigo-600"
                     />
                 </div>
 
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentStep.id}
-                        initial={{ opacity: 0, x: 20 }}
+                        initial={{ opacity: 0, x: 16 }}
                         animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
+                        exit={{ opacity: 0, x: -16 }}
                         transition={{ duration: 0.25 }}
                     >
-                        <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-3">{currentStep.title}</h1>
-                        <p className="text-base text-slate-400 mb-10 leading-relaxed">{currentStep.subtitle}</p>
+                        <div className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 mb-3">Question {step + 1}</div>
+                        <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 mb-3 leading-[1.05]">{currentStep.title}</h1>
+                        <p className="text-base text-slate-600 mb-10 leading-relaxed font-medium">{currentStep.subtitle}</p>
 
                         {currentStep.fields.map(field => (
                             <div key={field.id} className="mb-10">
@@ -146,17 +155,17 @@ export default function AgentAssessmentPage() {
                                                     onClick={() => setRadio(field.id, opt.value)}
                                                     className={`text-left rounded-2xl border-2 px-5 py-4 transition-all ${
                                                         active
-                                                            ? 'bg-violet-500/10 border-violet-400/60 ring-2 ring-violet-400/30'
-                                                            : 'bg-white/3 border-white/10 hover:bg-white/5 hover:border-white/20'
+                                                            ? 'bg-blue-50 border-blue-500 ring-4 ring-blue-100 shadow-md shadow-blue-600/10'
+                                                            : 'bg-white border-slate-200 hover:border-blue-200 hover:bg-blue-50/30 shadow-sm'
                                                     }`}
                                                 >
                                                     <div className="flex items-start gap-3">
-                                                        <div className={`mt-0.5 h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 ${active ? 'border-violet-400 bg-violet-400' : 'border-slate-600'}`}>
+                                                        <div className={`mt-0.5 h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${active ? 'border-blue-600 bg-blue-600' : 'border-slate-300 bg-white'}`}>
                                                             {active && <CheckCircle2 className="h-3 w-3 text-white" />}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <div className={`text-sm font-black ${active ? 'text-white' : 'text-slate-200'}`}>{opt.label}</div>
-                                                            {opt.description && <div className="text-xs text-slate-500 mt-0.5">{opt.description}</div>}
+                                                            <div className={`text-sm font-black tracking-tight ${active ? 'text-blue-900' : 'text-slate-800'}`}>{opt.label}</div>
+                                                            {opt.description && <div className={`text-xs mt-0.5 leading-relaxed ${active ? 'text-blue-700' : 'text-slate-500'}`}>{opt.description}</div>}
                                                         </div>
                                                     </div>
                                                 </button>
@@ -176,17 +185,17 @@ export default function AgentAssessmentPage() {
                                                     onClick={() => toggleMulti(field.id, opt.value)}
                                                     className={`text-left rounded-2xl border-2 px-4 py-3 transition-all ${
                                                         active
-                                                            ? 'bg-cyan-500/10 border-cyan-400/60 ring-2 ring-cyan-400/30'
-                                                            : 'bg-white/3 border-white/10 hover:bg-white/5 hover:border-white/20'
+                                                            ? 'bg-blue-50 border-blue-500 ring-4 ring-blue-100 shadow-md shadow-blue-600/10'
+                                                            : 'bg-white border-slate-200 hover:border-blue-200 hover:bg-blue-50/30 shadow-sm'
                                                     }`}
                                                 >
                                                     <div className="flex items-start gap-3">
-                                                        <div className={`mt-0.5 h-5 w-5 rounded border-2 flex items-center justify-center shrink-0 ${active ? 'border-cyan-400 bg-cyan-400' : 'border-slate-600'}`}>
+                                                        <div className={`mt-0.5 h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${active ? 'border-blue-600 bg-blue-600' : 'border-slate-300 bg-white'}`}>
                                                             {active && <CheckCircle2 className="h-3 w-3 text-white" />}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <div className={`text-sm font-black ${active ? 'text-white' : 'text-slate-200'}`}>{opt.label}</div>
-                                                            {opt.description && <div className="text-xs text-slate-500 mt-0.5">{opt.description}</div>}
+                                                            <div className={`text-sm font-black tracking-tight ${active ? 'text-blue-900' : 'text-slate-800'}`}>{opt.label}</div>
+                                                            {opt.description && <div className={`text-xs mt-0.5 leading-relaxed ${active ? 'text-blue-700' : 'text-slate-500'}`}>{opt.description}</div>}
                                                         </div>
                                                     </div>
                                                 </button>
@@ -200,11 +209,11 @@ export default function AgentAssessmentPage() {
                 </AnimatePresence>
 
                 {/* Nav */}
-                <div className="flex items-center justify-between mt-10 pt-6 border-t border-white/5">
+                <div className="flex items-center justify-between mt-10 pt-6 border-t border-slate-200">
                     <button
                         onClick={() => step > 0 && setStep(s => s - 1)}
                         disabled={step === 0}
-                        className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                        className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:pointer-events-none transition-colors"
                     >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
                     </button>
@@ -213,7 +222,7 @@ export default function AgentAssessmentPage() {
                         <button
                             onClick={() => setStep(s => s + 1)}
                             disabled={!isStepComplete}
-                            className="flex items-center gap-2 bg-gradient-to-r from-violet-500 to-cyan-500 hover:from-violet-400 hover:to-cyan-400 disabled:from-slate-700 disabled:to-slate-700 disabled:opacity-50 text-white font-black uppercase tracking-widest text-xs px-6 py-3 rounded-xl shadow-lg shadow-violet-500/20 transition-all"
+                            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-slate-300 disabled:to-slate-300 disabled:opacity-60 disabled:cursor-not-allowed text-white font-black uppercase tracking-widest text-xs px-6 py-3 rounded-xl shadow-md shadow-blue-600/20 transition-all"
                         >
                             Next
                             <ArrowRight className="h-3.5 w-3.5" />
@@ -222,7 +231,7 @@ export default function AgentAssessmentPage() {
                         <button
                             onClick={handleSubmit}
                             disabled={!isStepComplete || submitting}
-                            className="flex items-center gap-2 bg-gradient-to-r from-violet-500 to-cyan-500 hover:from-violet-400 hover:to-cyan-400 disabled:from-slate-700 disabled:to-slate-700 disabled:opacity-50 text-white font-black uppercase tracking-widest text-xs px-6 py-3 rounded-xl shadow-lg shadow-violet-500/20 transition-all"
+                            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-slate-300 disabled:to-slate-300 disabled:opacity-60 disabled:cursor-not-allowed text-white font-black uppercase tracking-widest text-xs px-6 py-3 rounded-xl shadow-md shadow-blue-600/20 transition-all"
                         >
                             {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
                             {submitting ? 'Saving…' : 'See My Agent Team'}
