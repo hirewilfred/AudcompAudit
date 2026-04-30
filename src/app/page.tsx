@@ -2,7 +2,7 @@
 // Build trigger: 1777248572
 
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight, CheckCircle2, ChevronRight, X,
@@ -422,6 +422,22 @@ function CaseStudyDetail({ study, onClose }: { study: typeof caseStudies[number]
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 export default function Home() {
   const [selectedStudy, setSelectedStudy] = useState<typeof caseStudies[number] | null>(null);
+  const [filmOpen, setFilmOpen] = useState(false);
+  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  // Force-enable autoplay on mobile/Safari where React's `muted` prop doesn't always stick.
+  useEffect(() => {
+    const v = heroVideoRef.current;
+    if (!v) return;
+    v.muted = true;
+    v.defaultMuted = true;
+    v.playsInline = true;
+    const tryPlay = () => v.play().catch(() => { /* user-gesture required — poster will show */ });
+    tryPlay();
+    const onCanPlay = () => tryPlay();
+    v.addEventListener('canplay', onCanPlay);
+    return () => v.removeEventListener('canplay', onCanPlay);
+  }, []);
 
   return (
     <div className="relative min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Open Sans', 'Arimo', system-ui, sans-serif" }}>
@@ -483,14 +499,19 @@ export default function Home() {
 
         {/* â•â• HERO (light background with image) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         <section className="relative w-full overflow-hidden bg-black h-screen min-h-[720px]">
+          {/* Fallback gradient — visible if the video can't decode/autoplay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-black" />
           <video
+            ref={heroVideoRef}
             autoPlay
             loop
             muted
             playsInline
+            preload="auto"
             className="absolute inset-0 h-full w-full object-cover"
           >
-            <source src="/Videos/Agent_intro.mp4" type="video/mp4" />
+            <source src="/Videos/Agent_intro-web.webm" type="video/webm" />
+            <source src="/Videos/Agent_intro-web.mp4" type="video/mp4" />
           </video>
 
           {/* Cinematic gradient — dark left, fading to reveal video right */}
@@ -545,15 +566,16 @@ export default function Home() {
                 Start Free AI Audit
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
-              <Link
-                href="#how-it-works"
-                className="inline-flex items-center gap-2 text-[13px] font-semibold text-white/90 hover:text-white transition"
+              <button
+                type="button"
+                onClick={() => setFilmOpen(true)}
+                className="group inline-flex items-center gap-2 text-[13px] font-semibold text-white/90 hover:text-white transition"
               >
                 <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/40 group-hover:border-white">
                   <ChevronRight className="h-4 w-4" />
                 </span>
                 Watch the Film
-              </Link>
+              </button>
             </motion.div>
           </div>
 
@@ -1022,6 +1044,48 @@ export default function Home() {
       <AnimatePresence>
         {selectedStudy && (
           <CaseStudyDetail study={selectedStudy} onClose={() => setSelectedStudy(null)} />
+        )}
+      </AnimatePresence>
+
+      {/* ══ FULL FILM MODAL ═════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {filmOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 sm:p-8"
+            onClick={() => setFilmOpen(false)}
+          >
+            <button
+              type="button"
+              onClick={() => setFilmOpen(false)}
+              className="absolute top-6 right-6 z-10 h-12 w-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white flex items-center justify-center transition"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+              className="relative w-full max-w-6xl aspect-video rounded-2xl overflow-hidden shadow-[0_40px_120px_-20px_rgba(0,0,0,0.8)] bg-black"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <video
+                autoPlay
+                controls
+                playsInline
+                preload="auto"
+                className="h-full w-full object-contain bg-black"
+              >
+                <source src="/Videos/AI-Agents-web.webm" type="video/webm" />
+                <source src="/Videos/AI-Agents-web.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
