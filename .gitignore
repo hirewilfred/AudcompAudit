@@ -46,6 +46,12 @@ next-env.d.ts
 
 .vercel
 
-# Large media (host externally)
-/public/Videos/
+# Large media (host externally) — keep web-optimized variants tracked
+/public/Videos/*
+!/public/Videos/AIOS2.mp4
+!/public/Videos/AISO.mp4
+!/public/Videos/Agent_intro-web.mp4
+!/public/Videos/Agent_intro-web.webm
+!/public/Videos/AI-Agents-web.mp4
+!/public/Videos/AI-Agents-web.webm
 /AI_Audit_Migration.zip
