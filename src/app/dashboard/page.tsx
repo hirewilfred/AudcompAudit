@@ -556,16 +556,11 @@ export default function DashboardPage() {
                     }
 
                     const { AGENT_CATALOG } = require('@/lib/agent-catalog');
-                    const COLOR_MAP: Record<string, { glow: string; ring: string; bg: string; border: string; text: string }> = {
-                        violet:  { glow: 'shadow-[0_0_40px_-10px_rgba(167,139,250,0.6)]', ring: 'ring-violet-300', bg: 'bg-violet-100', border: 'border-violet-200', text: 'text-violet-700' },
-                        cyan:    { glow: 'shadow-[0_0_40px_-10px_rgba(34,211,238,0.6)]',  ring: 'ring-cyan-300',   bg: 'bg-cyan-100',   border: 'border-cyan-200',   text: 'text-cyan-700'   },
-                        emerald: { glow: 'shadow-[0_0_40px_-10px_rgba(52,211,153,0.6)]',  ring: 'ring-emerald-300',bg: 'bg-emerald-100',border: 'border-emerald-200',text: 'text-emerald-700'},
-                        amber:   { glow: 'shadow-[0_0_40px_-10px_rgba(251,191,36,0.6)]',  ring: 'ring-amber-300',  bg: 'bg-amber-100',  border: 'border-amber-200',  text: 'text-amber-700'  },
-                        rose:    { glow: 'shadow-[0_0_40px_-10px_rgba(251,113,133,0.6)]', ring: 'ring-rose-300',   bg: 'bg-rose-100',   border: 'border-rose-200',   text: 'text-rose-700'   },
-                        sky:     { glow: 'shadow-[0_0_40px_-10px_rgba(56,189,248,0.6)]',  ring: 'ring-sky-300',    bg: 'bg-sky-100',    border: 'border-sky-200',    text: 'text-sky-700'    },
-                        pink:    { glow: 'shadow-[0_0_40px_-10px_rgba(244,114,182,0.6)]', ring: 'ring-pink-300',   bg: 'bg-pink-100',   border: 'border-pink-200',   text: 'text-pink-700'   },
-                        lime:    { glow: 'shadow-[0_0_40px_-10px_rgba(163,230,53,0.6)]',  ring: 'ring-lime-300',   bg: 'bg-lime-100',   border: 'border-lime-200',   text: 'text-lime-700'   },
-                    };
+                    const BLUE_PALETTE: { color: string; pattern: string; text: string; tagText: string }[] = [
+                        { color: 'bg-gradient-to-br from-sky-50 to-white text-sky-800 border-sky-100/50',     pattern: 'radial-gradient(circle at 2px 2px, #bae6fd 1px, transparent 0)', text: 'text-sky-800',     tagText: 'text-sky-600'     },
+                        { color: 'bg-gradient-to-br from-blue-50 to-white text-blue-800 border-blue-100/50',  pattern: 'radial-gradient(circle at 2px 2px, #bfdbfe 1px, transparent 0)', text: 'text-blue-800',    tagText: 'text-blue-600'    },
+                        { color: 'bg-gradient-to-br from-indigo-50 to-white text-indigo-800 border-indigo-100/50', pattern: 'radial-gradient(circle at 2px 2px, #c7d2fe 1px, transparent 0)', text: 'text-indigo-800', tagText: 'text-indigo-600' },
+                    ];
                     const recommended = agentIds
                         .map((id: string) => AGENT_CATALOG.find((a: any) => a.id === id))
                         .filter(Boolean);
@@ -584,16 +579,8 @@ export default function DashboardPage() {
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.4 }}
                                 >
-                                    <h2 className="text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] relative inline-block">
+                                    <h2 className="text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05]">
                                         Your AI Agent Team
-                                        <motion.span
-                                            initial={{ scaleX: 0 }}
-                                            whileInView={{ scaleX: 1 }}
-                                            viewport={{ once: true }}
-                                            transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
-                                            style={{ originX: 0 }}
-                                            className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
-                                        />
                                     </h2>
                                     <p className="text-xs text-slate-500 font-bold mt-3">Recommended {aaPackage}-agent package · based on your assessment</p>
                                 </motion.div>
@@ -602,25 +589,31 @@ export default function DashboardPage() {
                                 </Link>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {recommended.map((agent: any) => {
-                                    const c = COLOR_MAP[agent.color] || COLOR_MAP.violet;
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {recommended.map((agent: any, i: number) => {
+                                    const c = BLUE_PALETTE[i % BLUE_PALETTE.length];
                                     return (
-                                        <div key={agent.id} className={`relative rounded-2xl bg-white p-5 border-2 ${c.border} ring-1 ${c.ring} ${c.glow} transition-all hover:scale-[1.02]`}>
-                                            <div className="flex items-start gap-3 mb-3">
-                                                <div className={`h-10 w-10 rounded-xl ${c.bg} flex items-center justify-center shrink-0 ${c.text} font-black text-lg`}>
-                                                    {agent.name.charAt(0)}
+                                        <div
+                                            key={agent.id}
+                                            className={`${c.color} rounded-[32px] p-6 flex flex-col min-h-[220px] border-2 relative overflow-hidden group hover:scale-[1.03] transition-all duration-500 shadow-sm hover:shadow-xl hover:shadow-blue-900/10`}
+                                        >
+                                            <div
+                                                className="absolute inset-0 opacity-[0.4]"
+                                                style={{ backgroundImage: c.pattern, backgroundSize: '24px 24px' }}
+                                            />
+                                            <div className="absolute top-0 right-0 -mr-4 -mt-4 h-24 w-24 bg-current opacity-[0.03] rounded-full blur-2xl group-hover:opacity-[0.08] transition-opacity" />
+
+                                            <div className="relative z-10 flex flex-col h-full">
+                                                <div className="flex items-center justify-end mb-7">
+                                                    <div className="bg-white/80 backdrop-blur-md px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.15em] leading-none border border-black/5 opacity-60">{agent.slug}</div>
                                                 </div>
-                                                <div className="min-w-0">
-                                                    <div className="font-black text-sm text-slate-900 leading-tight">{agent.name}</div>
-                                                    <div className="text-[10px] font-mono text-slate-400 mt-0.5">{agent.slug}</div>
+                                                <h4 className={`text-[17px] font-semibold leading-tight mb-2 ${c.text}`}>{agent.name}</h4>
+                                                <p className="text-[11px] font-medium leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity mb-4 line-clamp-3">{agent.description}</p>
+                                                <div className="flex flex-wrap gap-1.5 mt-auto">
+                                                    {agent.tools.slice(0, 3).map((t: string) => (
+                                                        <span key={t} className={`text-[9px] font-black uppercase tracking-[0.1em] bg-white/70 ${c.tagText} rounded-full px-2 py-0.5 border border-black/5`}>{t}</span>
+                                                    ))}
                                                 </div>
-                                            </div>
-                                            <p className="text-[11px] text-slate-600 leading-relaxed mb-3 line-clamp-3">{agent.description}</p>
-                                            <div className="flex flex-wrap gap-1">
-                                                {agent.tools.slice(0, 3).map((t: string) => (
-                                                    <span key={t} className={`text-[9px] font-bold ${c.bg} ${c.text} rounded-full px-2 py-0.5`}>{t}</span>
-                                                ))}
                                             </div>
                                         </div>
                                     );
@@ -633,26 +626,16 @@ export default function DashboardPage() {
                                     <div className="text-sm font-bold">
                                         {assignedExpert?.bookings_url
                                             ? `Meet with ${assignedExpert.full_name} to lock the build order and ship the first agent inside 30 days.`
-                                            : 'Pick an AI Expert to lock the build order and ship the first agent inside 30 days.'}
+                                            : 'Your AI Expert will reach out to lock the build order and ship the first agent inside 30 days.'}
                                     </div>
                                 </div>
-                                {assignedExpert?.bookings_url ? (
-                                    <button
-                                        onClick={() => handleBooking(assignedExpert.bookings_url)}
-                                        className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-cyan-500 hover:from-violet-400 hover:to-cyan-400 text-white font-black text-xs uppercase tracking-widest px-5 py-3 rounded-xl transition-colors shrink-0"
-                                    >
-                                        Book with {assignedExpert.full_name?.split(' ')[0] ?? 'Expert'}
-                                        <ArrowRight className="h-3.5 w-3.5" />
-                                    </button>
-                                ) : (
-                                    <Link
-                                        href="/select-expert"
-                                        className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-cyan-500 hover:from-violet-400 hover:to-cyan-400 text-white font-black text-xs uppercase tracking-widest px-5 py-3 rounded-xl transition-colors shrink-0"
-                                    >
-                                        Choose Your AI Expert
-                                        <ArrowRight className="h-3.5 w-3.5" />
-                                    </Link>
-                                )}
+                                <button
+                                    onClick={() => handleBooking(assignedExpert?.bookings_url)}
+                                    className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-cyan-500 hover:from-violet-400 hover:to-cyan-400 text-white font-black text-xs uppercase tracking-widest px-5 py-3 rounded-xl transition-colors shrink-0"
+                                >
+                                    Book with {assignedExpert?.full_name?.split(' ')[0] ?? 'Your Expert'}
+                                    <ArrowRight className="h-3.5 w-3.5" />
+                                </button>
                             </div>
                         </motion.section>
                     );
@@ -668,12 +651,12 @@ export default function DashboardPage() {
                     const recommendedSize = flaggedCount >= 4 ? 6 : flaggedCount >= 2 ? 4 : 2;
 
                     const PACKAGES = [
-                        { size: 2, label: 'Starter',    tagline: 'Two custom AI agents to prove the model and ship a quick win.', accent: 'from-blue-600/10 to-blue-600/0',     border: 'border-blue-200',    badge: 'bg-blue-600 text-white',    headline: 'text-blue-700',
-                          bullets: ['2 production-ready agents built for your top gaps', 'Onboarding + training for your team', '30 days of post-launch tuning', 'Quarterly performance review'] },
-                        { size: 4, label: 'Growth',     tagline: 'Four agents covering the departments where you bleed the most time.', accent: 'from-indigo-600/10 to-indigo-600/0', border: 'border-indigo-200',  badge: 'bg-indigo-600 text-white',  headline: 'text-indigo-700',
-                          bullets: ['4 agents across Sales, Marketing, Service, or Ops', 'Cross-agent orchestration & shared memory', 'Onboarding + change-management playbook', '60 days of post-launch tuning', 'Monthly performance review'] },
-                        { size: 6, label: 'Enterprise', tagline: 'Six-agent operating system covering every department gap you flagged.', accent: 'from-emerald-600/10 to-emerald-600/0', border: 'border-emerald-200', badge: 'bg-emerald-600 text-white', headline: 'text-emerald-700',
-                          bullets: ['6 agents covering all five departments end-to-end', 'Full orchestration layer + Mission Control dashboard', 'Dedicated AI Expert + change-management team', '90 days of post-launch tuning', 'Quarterly business reviews + roadmap refresh'] },
+                        { size: 2, label: 'Starter',    icon: Zap,      iconColor: 'text-sky-500',    tagline: 'Two custom AI agents to prove the model and ship a quick win in your highest-leverage workflow.', accent: 'from-sky-50 to-white',  pattern: 'radial-gradient(circle at 2px 2px, #bae6fd 1px, transparent 0)', border: 'border-sky-100/50',  badge: 'bg-white/80 backdrop-blur-md border border-black/5 text-slate-500',    headline: 'text-sky-800',
+                          bullets: ['2 production-ready agents built for your top gaps', 'Discovery, build, and deploy in 4–6 weeks', 'Onboarding + training session for your team', '30 days of post-launch tuning included', 'Quarterly performance review with your AI Expert'] },
+                        { size: 4, label: 'Growth',     icon: Rocket,   iconColor: 'text-blue-500',   tagline: 'Four agents covering the departments where you bleed the most time — orchestrated to share data.', accent: 'from-blue-50 to-white', pattern: 'radial-gradient(circle at 2px 2px, #bfdbfe 1px, transparent 0)', border: 'border-blue-100/50', badge: 'bg-white/80 backdrop-blur-md border border-black/5 text-slate-500',  headline: 'text-blue-800',
+                          bullets: ['4 agents across Sales, Marketing, Service, or Ops', 'Cross-agent orchestration with shared memory', 'Change-management playbook + manager training', '60 days of post-launch tuning included', 'Monthly performance review with your AI Expert'] },
+                        { size: 6, label: 'Enterprise', icon: Sparkles, iconColor: 'text-indigo-500', tagline: 'Six-agent operating system covering every department gap you flagged — your AI workforce, end-to-end.', accent: 'from-indigo-50 to-white', pattern: 'radial-gradient(circle at 2px 2px, #c7d2fe 1px, transparent 0)', border: 'border-indigo-100/50', badge: 'bg-white/80 backdrop-blur-md border border-black/5 text-slate-500', headline: 'text-indigo-800',
+                          bullets: ['6 agents covering all five departments end-to-end', 'Full orchestration layer + Mission Control dashboard', 'Dedicated AI Expert + change-management team', '90 days of post-launch tuning included', 'Quarterly business reviews + roadmap refresh'] },
                     ];
 
                     return (
@@ -690,16 +673,8 @@ export default function DashboardPage() {
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.4 }}
                                 >
-                                    <h2 className="text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] relative inline-block">
+                                    <h2 className="text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05]">
                                         Recommended AI Agent Package
-                                        <motion.span
-                                            initial={{ scaleX: 0 }}
-                                            whileInView={{ scaleX: 1 }}
-                                            viewport={{ once: true }}
-                                            transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
-                                            style={{ originX: 0 }}
-                                            className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
-                                        />
                                     </h2>
                                     <p className="text-xs text-slate-500 font-bold mt-3">
                                         {flaggedCount > 0
@@ -710,33 +685,64 @@ export default function DashboardPage() {
                                 <span className="text-slate-400 text-sm font-black uppercase tracking-widest">{recommendedSize}-Agent fit</span>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-4">
                                 {PACKAGES.map(pkg => {
                                     const isRecommended = pkg.size === recommendedSize;
                                     return (
-                                        <div
+                                        <motion.div
                                             key={pkg.size}
-                                            className={`relative rounded-3xl border-2 p-6 bg-gradient-to-br ${pkg.accent} ${pkg.border} transition-all ${isRecommended ? 'ring-4 ring-violet-200 scale-[1.02] shadow-xl' : 'opacity-90 hover:opacity-100'}`}
+                                            initial={{ opacity: 0, y: 12 }}
+                                            whileInView={{ opacity: 1, y: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ duration: 0.4, delay: pkg.size * 0.05 }}
+                                            className={`relative bg-gradient-to-br ${pkg.accent} ${pkg.border} rounded-[40px] p-8 border-2 overflow-hidden group transition-all duration-500 shadow-sm hover:shadow-2xl hover:shadow-blue-900/10 hover:scale-[1.02] flex flex-col min-h-[480px] ${isRecommended ? 'ring-4 ring-blue-300 shadow-xl shadow-blue-200/50' : ''}`}
                                         >
+                                            <div
+                                                className="absolute inset-0 opacity-[0.4]"
+                                                style={{ backgroundImage: pkg.pattern, backgroundSize: '24px 24px' }}
+                                            />
+                                            <div className="absolute top-0 right-0 -mr-4 -mt-4 h-32 w-32 bg-current opacity-[0.03] rounded-full blur-3xl group-hover:opacity-[0.08] transition-opacity" />
+
                                             {isRecommended && (
-                                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-violet-600 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">
-                                                    Recommended for You
+                                                <div className="absolute top-4 right-4 z-20 inline-flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-lg shadow-blue-600/30 animate-pulse">
+                                                    <Sparkles className="h-3 w-3" />
+                                                    Recommended
                                                 </div>
                                             )}
-                                            <div className={`inline-flex items-center gap-1.5 ${pkg.badge} text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full mb-4`}>
-                                                <Bot className="h-3 w-3" /> {pkg.size}-Agent · {pkg.label}
+
+                                            <div className="relative z-10 flex flex-col flex-1">
+                                                <div className="flex items-start justify-between mb-6">
+                                                    <div className={`h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center ${pkg.iconColor} ring-1 ring-black/5 group-hover:scale-110 transition-transform duration-500`}>
+                                                        <pkg.icon className="h-6 w-6" />
+                                                    </div>
+                                                    {!isRecommended && (
+                                                        <div className={`inline-flex items-center ${pkg.badge} text-[9px] font-black uppercase tracking-[0.15em] px-3 py-1 rounded-full`}>
+                                                            {pkg.label}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-baseline gap-2 mb-2">
+                                                    <h3 className={`text-3xl font-black tracking-tight ${pkg.headline}`}>{pkg.size}</h3>
+                                                    <span className={`text-sm font-bold ${pkg.headline} opacity-70`}>Custom AI Agents</span>
+                                                </div>
+                                                <div className={`text-[10px] font-black uppercase tracking-[0.2em] ${pkg.headline} opacity-60 mb-4`}>{pkg.label} Package</div>
+                                                <p className="text-[13px] font-medium leading-relaxed text-slate-600 mb-6">{pkg.tagline}</p>
+                                                <ul className="space-y-2.5 mb-6">
+                                                    {pkg.bullets.map((b, i) => (
+                                                        <li key={i} className="flex items-start gap-2 text-[12px] text-slate-700 leading-snug">
+                                                            <CheckCircle2 className={`h-4 w-4 shrink-0 mt-0.5 ${pkg.iconColor}`} />
+                                                            <span>{b}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                                <div className="mt-auto pt-4 border-t border-slate-200/50 flex items-center justify-between">
+                                                    <span className={`text-[10px] font-black uppercase tracking-widest ${pkg.headline} opacity-70`}>Custom-built for you</span>
+                                                    <div className={`h-9 w-9 rounded-full bg-white shadow-sm flex items-center justify-center ${pkg.iconColor} ring-1 ring-black/5 -rotate-45 group-hover:rotate-0 transition-transform`}>
+                                                        <ArrowRight className="h-4 w-4" />
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <h3 className={`text-xl font-black leading-tight mb-2 ${pkg.headline}`}>{pkg.size} Custom AI Agents</h3>
-                                            <p className="text-xs text-slate-600 font-bold leading-relaxed mb-4">{pkg.tagline}</p>
-                                            <ul className="space-y-2">
-                                                {pkg.bullets.map((b, i) => (
-                                                    <li key={i} className="flex items-start gap-2 text-[12px] text-slate-700 leading-snug">
-                                                        <CheckCircle2 className={`h-3.5 w-3.5 shrink-0 mt-0.5 ${pkg.headline}`} />
-                                                        <span>{b}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
+                                        </motion.div>
                                     );
                                 })}
                             </div>
@@ -748,27 +754,17 @@ export default function DashboardPage() {
                                         {assignedExpert?.bookings_url
                                             ? `Meet with ${assignedExpert.full_name} to scope the right package and the order we ship the agents in.`
                                             : assignedExpert
-                                                ? `${assignedExpert.full_name} will reach out to scope the right package — or pick another expert below.`
-                                                : 'Pick an Audcomp AI Expert below to scope the right package and the order we ship the agents in.'}
+                                                ? `${assignedExpert.full_name} will reach out to scope the right package and lock the build order.`
+                                                : 'Your Audcomp AI Expert will reach out to scope the right package and the order we ship the agents in.'}
                                     </div>
                                 </div>
-                                {assignedExpert?.bookings_url ? (
-                                    <button
-                                        onClick={() => handleBooking(assignedExpert.bookings_url)}
-                                        className="inline-flex items-center justify-center gap-2 bg-violet-500 hover:bg-violet-400 text-white font-black text-xs uppercase tracking-widest px-5 py-3 rounded-xl transition-colors shrink-0"
-                                    >
-                                        Book with {assignedExpert.full_name?.split(' ')[0] ?? 'Expert'}
-                                        <ArrowRight className="h-3.5 w-3.5" />
-                                    </button>
-                                ) : (
-                                    <Link
-                                        href="/select-expert"
-                                        className="inline-flex items-center justify-center gap-2 bg-violet-500 hover:bg-violet-400 text-white font-black text-xs uppercase tracking-widest px-5 py-3 rounded-xl transition-colors shrink-0"
-                                    >
-                                        Choose Your AI Expert
-                                        <ArrowRight className="h-3.5 w-3.5" />
-                                    </Link>
-                                )}
+                                <button
+                                    onClick={() => handleBooking(assignedExpert?.bookings_url)}
+                                    className="inline-flex items-center justify-center gap-2 bg-violet-500 hover:bg-violet-400 text-white font-black text-xs uppercase tracking-widest px-5 py-3 rounded-xl transition-colors shrink-0"
+                                >
+                                    Book with {assignedExpert?.full_name?.split(' ')[0] ?? 'Your Expert'}
+                                    <ArrowRight className="h-3.5 w-3.5" />
+                                </button>
                             </div>
                         </motion.section>
                     );
@@ -801,17 +797,9 @@ export default function DashboardPage() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.4 }}
-                            className="text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] relative inline-block mb-4"
+                            className="text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] mb-4"
                         >
                             Audit Results Ready for Expert Review
-                            <motion.span
-                                initial={{ scaleX: 0 }}
-                                whileInView={{ scaleX: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
-                                style={{ originX: 0 }}
-                                className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
-                            />
                         </motion.h2>
                         <p className="text-lg font-medium text-slate-500 max-w-2xl leading-relaxed mb-8">
                             Your <span className="text-blue-600 font-black">{displayData.overall_score}%</span> readiness score is prepared for deep-dive validation. Book your session to review these metrics and capture the identified <span className="text-slate-900 font-black">${Math.round(annualSavings).toLocaleString()}</span> in annual savings.
@@ -853,17 +841,9 @@ export default function DashboardPage() {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.4 }}
-                                    className="text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] relative inline-block"
+                                    className="text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05]"
                                 >
                                     Recommended Services
-                                    <motion.span
-                                        initial={{ scaleX: 0 }}
-                                        whileInView={{ scaleX: 1 }}
-                                        viewport={{ once: true }}
-                                        transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
-                                        style={{ originX: 0 }}
-                                        className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
-                                    />
                                 </motion.h2>
                                 <button className="text-slate-400 text-sm font-black hover:text-blue-600 uppercase tracking-widest transition-colors shrink-0">See All Recommendations</button>
                             </div>
@@ -888,14 +868,11 @@ export default function DashboardPage() {
                                         <div className="absolute top-0 right-0 -mr-4 -mt-4 h-32 w-32 bg-current opacity-[0.03] rounded-full blur-3xl group-hover:opacity-[0.08] transition-opacity" />
 
                                         <div className="relative z-10">
-                                            <div className="flex items-center justify-between mb-6">
-                                                <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-500 animate-float">
-                                                    <rec.icon className={`h-6 w-6 ${rec.iconColor}`} />
-                                                </div>
+                                            <div className="flex items-center justify-end mb-8">
                                                 <div className="bg-white/80 backdrop-blur-md px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.15em] leading-none border border-black/5 opacity-60">{rec.tag}</div>
                                             </div>
-                                            <h3 className="text-xl font-black leading-[1.2] mb-3">{rec.title}</h3>
-                                            <p className="text-xs font-bold leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity">{rec.desc}</p>
+                                            <h3 className="text-xl font-semibold leading-[1.2] mb-3">{rec.title}</h3>
+                                            <p className="text-xs font-medium leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity">{rec.desc}</p>
                                         </div>
                                         <div className="mt-8 flex items-center justify-between relative z-10">
                                             <div className="flex items-center gap-2">
@@ -916,17 +893,9 @@ export default function DashboardPage() {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.4 }}
-                                    className="text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-slate-900 mb-8 relative inline-block"
+                                    className="text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-slate-900 mb-8"
                                 >
                                     AI Training Programs
-                                    <motion.span
-                                        initial={{ scaleX: 0 }}
-                                        whileInView={{ scaleX: 1 }}
-                                        viewport={{ once: true }}
-                                        transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
-                                        style={{ originX: 0 }}
-                                        className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
-                                    />
                                 </motion.h3>
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -936,27 +905,27 @@ export default function DashboardPage() {
                                             desc: 'Learn to design and deploy custom autonomous agents for your business workflows.',
                                             tag: 'Agents',
                                             icon: Bot,
-                                            color: 'bg-gradient-to-br from-indigo-50 to-white text-indigo-800 border-indigo-100/50',
-                                            iconColor: 'text-indigo-500',
-                                            pattern: 'radial-gradient(circle at 2px 2px, #c7d2fe 1px, transparent 0)'
+                                            color: 'bg-gradient-to-br from-sky-50 to-white text-sky-800 border-sky-100/50',
+                                            iconColor: 'text-sky-500',
+                                            pattern: 'radial-gradient(circle at 2px 2px, #bae6fd 1px, transparent 0)'
                                         },
                                         {
                                             title: 'Team Adoption masterclass',
                                             desc: 'Train your staff on AI safety, daily integration, and operational efficiency.',
                                             tag: 'Adoption',
                                             icon: Users,
-                                            color: 'bg-gradient-to-br from-emerald-50 to-white text-emerald-800 border-emerald-100/50',
-                                            iconColor: 'text-emerald-500',
-                                            pattern: 'radial-gradient(circle at 2px 2px, #a7f3d0 1px, transparent 0)'
+                                            color: 'bg-gradient-to-br from-blue-50 to-white text-blue-800 border-blue-100/50',
+                                            iconColor: 'text-blue-500',
+                                            pattern: 'radial-gradient(circle at 2px 2px, #bfdbfe 1px, transparent 0)'
                                         },
                                         {
                                             title: 'Prompt Engineering',
                                             desc: 'Master communication structures to get the best outputs from GenAI tools.',
                                             tag: 'Prompting',
                                             icon: MessageSquare,
-                                            color: 'bg-gradient-to-br from-amber-50 to-white text-amber-800 border-amber-100/50',
-                                            iconColor: 'text-amber-500',
-                                            pattern: 'radial-gradient(circle at 2px 2px, #fde68a 1px, transparent 0)'
+                                            color: 'bg-gradient-to-br from-indigo-50 to-white text-indigo-800 border-indigo-100/50',
+                                            iconColor: 'text-indigo-500',
+                                            pattern: 'radial-gradient(circle at 2px 2px, #c7d2fe 1px, transparent 0)'
                                         }
                                     ].map((training, i) => (
                                         <motion.div
@@ -977,14 +946,11 @@ export default function DashboardPage() {
                                             <div className="absolute top-0 right-0 -mr-4 -mt-4 h-24 w-24 bg-current opacity-[0.03] rounded-full blur-2xl group-hover:opacity-[0.08] transition-opacity" />
 
                                             <div className="relative z-10">
-                                                <div className="flex items-center justify-between mb-5">
-                                                    <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-500 animate-float">
-                                                        <training.icon className={`h-5 w-5 ${training.iconColor}`} />
-                                                    </div>
+                                                <div className="flex items-center justify-end mb-7">
                                                     <div className="bg-white/80 backdrop-blur-md px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.15em] leading-none border border-black/5 opacity-60">{training.tag}</div>
                                                 </div>
-                                                <h4 className="text-[17px] font-black leading-tight mb-2">{training.title}</h4>
-                                                <p className="text-[11px] font-bold leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity">{training.desc}</p>
+                                                <h4 className="text-[17px] font-semibold leading-tight mb-2">{training.title}</h4>
+                                                <p className="text-[11px] font-medium leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity">{training.desc}</p>
                                             </div>
                                             <div className="mt-6 flex items-center justify-between relative z-10">
                                                 <div className="flex items-center gap-2">
@@ -1008,17 +974,9 @@ export default function DashboardPage() {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.4 }}
-                                    className="text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] relative inline-block"
+                                    className="text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05]"
                                 >
                                     Your AI Implementation Roadmap
-                                    <motion.span
-                                        initial={{ scaleX: 0 }}
-                                        whileInView={{ scaleX: 1 }}
-                                        viewport={{ once: true }}
-                                        transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
-                                        style={{ originX: 0 }}
-                                        className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
-                                    />
                                 </motion.h2>
                                 <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 border border-indigo-100 shrink-0">
                                     <div className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
@@ -1127,17 +1085,9 @@ export default function DashboardPage() {
                                         whileInView={{ opacity: 1, y: 0 }}
                                         viewport={{ once: true }}
                                         transition={{ duration: 0.4 }}
-                                        className="text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] relative inline-block"
+                                        className="text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05]"
                                     >
                                         Metric Breakdown
-                                        <motion.span
-                                            initial={{ scaleX: 0 }}
-                                            whileInView={{ scaleX: 1 }}
-                                            viewport={{ once: true }}
-                                            transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
-                                            style={{ originX: 0 }}
-                                            className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
-                                        />
                                     </motion.h3>
                                     <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] shrink-0">Live Data</span>
                                 </div>
@@ -1190,17 +1140,9 @@ export default function DashboardPage() {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.4 }}
-                                    className="text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] relative inline-block mb-8"
+                                    className="text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] mb-8"
                                 >
                                     Industry Comparison
-                                    <motion.span
-                                        initial={{ scaleX: 0 }}
-                                        whileInView={{ scaleX: 1 }}
-                                        viewport={{ once: true }}
-                                        transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
-                                        style={{ originX: 0 }}
-                                        className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
-                                    />
                                 </motion.h3>
                                 <div className="h-[210px] w-full mt-4">
                                     <ResponsiveContainer width="100%" height="100%">
@@ -1235,17 +1177,9 @@ export default function DashboardPage() {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.4 }}
-                                    className="text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] relative inline-block mb-2"
+                                    className="text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] mb-2"
                                 >
                                     Overall Score
-                                    <motion.span
-                                        initial={{ scaleX: 0 }}
-                                        whileInView={{ scaleX: 1 }}
-                                        viewport={{ once: true }}
-                                        transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
-                                        style={{ originX: 0 }}
-                                        className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
-                                    />
                                 </motion.h2>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-3 mb-10">Verified Readiness Rank</p>
 
@@ -1496,17 +1430,9 @@ export default function DashboardPage() {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.4 }}
-                                    className="text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05] relative inline-block"
+                                    className="text-2xl md:text-3xl font-semibold tracking-[-0.02em] text-slate-900 leading-[1.05]"
                                 >
                                     AI Strategic Advisor
-                                    <motion.span
-                                        initial={{ scaleX: 0 }}
-                                        whileInView={{ scaleX: 1 }}
-                                        viewport={{ once: true }}
-                                        transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
-                                        style={{ originX: 0 }}
-                                        className="absolute -bottom-1 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
-                                    />
                                 </motion.h3>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-3 mb-6">Custom Roadmap Ready</p>
                                 <p className="text-xs font-bold text-slate-500 leading-relaxed mb-8">

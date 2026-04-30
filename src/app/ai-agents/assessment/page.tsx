@@ -9,21 +9,65 @@ import { AGENT_ASSESSMENT_STEPS, AgentAssessmentResponses, recommendAgents } fro
 import { createClient } from '@/lib/supabase/client';
 import SiteNav from '@/components/SiteNav';
 
+const PENDING_KEY = 'aa_pending_responses';
+
 export default function AgentAssessmentPage() {
     const router = useRouter();
     const supabase = createClient();
     const [step, setStep] = useState(0);
     const [responses, setResponses] = useState<AgentAssessmentResponses>({});
     const [submitting, setSubmitting] = useState(false);
-    const [authChecked, setAuthChecked] = useState(false);
+    const [hydrated, setHydrated] = useState(false);
 
+    // Hydrate any in-flight responses from a previous (pre-auth) session.
     useEffect(() => {
+        try {
+            const raw = typeof window !== 'undefined' ? localStorage.getItem(PENDING_KEY) : null;
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') setResponses(parsed);
+            }
+        } catch {}
+        setHydrated(true);
+    }, []);
+
+    // Persist responses locally so they survive an auth round-trip.
+    useEffect(() => {
+        if (!hydrated) return;
+        try { localStorage.setItem(PENDING_KEY, JSON.stringify(responses)); } catch {}
+    }, [responses, hydrated]);
+
+    // After returning from auth with `pending=1`, auto-submit if responses are complete.
+    useEffect(() => {
+        if (!hydrated) return;
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('pending') !== '1') return;
         (async () => {
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) { router.push('/auth?next=/ai-agents/assessment'); return; }
-            setAuthChecked(true);
+            if (!session) return;
+            const allComplete = AGENT_ASSESSMENT_STEPS.every(s =>
+                s.fields.every(f => {
+                    const v = responses[f.id];
+                    if (f.type === 'multiselect') return Array.isArray(v) && v.length > 0;
+                    return typeof v === 'string' && v.length > 0;
+                })
+            );
+            if (allComplete) {
+                handleSubmit();
+            } else {
+                // Jump to the first incomplete step.
+                const idx = AGENT_ASSESSMENT_STEPS.findIndex(s =>
+                    s.fields.some(f => {
+                        const v = responses[f.id];
+                        if (f.type === 'multiselect') return !Array.isArray(v) || v.length === 0;
+                        return typeof v !== 'string' || v.length === 0;
+                    })
+                );
+                if (idx >= 0) setStep(idx);
+            }
         })();
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [hydrated]);
 
     const totalSteps = AGENT_ASSESSMENT_STEPS.length;
     const currentStep = AGENT_ASSESSMENT_STEPS[step];
@@ -47,7 +91,12 @@ export default function AgentAssessmentPage() {
         setSubmitting(true);
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) { router.push('/auth'); return; }
+            if (!session) {
+                // Stash answers locally and send the user to create an account.
+                try { localStorage.setItem(PENDING_KEY, JSON.stringify(responses)); } catch {}
+                router.push('/auth?mode=signup&next=' + encodeURIComponent('/ai-agents/assessment?pending=1'));
+                return;
+            }
 
             const recommendation = recommendAgents(responses);
 
@@ -80,6 +129,7 @@ export default function AgentAssessmentPage() {
                 });
             }
 
+            try { localStorage.removeItem(PENDING_KEY); } catch {}
             router.push('/dashboard?aa=1');
         } catch (err) {
             console.error('Agent assessment save failed', err);
@@ -88,7 +138,7 @@ export default function AgentAssessmentPage() {
         }
     };
 
-    if (!authChecked) {
+    if (!hydrated) {
         return (
             <div className="min-h-screen bg-[#F4F7FE] flex items-center justify-center">
                 <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />

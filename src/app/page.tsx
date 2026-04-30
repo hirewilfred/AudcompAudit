@@ -482,7 +482,105 @@ export default function Home() {
       <main>
 
         {/* â•â• HERO (light background with image) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-        <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white py-20 sm:py-28">
+        <section className="relative w-full overflow-hidden bg-black h-screen min-h-[720px]">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover"
+          >
+            <source src="/Videos/Agent_intro.mp4" type="video/mp4" />
+          </video>
+
+          {/* Cinematic gradient — dark left, fading to reveal video right */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-black/20" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
+
+          {/* Content — left aligned, full-screen layout */}
+          <div className="relative z-10 mx-auto h-full max-w-[1500px] px-6 sm:px-12 lg:px-20 flex flex-col justify-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7 }}
+              className="mb-6 inline-flex items-center gap-3"
+            >
+              <span className="inline-flex items-center rounded-md bg-orange-500 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-white">
+                AI
+              </span>
+              <h1 className="text-white text-[44px] sm:text-[64px] lg:text-[80px] font-semibold tracking-tight leading-none">
+                Workforce
+              </h1>
+            </motion.div>
+
+            <motion.h2
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              className="max-w-[680px] text-white text-[36px] sm:text-[52px] lg:text-[68px] font-semibold leading-[1.05] tracking-tight"
+            >
+              <span className="text-orange-500">The Modern</span> Workforce <br />
+              Is <span className="text-orange-500">Already</span> Here.
+            </motion.h2>
+
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.35 }}
+              className="mt-8 max-w-md text-[15px] sm:text-[17px] leading-relaxed text-white/75"
+            >
+              Custom AI agents that work alongside your team — scored to your readiness, sequenced by ROI, deployed in weeks.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="mt-10 flex items-center gap-5"
+            >
+              <Link
+                href="/auth?next=/ai-agents/assessment"
+                className="group inline-flex items-center gap-3 rounded-full bg-orange-500 px-8 py-4 text-[14px] font-bold uppercase tracking-wider text-white shadow-[0_20px_50px_-15px_rgba(249,115,22,0.7)] hover:bg-orange-600 transition"
+              >
+                Start Free AI Audit
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+              <Link
+                href="#how-it-works"
+                className="inline-flex items-center gap-2 text-[13px] font-semibold text-white/90 hover:text-white transition"
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/40 group-hover:border-white">
+                  <ChevronRight className="h-4 w-4" />
+                </span>
+                Watch the Film
+              </Link>
+            </motion.div>
+          </div>
+
+          {/* Right-side vertical scroll progress indicator */}
+          <div className="absolute right-6 lg:right-10 top-1/2 -translate-y-1/2 z-10 flex flex-col items-center gap-2">
+            <div className="h-24 w-[2px] bg-white/15 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: '100%' }}
+                transition={{ duration: 2, ease: 'easeOut' }}
+                className="w-full bg-orange-500"
+              />
+            </div>
+          </div>
+
+          {/* Bottom scroll cue */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.4, duration: 0.6 }}
+            className="absolute bottom-8 right-6 lg:right-10 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-white/5 backdrop-blur-sm text-white hover:bg-white/15 cursor-pointer"
+          >
+            <ChevronRight className="h-4 w-4 rotate-90" />
+          </motion.div>
+        </section>
+
+        <section className="hidden relative overflow-hidden bg-gradient-to-b from-gray-50 to-white py-20 sm:py-28">
           <div className="relative mx-auto max-w-7xl px-6">
             <div className="grid items-center gap-12 lg:grid-cols-2">
               {/* Left â€” copy */}

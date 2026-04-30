@@ -18,7 +18,11 @@ export default function AuthPage() {
 }
 
 function AuthPageContent() {
-    const [isLogin, setIsLogin] = useState(true);
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const nextParam = searchParams?.get('next') ?? null;
+    const modeParam = searchParams?.get('mode') ?? null;
+    const [isLogin, setIsLogin] = useState(modeParam !== 'signup');
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -27,9 +31,6 @@ function AuthPageContent() {
     const [phone, setPhone] = useState('');
     const [remember, setRemember] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const nextParam = searchParams?.get('next') ?? null;
     const supabase = createClient();
 
     // Only allow same-origin paths in `next` to prevent open-redirect.
