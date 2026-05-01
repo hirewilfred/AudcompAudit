@@ -272,7 +272,9 @@ export default function AdminAuditsPage() {
                                     const cats = r.category_scores
                                         ? Object.entries(r.category_scores).sort((a, b) => (Number(b[1]) - Number(a[1]))).slice(0, 2)
                                         : [];
-                                    const linkable = r.has_advisor_report || r.has_completed_audit;
+                                    // Always link — the detail page renders an empty state when the
+                                    // user hasn't filled out either questionnaire yet.
+                                    const linkable = true;
                                     return (
                                         <tr key={r.user_id} className="hover:bg-white/3 transition-colors">
                                             <td className="px-5 py-4">
