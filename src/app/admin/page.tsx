@@ -1,66 +1,77 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import AdminNavbar from '@/components/AdminNavbar';
 import {
-    Users, ArrowRight, TrendingUp, Eye, Plus, Loader2, CheckCircle2,
-    ShieldAlert, LogOut, Bot, Zap, Play, Pause, Activity, Sparkles,
-    ClipboardList, UserCircle, LayoutDashboard, RefreshCw, ChevronRight,
-    DollarSign, Briefcase, RotateCcw
+    Users, ArrowRight, Loader2, ShieldAlert, Activity,
+    ClipboardList, RotateCcw, DollarSign, Megaphone,
+    Building2, ChevronRight, AlertTriangle, TrendingUp,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { DEMO_AGENTS } from '@/lib/demoData';
 
-const AGENT_COLORS = ['blue', 'violet', 'rose', 'emerald', 'amber', 'pink', 'cyan', 'indigo', 'teal', 'orange'];
+const fmtMoney = (n: number) =>
+    n.toLocaleString('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 });
+const fmtDate = (d: string | null | undefined) =>
+    d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
 
-const statusStyle = (s: string) =>
-    s === 'running' ? 'bg-emerald-500 animate-pulse' : s === 'queued' ? 'bg-amber-400' : 'bg-slate-500';
+interface UncollectedRow {
+    id: string;
+    company_name: string;
+    contracted: number;
+    actual: number;
+    delta: number;
+    pricePerUser: number;
+    missingMRR: number;
+}
 
-const agentBorder = (c: string) => ({
-    blue: 'border-blue-500/20', violet: 'border-violet-500/20',
-    rose: 'border-rose-500/20', emerald: 'border-emerald-500/20',
-    amber: 'border-amber-500/20', pink: 'border-pink-500/20',
-    cyan: 'border-cyan-500/20', indigo: 'border-indigo-500/20',
-    teal: 'border-teal-500/20', orange: 'border-orange-500/20',
-}[c] || 'border-white/5');
+interface CampaignRow {
+    id: string;
+    name: string;
+    status: string;
+    stats_researched: number;
+    stats_contacted: number;
+    stats_replied: number;
+    stats_booked: number;
+    client_name: string | null;
+    updated_at: string | null;
+}
 
-// ── Quick-nav items ───────────────────────────────────────────────────────────
-const QUICK_NAV = [
-    { label: 'Command Center', icon: LayoutDashboard, href: '/admin', color: 'text-blue-400' },
-    { label: 'Audit Results', icon: ClipboardList, href: '/admin/audits', color: 'text-violet-400' },
-    { label: 'Managed Experts', icon: UserCircle, href: '/admin/experts', color: 'text-emerald-400' },
-    { label: 'Users', icon: Users, href: '/admin/users', color: 'text-amber-400' },
-    { label: 'CRM', icon: Briefcase, href: '/admin/crm', color: 'text-pink-400' },
-];
+interface AuditRow {
+    user_id: string;
+    full_name: string | null;
+    email: string | null;
+    organization: string | null;
+    overall_score: number | null;
+    created_at: string;
+    expert_name: string | null;
+}
 
-export default function AdminPage() {
+export default function AdminCommandCenter() {
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-    const [stats, setStats] = useState({ totalExperts: 0, totalProfiles: 0, totalAudits: 0 });
-    const [recentUsers, setRecentUsers] = useState<any[]>([]);
-    const [demoMode, setDemoMode] = useState(false);
-
     const router = useRouter();
     const supabase = createClient();
 
-    const handleLogout = async () => {
-        await supabase.auth.signOut();
-        router.push('/auth');
-    };
+    const [stats, setStats] = useState({
+        totalProfiles: 0,
+        totalAudits: 0,
+        totalMRR: 0,
+        uncollectedMRR: 0,
+        activeCampaigns: 0,
+        newAudits7d: 0,
+    });
+    const [uncollected, setUncollected] = useState<UncollectedRow[]>([]);
+    const [activeCampaigns, setActiveCampaigns] = useState<CampaignRow[]>([]);
+    const [recentAudits, setRecentAudits] = useState<AuditRow[]>([]);
 
     const [resetting, setResetting] = useState(false);
     const handleResetMyAudit = async () => {
         const ok = window.confirm(
-            'Reset YOUR audit?\n\n' +
-            'This will:\n' +
-            '• Delete your audit_scores rows\n' +
-            '• Delete your ai_advisor_reports rows\n' +
-            '• Set has_completed_audit = false\n' +
-            '• Send you back to the survey to retake it\n\n' +
-            'Continue?'
+            'Reset YOUR audit?\n\nThis will delete your audit_scores + ai_advisor_reports and ' +
+            'flip has_completed_audit to false so you can retake the survey. Continue?'
         );
         if (!ok) return;
         setResetting(true);
@@ -82,46 +93,129 @@ export default function AdminPage() {
     };
 
     useEffect(() => {
-        async function checkAdmin() {
+        (async () => {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
                 if (!session) { router.push('/auth'); return; }
 
-                const { data } = await supabase.from('profiles').select('is_admin').eq('id', session.user.id).single();
-                const profile = data as { is_admin: boolean } | null;
-
+                const { data: profile } = await supabase
+                    .from('profiles').select('is_admin').eq('id', session.user.id).single() as any;
                 if (!profile?.is_admin) { setIsAdmin(false); return; }
                 setIsAdmin(true);
 
-                const [expertsRes, profilesRes, scoresRes, profilesListRes, expertsListRes, scoresListRes] = await Promise.all([
-                    supabase.from('experts').select('*', { count: 'exact', head: true }),
+                const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+                const [
+                    profilesCountRes,
+                    auditsCountRes,
+                    new7dRes,
+                    amsRes,
+                    campaignsRes,
+                    recentAuditsRes,
+                    expertsRes,
+                ] = await Promise.all([
                     supabase.from('profiles').select('*', { count: 'exact', head: true }),
                     supabase.from('audit_scores').select('*', { count: 'exact', head: true }),
-                    supabase.from('profiles').select('id, full_name, email, organization, has_completed_audit, assigned_expert_id, updated_at').order('updated_at', { ascending: false }).limit(50),
-                    supabase.from('experts').select('id, full_name, photo_url, email'),
-                    supabase.from('audit_scores').select('user_id, created_at, overall_score'),
+                    supabase.from('audit_scores').select('*', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo),
+                    (supabase.from('ams_clients') as any)
+                        .select('id, company_name, monthly_amount, users_contracted, price_per_user, ams_user_snapshots(basic_licensed_users)'),
+                    (supabase.from('outreach_campaigns') as any)
+                        .select('id, name, status, stats_researched, stats_contacted, stats_replied, stats_booked, updated_at, ams_clients(company_name)')
+                        .eq('status', 'active')
+                        .order('updated_at', { ascending: false })
+                        .limit(8),
+                    (supabase.from('audit_scores') as any)
+                        .select('user_id, overall_score, created_at')
+                        .order('created_at', { ascending: false })
+                        .limit(20),
+                    supabase.from('experts').select('id, full_name'),
                 ]);
 
-                setStats({ totalExperts: expertsRes.count || 0, totalProfiles: profilesRes.count || 0, totalAudits: scoresRes.count || 0 });
+                // ── AMS uncollected revenue ──────────────────────────────
+                const amsClients = (amsRes.data || []) as any[];
+                let totalMRR = 0;
+                let uncollectedTotal = 0;
+                const overageRows: UncollectedRow[] = [];
 
-                if (profilesListRes.data) {
-                    const allExperts = expertsListRes.data || [];
-                    const allScores = scoresListRes.data || [];
-                    const merged = profilesListRes.data.map((p: any) => {
-                        const expert = allExperts.find((e: any) => e.id === p.assigned_expert_id);
-                        const userScores = allScores.filter((s: any) => s.user_id === p.id).sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-                        return { ...p, experts: expert ? [expert] : [], audit_scores: userScores.length > 0 ? [userScores[0]] : [] };
-                    });
-                    setRecentUsers(merged);
+                for (const c of amsClients) {
+                    const monthly = parseFloat(c.monthly_amount) || 0;
+                    totalMRR += monthly;
+                    const snap = Array.isArray(c.ams_user_snapshots) ? c.ams_user_snapshots[0] : null;
+                    const actual = snap?.basic_licensed_users ?? 0;
+                    const contracted = c.users_contracted || 0;
+                    const ppu = parseFloat(c.price_per_user) ||
+                        (contracted > 0 && monthly > 0 ? monthly / contracted : 0);
+                    const delta = actual - contracted;
+                    if (delta > 0 && ppu > 0) {
+                        const missingMRR = delta * ppu;
+                        uncollectedTotal += missingMRR;
+                        overageRows.push({
+                            id: c.id,
+                            company_name: c.company_name || '—',
+                            contracted, actual, delta, pricePerUser: ppu, missingMRR,
+                        });
+                    }
                 }
+                overageRows.sort((a, b) => b.missingMRR - a.missingMRR);
+
+                // ── Recent audits — hydrate user + expert info ───────────
+                const auditRows = (recentAuditsRes.data || []) as any[];
+                const userIds = Array.from(new Set(auditRows.map(a => a.user_id))).filter(Boolean);
+                let profileMap = new Map<string, any>();
+                if (userIds.length) {
+                    const { data: profs } = await supabase
+                        .from('profiles')
+                        .select('id, full_name, email, organization, assigned_expert_id')
+                        .in('id', userIds);
+                    (profs || []).forEach((p: any) => profileMap.set(p.id, p));
+                }
+                const expertMap = new Map<string, string>();
+                (expertsRes.data || []).forEach((e: any) => expertMap.set(e.id, e.full_name));
+
+                const hydratedAudits: AuditRow[] = auditRows.map(a => {
+                    const p = profileMap.get(a.user_id) || {};
+                    return {
+                        user_id: a.user_id,
+                        full_name: p.full_name || null,
+                        email: p.email || null,
+                        organization: p.organization || null,
+                        overall_score: a.overall_score ?? null,
+                        created_at: a.created_at,
+                        expert_name: p.assigned_expert_id ? (expertMap.get(p.assigned_expert_id) || null) : null,
+                    };
+                });
+
+                // ── Outreach ──────────────────────────────────────────────
+                const camps: CampaignRow[] = ((campaignsRes.data || []) as any[]).map(c => ({
+                    id: c.id,
+                    name: c.name || 'Untitled campaign',
+                    status: c.status,
+                    stats_researched: c.stats_researched || 0,
+                    stats_contacted: c.stats_contacted || 0,
+                    stats_replied: c.stats_replied || 0,
+                    stats_booked: c.stats_booked || 0,
+                    client_name: c.ams_clients?.company_name || null,
+                    updated_at: c.updated_at,
+                }));
+
+                setUncollected(overageRows.slice(0, 6));
+                setActiveCampaigns(camps);
+                setRecentAudits(hydratedAudits.slice(0, 10));
+                setStats({
+                    totalProfiles: profilesCountRes.count || 0,
+                    totalAudits: auditsCountRes.count || 0,
+                    totalMRR,
+                    uncollectedMRR: uncollectedTotal,
+                    activeCampaigns: camps.length,
+                    newAudits7d: new7dRes.count || 0,
+                });
             } catch (err) {
                 console.error(err);
                 setIsAdmin(false);
             } finally {
                 setLoading(false);
             }
-        }
-        checkAdmin();
+        })();
     }, []);
 
     if (loading) return (
@@ -141,243 +235,287 @@ export default function AdminPage() {
         </div>
     );
 
-    const runningAgents = DEMO_AGENTS.filter(a => a.status === 'running').length;
+    const kpis = [
+        {
+            label: 'Uncollected MRR',
+            value: fmtMoney(stats.uncollectedMRR),
+            sub: `${uncollected.length} clients over contract`,
+            icon: AlertTriangle,
+            tint: 'rose',
+            href: '/admin/ams',
+        },
+        {
+            label: 'Active Campaigns',
+            value: String(stats.activeCampaigns),
+            sub: `${activeCampaigns.reduce((s, c) => s + c.stats_contacted, 0)} contacted`,
+            icon: Megaphone,
+            tint: 'blue',
+            href: '/admin/outreach',
+        },
+        {
+            label: 'New Audits · 7d',
+            value: String(stats.newAudits7d),
+            sub: `${stats.totalAudits} all-time`,
+            icon: ClipboardList,
+            tint: 'violet',
+            href: '/admin/audits',
+        },
+        {
+            label: 'Total Users',
+            value: String(stats.totalProfiles),
+            sub: `${fmtMoney(stats.totalMRR)} AMS MRR`,
+            icon: Users,
+            tint: 'emerald',
+            href: '/admin/users',
+        },
+    ];
+
+    const tintBg = (t: string) => ({
+        rose: 'bg-rose-500/10 text-rose-300 border-rose-500/20',
+        blue: 'bg-blue-500/10 text-blue-300 border-blue-500/20',
+        violet: 'bg-violet-500/10 text-violet-300 border-violet-500/20',
+        emerald: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
+    }[t] || 'bg-white/5 text-white border-white/10');
 
     return (
         <div className="min-h-screen bg-[#050B1A] text-white">
-            {/* Ambient glow */}
             <div className="fixed top-0 right-0 h-[600px] w-[600px] rounded-full bg-blue-600/8 blur-[130px] pointer-events-none" />
             <div className="fixed bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-violet-600/5 blur-[130px] pointer-events-none" />
 
             <AdminNavbar />
 
             <main className="pl-64 pr-8 pt-8 pb-20 relative">
-                {/* ── Header ── */}
+                {/* Header */}
                 <header className="flex items-center justify-between mb-8">
                     <div>
                         <div className="flex items-center gap-2 text-blue-400 font-bold text-xs uppercase tracking-widest mb-2">
                             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                            {demoMode ? 'Demo Mode Active' : 'System Active'}
+                            Command Center
                         </div>
-                        <h1 className="text-4xl font-black tracking-tight text-white">AI Command Center</h1>
-                        <p className="text-slate-500 text-sm mt-1">Audcomp Admin Portal — Real-time AI oversight</p>
+                        <h1 className="text-4xl font-black tracking-tight text-white">Audcomp HQ</h1>
+                        <p className="text-slate-500 text-sm mt-1">Revenue, outreach, and audit pipeline at a glance.</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <button
-                            onClick={() => window.open('/demo', '_blank', 'width=1400,height=900')}
-                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all bg-white/5 text-slate-300 hover:bg-rose-500/20 hover:text-rose-300 border border-white/10 hover:border-rose-500/30"
-                        >
-                            <Play className="h-4 w-4" />
-                            Florist Live Demo
-                        </button>
-                        <button
                             onClick={handleResetMyAudit}
                             disabled={resetting}
-                            title="Wipe your own audit_scores + ai_advisor_reports and re-take the survey to test new questions / recommendations"
-                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:text-amber-300 border border-white/10 hover:border-amber-500/30 disabled:opacity-50"
+                            title="Wipe your own audit and re-take the survey."
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all bg-white/5 text-slate-400 hover:bg-amber-500/10 hover:text-amber-300 border border-white/10 hover:border-amber-500/30 disabled:opacity-50"
                         >
-                            {resetting ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+                            {resetting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
                             {resetting ? 'Resetting…' : 'Reset My Audit'}
-                        </button>
-                        <button onClick={() => router.push('/admin/experts/new')} className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-xl transition-colors shadow-lg shadow-blue-600/20">
-                            <Plus className="h-4 w-4" /> Add Expert
                         </button>
                     </div>
                 </header>
 
-                {/* ── Quick Nav Bar ── */}
-                <div className="flex items-center gap-2 mb-8 p-1.5 bg-white/3 rounded-2xl border border-white/5 w-fit">
-                    {QUICK_NAV.map(item => (
-                        <Link key={item.href} href={item.href} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-400 hover:text-white hover:bg-white/8 transition-all">
-                            <item.icon className={`h-4 w-4 ${item.color}`} />
-                            {item.label}
-                        </Link>
-                    ))}
-                </div>
-
-                {/* ── Stats ── */}
+                {/* KPI strip */}
                 <div className="grid grid-cols-4 gap-4 mb-8">
-                    {[
-                        { label: 'Active Agents', value: demoMode ? runningAgents : 0, icon: Bot, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-                        { label: 'Managed Experts', value: stats.totalExperts, icon: UserCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                        { label: 'Total Users', value: stats.totalProfiles, icon: Users, color: 'text-violet-400', bg: 'bg-violet-500/10' },
-                        { label: 'Audits Completed', value: stats.totalAudits, icon: ClipboardList, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-                    ].map((stat, i) => (
-                        <motion.div key={i} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-                            className="bg-slate-900/40 backdrop-blur-xl rounded-2xl p-5 border border-white/5 flex items-center gap-4">
-                            <div className={`h-12 w-12 rounded-xl ${stat.bg} flex items-center justify-center`}>
-                                <stat.icon className={`h-6 w-6 ${stat.color}`} />
-                            </div>
-                            <div>
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{stat.label}</p>
-                                <p className="text-3xl font-black text-white tabular-nums">{stat.value}</p>
-                            </div>
+                    {kpis.map((k, i) => (
+                        <motion.div
+                            key={k.label}
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.05 }}
+                        >
+                            <Link
+                                href={k.href}
+                                className="block bg-slate-900/40 backdrop-blur-xl rounded-2xl p-5 border border-white/5 hover:border-white/15 transition-all group"
+                            >
+                                <div className="flex items-start justify-between mb-3">
+                                    <div className={`h-10 w-10 rounded-xl border ${tintBg(k.tint)} flex items-center justify-center`}>
+                                        <k.icon className="h-5 w-5" />
+                                    </div>
+                                    <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+                                </div>
+                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
+                                <p className="text-3xl font-black text-white tabular-nums leading-none mb-1">{k.value}</p>
+                                <p className="text-xs text-slate-500 font-medium">{k.sub}</p>
+                            </Link>
                         </motion.div>
                     ))}
                 </div>
 
-                {/* ── Main grid ── */}
-                <div className="grid grid-cols-12 gap-6">
-
-                    {/* AI Agents Panel */}
+                {/* Two-column body */}
+                <div className="grid grid-cols-12 gap-6 mb-6">
+                    {/* Uncollected AMS Revenue */}
                     <div className="col-span-7 bg-slate-900/40 backdrop-blur-xl rounded-2xl border border-white/5 overflow-hidden">
                         <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <Bot className="h-5 w-5 text-blue-400" />
-                                <h2 className="font-bold text-white">AI Agents</h2>
-                                {demoMode && <span className="text-[10px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-widest">{runningAgents} Running</span>}
+                                <DollarSign className="h-5 w-5 text-rose-400" />
+                                <h2 className="font-bold text-white">Uncollected AMS Revenue</h2>
+                                <span className="text-[10px] font-black bg-rose-500/10 text-rose-300 border border-rose-500/20 px-2 py-0.5 rounded-full uppercase tracking-widest">
+                                    {fmtMoney(stats.uncollectedMRR)} / mo
+                                </span>
                             </div>
-                            {!demoMode && <span className="text-xs text-slate-500 font-bold">Click "Florist Live Demo" to see agents live</span>}
+                            <Link href="/admin/ams" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1">
+                                View AMS <ArrowRight className="h-3 w-3" />
+                            </Link>
                         </div>
-                        <div className="p-4 grid grid-cols-2 gap-3">
-                            {DEMO_AGENTS.map((agent, i) => {
-                                const color = AGENT_COLORS[i % AGENT_COLORS.length];
-                                return (
-                                    <div key={agent.name} className={`rounded-xl border p-4 ${demoMode ? agentBorder(color) : 'border-white/5'} bg-white/2 transition-all`}>
-                                        <div className="flex items-start gap-3 mb-2">
-                                            <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${demoMode ? statusStyle(agent.status) : 'bg-slate-700'}`} />
-                                            <div>
-                                                <div className="text-sm font-bold text-white">{agent.label}</div>
-                                                <div className="text-[10px] text-slate-500">{agent.description.split('.')[0]}</div>
-                                            </div>
-                                            <span className={`ml-auto text-[10px] font-black px-2 py-0.5 rounded-full capitalize ${
-                                                demoMode
-                                                    ? agent.status === 'running' ? 'bg-emerald-500/10 text-emerald-400' : agent.status === 'queued' ? 'bg-amber-500/10 text-amber-400' : 'bg-white/5 text-slate-500'
-                                                    : 'bg-white/5 text-slate-600'
-                                            }`}>{demoMode ? agent.status : 'idle'}</span>
+
+                        {uncollected.length === 0 ? (
+                            <div className="px-6 py-12 text-center">
+                                <p className="text-sm text-slate-500 font-medium">All synced clients are within contract. Nothing to collect.</p>
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-white/5">
+                                {uncollected.map(c => (
+                                    <div key={c.id} className="px-6 py-3.5 flex items-center gap-4 hover:bg-white/2 transition-colors">
+                                        <div className="h-9 w-9 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0">
+                                            <Building2 className="h-4 w-4 text-rose-300" />
                                         </div>
-                                        {demoMode && agent.currentTask && <div className="text-[11px] text-slate-400 bg-black/20 rounded-lg px-3 py-2 leading-relaxed">{agent.currentTask}</div>}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-bold text-white truncate">{c.company_name}</div>
+                                            <div className="text-xs text-slate-500">
+                                                {c.actual} actual · {c.contracted} contracted · <span className="text-rose-300 font-bold">+{c.delta} over</span>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-sm font-black text-rose-300 tabular-nums">{fmtMoney(c.missingMRR)}/mo</div>
+                                            <div className="text-[10px] text-slate-500 font-medium">@ {fmtMoney(c.pricePerUser)}/seat</div>
+                                        </div>
                                     </div>
-                                );
-                            })}
-                        </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
-                    {/* AI Audits Summary */}
-                    <div className="col-span-5 flex flex-col gap-4">
-                        {/* Audit quick-links */}
-                        <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl border border-white/5 p-5">
-                            <h2 className="font-bold text-white mb-4 flex items-center gap-2"><ClipboardList className="h-5 w-5 text-violet-400" /> AI Audits</h2>
-                            <div className="space-y-2">
-                                <Link href="/admin/audits" className="flex items-center justify-between p-3 rounded-xl bg-white/3 hover:bg-white/6 border border-white/5 hover:border-violet-500/30 transition-all group">
-                                    <div className="flex items-center gap-3">
-                                        <ClipboardList className="h-4 w-4 text-violet-400" />
-                                        <span className="text-sm font-bold text-white">Audit Results</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs font-black text-violet-400">{stats.totalAudits} total</span>
-                                        <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-white transition-colors" />
-                                    </div>
-                                </Link>
-                                <Link href="/admin/experts" className="flex items-center justify-between p-3 rounded-xl bg-white/3 hover:bg-white/6 border border-white/5 hover:border-emerald-500/30 transition-all group">
-                                    <div className="flex items-center gap-3">
-                                        <UserCircle className="h-4 w-4 text-emerald-400" />
-                                        <span className="text-sm font-bold text-white">Managed Experts</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs font-black text-emerald-400">{stats.totalExperts} active</span>
-                                        <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-white transition-colors" />
-                                    </div>
-                                </Link>
-                                <Link href="/admin/users" className="flex items-center justify-between p-3 rounded-xl bg-white/3 hover:bg-white/6 border border-white/5 hover:border-blue-500/30 transition-all group">
-                                    <div className="flex items-center gap-3">
-                                        <Users className="h-4 w-4 text-blue-400" />
-                                        <span className="text-sm font-bold text-white">Users</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs font-black text-blue-400">{stats.totalProfiles} registered</span>
-                                        <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-white transition-colors" />
-                                    </div>
-                                </Link>
-                            </div>
-                        </div>
-
-                        {/* Completion rate card */}
-                        <div className="bg-gradient-to-br from-blue-600/20 to-violet-600/20 rounded-2xl border border-blue-500/20 p-5 flex-1">
-                            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Audit Completion Rate</div>
-                            <div className="text-5xl font-black text-white mb-2">
-                                {stats.totalProfiles > 0 ? Math.round((stats.totalAudits / stats.totalProfiles) * 100) : 0}%
-                            </div>
-                            <div className="h-2 bg-black/20 rounded-full overflow-hidden mb-4">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${stats.totalProfiles > 0 ? Math.min(100, Math.round((stats.totalAudits / stats.totalProfiles) * 100)) : 0}%` }}
-                                    transition={{ duration: 1, ease: 'easeOut' }}
-                                    className="h-full bg-gradient-to-r from-blue-500 to-violet-500 rounded-full"
-                                />
-                            </div>
-                            <p className="text-xs text-slate-400">{stats.totalAudits} of {stats.totalProfiles} users have completed the AI audit</p>
-                        </div>
-                    </div>
-
-                    {/* Recent Users / Audit History */}
-                    <div className="col-span-12 bg-slate-900/40 backdrop-blur-xl rounded-2xl border border-white/5 overflow-hidden">
+                    {/* Active Outreach */}
+                    <div className="col-span-5 bg-slate-900/40 backdrop-blur-xl rounded-2xl border border-white/5 overflow-hidden">
                         <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
-                            <h2 className="font-bold text-white flex items-center gap-2"><Activity className="h-5 w-5 text-amber-400" /> Recent Users & Audit History</h2>
-                            <Link href="/admin/users" className="text-xs font-bold text-slate-400 hover:text-white transition-colors flex items-center gap-1">View All <ArrowRight className="h-3 w-3" /></Link>
+                            <div className="flex items-center gap-3">
+                                <Megaphone className="h-5 w-5 text-blue-400" />
+                                <h2 className="font-bold text-white">Active Campaigns</h2>
+                            </div>
+                            <Link href="/admin/outreach" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1">
+                                Outreach <ArrowRight className="h-3 w-3" />
+                            </Link>
                         </div>
+
+                        {activeCampaigns.length === 0 ? (
+                            <div className="px-6 py-12 text-center">
+                                <p className="text-sm text-slate-500 font-medium mb-4">No campaigns running right now.</p>
+                                <Link href="/admin/outreach/campaigns/new" className="inline-flex items-center gap-2 text-xs font-bold text-blue-400 hover:text-blue-300">
+                                    Launch a campaign <ArrowRight className="h-3 w-3" />
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-white/5">
+                                {activeCampaigns.map(c => {
+                                    const replyRate = c.stats_contacted > 0
+                                        ? Math.round((c.stats_replied / c.stats_contacted) * 100)
+                                        : 0;
+                                    return (
+                                        <Link
+                                            key={c.id}
+                                            href={`/admin/outreach/campaigns/${c.id}`}
+                                            className="block px-6 py-3.5 hover:bg-white/2 transition-colors"
+                                        >
+                                            <div className="flex items-start justify-between gap-3 mb-2">
+                                                <div className="min-w-0">
+                                                    <div className="text-sm font-bold text-white truncate">{c.name}</div>
+                                                    <div className="text-[11px] text-slate-500 truncate">
+                                                        {c.client_name || 'Audcomp'} · {fmtDate(c.updated_at)}
+                                                    </div>
+                                                </div>
+                                                <span className="text-[10px] font-black bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-widest shrink-0">
+                                                    Active
+                                                </span>
+                                            </div>
+                                            <div className="grid grid-cols-4 gap-2 text-center">
+                                                <Stat label="Researched" value={c.stats_researched} />
+                                                <Stat label="Contacted" value={c.stats_contacted} />
+                                                <Stat label="Replied" value={c.stats_replied} accent={replyRate >= 10 ? 'emerald' : undefined} />
+                                                <Stat label="Booked" value={c.stats_booked} accent="violet" />
+                                            </div>
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Recent AI Audits */}
+                <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl border border-white/5 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Activity className="h-5 w-5 text-violet-400" />
+                            <h2 className="font-bold text-white">New AI Audits</h2>
+                            <span className="text-[10px] font-black bg-violet-500/10 text-violet-300 border border-violet-500/20 px-2 py-0.5 rounded-full uppercase tracking-widest">
+                                {stats.newAudits7d} this week
+                            </span>
+                        </div>
+                        <Link href="/admin/audits" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1">
+                            All audits <ArrowRight className="h-3 w-3" />
+                        </Link>
+                    </div>
+
+                    {recentAudits.length === 0 ? (
+                        <div className="px-6 py-12 text-center">
+                            <p className="text-sm text-slate-500 font-medium">No audits yet. Once users complete the survey they'll appear here.</p>
+                        </div>
+                    ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b border-white/5">
-                                        {['User', 'Company', 'Audit Status', 'Score', 'Assigned Expert', 'Date'].map(h => (
-                                            <th key={h} className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">{h}</th>
+                                        {['User', 'Company', 'Score', 'Expert', 'Submitted'].map(h => (
+                                            <th key={h} className="px-6 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">{h}</th>
                                         ))}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
-                                    {recentUsers.length === 0 ? (
-                                        <tr><td colSpan={6} className="px-6 py-12 text-center text-slate-500 font-bold">No users found.</td></tr>
-                                    ) : recentUsers.slice(0, 15).map((u, i) => {
-                                        const score = Array.isArray(u.audit_scores) ? u.audit_scores[0] : null;
-                                        const expert = Array.isArray(u.experts) ? u.experts[0] : null;
-                                        const date = score?.created_at || u.updated_at;
-                                        return (
-                                            <tr key={u.id || i} className="hover:bg-white/2 transition-colors">
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-blue-600/20 border border-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold shrink-0">
-                                                            {(u.full_name || 'U').charAt(0).toUpperCase()}
-                                                        </div>
-                                                        <div>
-                                                            <div className="text-sm font-bold text-white">{u.full_name || 'No name'}</div>
-                                                            <div className="text-xs text-slate-500">{u.email}</div>
-                                                        </div>
+                                    {recentAudits.map(a => (
+                                        <tr key={`${a.user_id}-${a.created_at}`} className="hover:bg-white/2 transition-colors">
+                                            <td className="px-6 py-3.5">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-violet-600/20 border border-violet-500/20 flex items-center justify-center text-violet-300 text-xs font-bold shrink-0">
+                                                        {(a.full_name || a.email || 'U').charAt(0).toUpperCase()}
                                                     </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-slate-400">{u.organization || '—'}</td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${u.has_completed_audit ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-white/5 text-slate-500 border border-white/5'}`}>
-                                                        {u.has_completed_audit ? 'Complete' : 'Pending'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm font-bold">
-                                                    {score?.overall_score != null ? (
-                                                        <span className={score.overall_score >= 65 ? 'text-emerald-400' : score.overall_score >= 40 ? 'text-amber-400' : 'text-red-400'}>
-                                                            {score.overall_score}%
-                                                        </span>
-                                                    ) : <span className="text-slate-600">—</span>}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    {expert ? (
-                                                        <div className="flex items-center gap-2">
-                                                            {expert.photo_url && <img src={expert.photo_url} className="w-6 h-6 rounded-full object-cover" />}
-                                                            <span className="text-sm font-bold text-slate-300">{expert.full_name}</span>
-                                                        </div>
-                                                    ) : <span className="text-xs font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">Unassigned</span>}
-                                                </td>
-                                                <td className="px-6 py-4 text-xs text-slate-500">
-                                                    {date ? new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
+                                                    <div className="min-w-0">
+                                                        <div className="text-sm font-bold text-white truncate">{a.full_name || 'No name'}</div>
+                                                        <div className="text-xs text-slate-500 truncate">{a.email || '—'}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-3.5 text-sm text-slate-400">{a.organization || '—'}</td>
+                                            <td className="px-6 py-3.5">
+                                                {a.overall_score != null ? (
+                                                    <span className={`text-sm font-black tabular-nums ${
+                                                        a.overall_score >= 65 ? 'text-emerald-300'
+                                                            : a.overall_score >= 40 ? 'text-amber-300'
+                                                            : 'text-rose-300'
+                                                    }`}>{a.overall_score}%</span>
+                                                ) : <span className="text-slate-600">—</span>}
+                                            </td>
+                                            <td className="px-6 py-3.5">
+                                                {a.expert_name
+                                                    ? <span className="text-sm font-bold text-slate-300">{a.expert_name}</span>
+                                                    : <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full uppercase tracking-widest">Unassigned</span>}
+                                            </td>
+                                            <td className="px-6 py-3.5 text-xs text-slate-500 font-medium tabular-nums">
+                                                {new Date(a.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                            </td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
                         </div>
-                    </div>
+                    )}
                 </div>
             </main>
+        </div>
+    );
+}
+
+function Stat({ label, value, accent }: { label: string; value: number; accent?: 'emerald' | 'violet' }) {
+    const tint = accent === 'emerald' ? 'text-emerald-300'
+        : accent === 'violet' ? 'text-violet-300'
+        : 'text-white';
+    return (
+        <div className="bg-black/20 rounded-lg py-2">
+            <div className={`text-base font-black tabular-nums ${tint}`}>{value}</div>
+            <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{label}</div>
         </div>
     );
 }
