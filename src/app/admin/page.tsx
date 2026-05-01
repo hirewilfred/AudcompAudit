@@ -219,17 +219,17 @@ export default function AdminCommandCenter() {
     }, []);
 
     if (loading) return (
-        <div className="flex min-h-screen items-center justify-center bg-[#050B1A]">
-            <Loader2 className="h-10 w-10 text-blue-500 animate-spin" />
+        <div className="flex min-h-screen items-center justify-center bg-[#F4F7FE]">
+            <Loader2 className="h-10 w-10 text-blue-600 animate-spin" />
         </div>
     );
 
     if (isAdmin === false) return (
-        <div className="min-h-screen flex items-center justify-center bg-[#050B1A] p-6">
-            <div className="max-w-md w-full bg-slate-900 rounded-3xl p-12 text-center border border-white/10">
-                <ShieldAlert className="h-12 w-12 text-red-400 mx-auto mb-6" />
-                <h1 className="text-3xl font-black text-white mb-4">Access Denied</h1>
-                <p className="text-slate-400 mb-8">This area is restricted to system administrators.</p>
+        <div className="min-h-screen flex items-center justify-center bg-[#F4F7FE] p-6">
+            <div className="max-w-md w-full bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-sm">
+                <ShieldAlert className="h-12 w-12 text-red-500 mx-auto mb-6" />
+                <h1 className="text-3xl font-black text-slate-900 mb-4">Access Denied</h1>
+                <p className="text-slate-500 mb-8">This area is restricted to system administrators.</p>
                 <button onClick={() => router.push('/dashboard')} className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-500 transition-colors">Return to Dashboard</button>
             </div>
         </div>
@@ -271,16 +271,16 @@ export default function AdminCommandCenter() {
     ];
 
     const tintBg = (t: string) => ({
-        rose: 'bg-rose-500/10 text-rose-300 border-rose-500/20',
-        blue: 'bg-blue-500/10 text-blue-300 border-blue-500/20',
-        violet: 'bg-violet-500/10 text-violet-300 border-violet-500/20',
-        emerald: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
-    }[t] || 'bg-white/5 text-white border-white/10');
+        rose: 'bg-rose-50 text-rose-600 border-rose-100',
+        blue: 'bg-blue-50 text-blue-600 border-blue-100',
+        violet: 'bg-violet-50 text-violet-600 border-violet-100',
+        emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+    }[t] || 'bg-slate-50 text-slate-600 border-slate-100');
 
     return (
-        <div className="min-h-screen bg-[#050B1A] text-white">
-            <div className="fixed top-0 right-0 h-[600px] w-[600px] rounded-full bg-blue-600/8 blur-[130px] pointer-events-none" />
-            <div className="fixed bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-violet-600/5 blur-[130px] pointer-events-none" />
+        <div className="min-h-screen bg-[#F4F7FE] text-slate-800">
+            <div className="fixed top-[-10%] right-[-5%] h-[600px] w-[600px] rounded-full bg-blue-600/5 blur-[120px] pointer-events-none" />
+            <div className="fixed bottom-[-10%] left-[-5%] h-[400px] w-[400px] rounded-full bg-blue-600/5 blur-[120px] pointer-events-none" />
 
             <AdminNavbar />
 
@@ -288,11 +288,11 @@ export default function AdminCommandCenter() {
                 {/* Header */}
                 <header className="flex items-center justify-between mb-8">
                     <div>
-                        <div className="flex items-center gap-2 text-blue-400 font-bold text-xs uppercase tracking-widest mb-2">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <div className="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-widest mb-2">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                             Command Center
                         </div>
-                        <h1 className="text-4xl font-black tracking-tight text-white">Audcomp HQ</h1>
+                        <h1 className="text-4xl font-black tracking-tight text-slate-900">Audcomp HQ</h1>
                         <p className="text-slate-500 text-sm mt-1">Revenue, outreach, and audit pipeline at a glance.</p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -300,7 +300,7 @@ export default function AdminCommandCenter() {
                             onClick={handleResetMyAudit}
                             disabled={resetting}
                             title="Wipe your own audit and re-take the survey."
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all bg-white/5 text-slate-400 hover:bg-amber-500/10 hover:text-amber-300 border border-white/10 hover:border-amber-500/30 disabled:opacity-50"
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all bg-white text-slate-500 hover:bg-amber-50 hover:text-amber-700 border border-slate-100 hover:border-amber-200 disabled:opacity-50"
                         >
                             {resetting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
                             {resetting ? 'Resetting…' : 'Reset My Audit'}
@@ -319,16 +319,16 @@ export default function AdminCommandCenter() {
                         >
                             <Link
                                 href={k.href}
-                                className="block bg-slate-900/40 backdrop-blur-xl rounded-2xl p-5 border border-white/5 hover:border-white/15 transition-all group"
+                                className="block bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-100 transition-all group"
                             >
                                 <div className="flex items-start justify-between mb-3">
                                     <div className={`h-10 w-10 rounded-xl border ${tintBg(k.tint)} flex items-center justify-center`}>
                                         <k.icon className="h-5 w-5" />
                                     </div>
-                                    <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+                                    <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
                                 </div>
                                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
-                                <p className="text-3xl font-black text-white tabular-nums leading-none mb-1">{k.value}</p>
+                                <p className="text-3xl font-black text-slate-900 tabular-nums leading-none mb-1">{k.value}</p>
                                 <p className="text-xs text-slate-500 font-medium">{k.sub}</p>
                             </Link>
                         </motion.div>
@@ -338,16 +338,16 @@ export default function AdminCommandCenter() {
                 {/* Two-column body */}
                 <div className="grid grid-cols-12 gap-6 mb-6">
                     {/* Uncollected AMS Revenue */}
-                    <div className="col-span-7 bg-slate-900/40 backdrop-blur-xl rounded-2xl border border-white/5 overflow-hidden">
-                        <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+                    <div className="col-span-7 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <DollarSign className="h-5 w-5 text-rose-400" />
-                                <h2 className="font-bold text-white">Uncollected AMS Revenue</h2>
-                                <span className="text-[10px] font-black bg-rose-500/10 text-rose-300 border border-rose-500/20 px-2 py-0.5 rounded-full uppercase tracking-widest">
+                                <DollarSign className="h-5 w-5 text-rose-500" />
+                                <h2 className="font-bold text-slate-900">Uncollected AMS Revenue</h2>
+                                <span className="text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-100 px-2 py-0.5 rounded-full uppercase tracking-widest">
                                     {fmtMoney(stats.uncollectedMRR)} / mo
                                 </span>
                             </div>
-                            <Link href="/admin/ams" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1">
+                            <Link href="/admin/ams" className="text-xs font-bold text-slate-500 hover:text-blue-600 flex items-center gap-1">
                                 View AMS <ArrowRight className="h-3 w-3" />
                             </Link>
                         </div>
@@ -357,20 +357,20 @@ export default function AdminCommandCenter() {
                                 <p className="text-sm text-slate-500 font-medium">All synced clients are within contract. Nothing to collect.</p>
                             </div>
                         ) : (
-                            <div className="divide-y divide-white/5">
+                            <div className="divide-y divide-slate-100">
                                 {uncollected.map(c => (
-                                    <div key={c.id} className="px-6 py-3.5 flex items-center gap-4 hover:bg-white/2 transition-colors">
-                                        <div className="h-9 w-9 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0">
-                                            <Building2 className="h-4 w-4 text-rose-300" />
+                                    <div key={c.id} className="px-6 py-3.5 flex items-center gap-4 hover:bg-slate-50 transition-colors">
+                                        <div className="h-9 w-9 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0">
+                                            <Building2 className="h-4 w-4 text-rose-600" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-bold text-white truncate">{c.company_name}</div>
+                                            <div className="text-sm font-bold text-slate-900 truncate">{c.company_name}</div>
                                             <div className="text-xs text-slate-500">
-                                                {c.actual} actual · {c.contracted} contracted · <span className="text-rose-300 font-bold">+{c.delta} over</span>
+                                                {c.actual} actual · {c.contracted} contracted · <span className="text-rose-600 font-bold">+{c.delta} over</span>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-sm font-black text-rose-300 tabular-nums">{fmtMoney(c.missingMRR)}/mo</div>
+                                            <div className="text-sm font-black text-rose-600 tabular-nums">{fmtMoney(c.missingMRR)}/mo</div>
                                             <div className="text-[10px] text-slate-500 font-medium">@ {fmtMoney(c.pricePerUser)}/seat</div>
                                         </div>
                                     </div>
@@ -380,13 +380,13 @@ export default function AdminCommandCenter() {
                     </div>
 
                     {/* Active Outreach */}
-                    <div className="col-span-5 bg-slate-900/40 backdrop-blur-xl rounded-2xl border border-white/5 overflow-hidden">
-                        <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+                    <div className="col-span-5 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <Megaphone className="h-5 w-5 text-blue-400" />
-                                <h2 className="font-bold text-white">Active Campaigns</h2>
+                                <Megaphone className="h-5 w-5 text-blue-600" />
+                                <h2 className="font-bold text-slate-900">Active Campaigns</h2>
                             </div>
-                            <Link href="/admin/outreach" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1">
+                            <Link href="/admin/outreach" className="text-xs font-bold text-slate-500 hover:text-blue-600 flex items-center gap-1">
                                 Outreach <ArrowRight className="h-3 w-3" />
                             </Link>
                         </div>
@@ -394,12 +394,12 @@ export default function AdminCommandCenter() {
                         {activeCampaigns.length === 0 ? (
                             <div className="px-6 py-12 text-center">
                                 <p className="text-sm text-slate-500 font-medium mb-4">No campaigns running right now.</p>
-                                <Link href="/admin/outreach/campaigns/new" className="inline-flex items-center gap-2 text-xs font-bold text-blue-400 hover:text-blue-300">
+                                <Link href="/admin/outreach/campaigns/new" className="inline-flex items-center gap-2 text-xs font-bold text-blue-600 hover:text-blue-700">
                                     Launch a campaign <ArrowRight className="h-3 w-3" />
                                 </Link>
                             </div>
                         ) : (
-                            <div className="divide-y divide-white/5">
+                            <div className="divide-y divide-slate-100">
                                 {activeCampaigns.map(c => {
                                     const replyRate = c.stats_contacted > 0
                                         ? Math.round((c.stats_replied / c.stats_contacted) * 100)
@@ -408,16 +408,16 @@ export default function AdminCommandCenter() {
                                         <Link
                                             key={c.id}
                                             href={`/admin/outreach/campaigns/${c.id}`}
-                                            className="block px-6 py-3.5 hover:bg-white/2 transition-colors"
+                                            className="block px-6 py-3.5 hover:bg-slate-50 transition-colors"
                                         >
                                             <div className="flex items-start justify-between gap-3 mb-2">
                                                 <div className="min-w-0">
-                                                    <div className="text-sm font-bold text-white truncate">{c.name}</div>
+                                                    <div className="text-sm font-bold text-slate-900 truncate">{c.name}</div>
                                                     <div className="text-[11px] text-slate-500 truncate">
                                                         {c.client_name || 'Audcomp'} · {fmtDate(c.updated_at)}
                                                     </div>
                                                 </div>
-                                                <span className="text-[10px] font-black bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-widest shrink-0">
+                                                <span className="text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-widest shrink-0">
                                                     Active
                                                 </span>
                                             </div>
@@ -425,7 +425,7 @@ export default function AdminCommandCenter() {
                                                 <Stat label="Researched" value={c.stats_researched} />
                                                 <Stat label="Contacted" value={c.stats_contacted} />
                                                 <Stat label="Replied" value={c.stats_replied} accent={replyRate >= 10 ? 'emerald' : undefined} />
-                                                <Stat label="Booked" value={c.stats_booked} accent="violet" />
+                                                <Stat label="Booked" value={c.stats_booked} accent="blue" />
                                             </div>
                                         </Link>
                                     );
@@ -436,16 +436,16 @@ export default function AdminCommandCenter() {
                 </div>
 
                 {/* Recent AI Audits */}
-                <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <Activity className="h-5 w-5 text-violet-400" />
-                            <h2 className="font-bold text-white">New AI Audits</h2>
-                            <span className="text-[10px] font-black bg-violet-500/10 text-violet-300 border border-violet-500/20 px-2 py-0.5 rounded-full uppercase tracking-widest">
+                            <Activity className="h-5 w-5 text-blue-600" />
+                            <h2 className="font-bold text-slate-900">New AI Audits</h2>
+                            <span className="text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded-full uppercase tracking-widest">
                                 {stats.newAudits7d} this week
                             </span>
                         </div>
-                        <Link href="/admin/audits" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1">
+                        <Link href="/admin/audits" className="text-xs font-bold text-slate-500 hover:text-blue-600 flex items-center gap-1">
                             All audits <ArrowRight className="h-3 w-3" />
                         </Link>
                     </div>
@@ -458,43 +458,43 @@ export default function AdminCommandCenter() {
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
-                                    <tr className="border-b border-white/5">
+                                    <tr className="border-b border-slate-100 bg-slate-50/50">
                                         {['User', 'Company', 'Score', 'Expert', 'Submitted'].map(h => (
                                             <th key={h} className="px-6 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">{h}</th>
                                         ))}
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-white/5">
+                                <tbody className="divide-y divide-slate-100">
                                     {recentAudits.map(a => (
                                         <tr
                                             key={`${a.user_id}-${a.created_at}`}
                                             onClick={() => router.push(`/admin/audits/${a.user_id}`)}
-                                            className="hover:bg-white/3 transition-colors cursor-pointer">
+                                            className="hover:bg-slate-50 transition-colors cursor-pointer">
                                             <td className="px-6 py-3.5">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-violet-600/20 border border-violet-500/20 flex items-center justify-center text-violet-300 text-xs font-bold shrink-0">
+                                                    <div className="w-8 h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-700 text-xs font-bold shrink-0">
                                                         {(a.full_name || a.email || 'U').charAt(0).toUpperCase()}
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <div className="text-sm font-bold text-white truncate">{a.full_name || 'No name'}</div>
+                                                        <div className="text-sm font-bold text-slate-900 truncate">{a.full_name || 'No name'}</div>
                                                         <div className="text-xs text-slate-500 truncate">{a.email || '—'}</div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-3.5 text-sm text-slate-400">{a.organization || '—'}</td>
+                                            <td className="px-6 py-3.5 text-sm text-slate-600">{a.organization || '—'}</td>
                                             <td className="px-6 py-3.5">
                                                 {a.overall_score != null ? (
                                                     <span className={`text-sm font-black tabular-nums ${
-                                                        a.overall_score >= 65 ? 'text-emerald-300'
-                                                            : a.overall_score >= 40 ? 'text-amber-300'
-                                                            : 'text-rose-300'
+                                                        a.overall_score >= 65 ? 'text-emerald-600'
+                                                            : a.overall_score >= 40 ? 'text-amber-600'
+                                                            : 'text-rose-600'
                                                     }`}>{a.overall_score}%</span>
-                                                ) : <span className="text-slate-600">—</span>}
+                                                ) : <span className="text-slate-400">—</span>}
                                             </td>
                                             <td className="px-6 py-3.5">
                                                 {a.expert_name
-                                                    ? <span className="text-sm font-bold text-slate-300">{a.expert_name}</span>
-                                                    : <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full uppercase tracking-widest">Unassigned</span>}
+                                                    ? <span className="text-sm font-bold text-slate-700">{a.expert_name}</span>
+                                                    : <span className="text-[10px] font-black text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full uppercase tracking-widest">Unassigned</span>}
                                             </td>
                                             <td className="px-6 py-3.5 text-xs text-slate-500 font-medium tabular-nums">
                                                 {new Date(a.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -511,12 +511,12 @@ export default function AdminCommandCenter() {
     );
 }
 
-function Stat({ label, value, accent }: { label: string; value: number; accent?: 'emerald' | 'violet' }) {
-    const tint = accent === 'emerald' ? 'text-emerald-300'
-        : accent === 'violet' ? 'text-violet-300'
-        : 'text-white';
+function Stat({ label, value, accent }: { label: string; value: number; accent?: 'emerald' | 'blue' }) {
+    const tint = accent === 'emerald' ? 'text-emerald-600'
+        : accent === 'blue' ? 'text-blue-600'
+        : 'text-slate-900';
     return (
-        <div className="bg-black/20 rounded-lg py-2">
+        <div className="bg-slate-50 rounded-lg py-2 border border-slate-100">
             <div className={`text-base font-black tabular-nums ${tint}`}>{value}</div>
             <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{label}</div>
         </div>
