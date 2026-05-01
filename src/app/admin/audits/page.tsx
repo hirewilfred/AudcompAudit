@@ -330,7 +330,7 @@ export default function AdminAuditsPage() {
                                             <td className="px-5 py-4">
                                                 {linkable ? (
                                                     <Link
-                                                        href={`/ai-advisor/results?userId=${r.user_id}`}
+                                                        href={`/admin/audits/${r.user_id}`}
                                                         className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-widest bg-violet-600 hover:bg-violet-500 text-white px-3 py-1.5 rounded-lg transition-colors"
                                                     >
                                                         <FileText className="h-3 w-3" />

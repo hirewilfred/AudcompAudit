@@ -466,7 +466,10 @@ export default function AdminCommandCenter() {
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
                                     {recentAudits.map(a => (
-                                        <tr key={`${a.user_id}-${a.created_at}`} className="hover:bg-white/2 transition-colors">
+                                        <tr
+                                            key={`${a.user_id}-${a.created_at}`}
+                                            onClick={() => router.push(`/admin/audits/${a.user_id}`)}
+                                            className="hover:bg-white/3 transition-colors cursor-pointer">
                                             <td className="px-6 py-3.5">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-full bg-violet-600/20 border border-violet-500/20 flex items-center justify-center text-violet-300 text-xs font-bold shrink-0">
