@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, UserCircle, Home, LogOut, Building2, Megaphone, Zap, Users2, ClipboardList, GraduationCap, KeyRound } from 'lucide-react';
+import { LayoutDashboard, Users, UserCircle, Home, LogOut, Building2, Megaphone, Zap, Users2, ClipboardList, GraduationCap, KeyRound, Globe } from 'lucide-react';
 
 export default function AdminNavbar() {
     const pathname = usePathname();
@@ -30,6 +30,7 @@ export default function AdminNavbar() {
                 { label: 'Outreach Dashboard', href: '/admin/outreach', icon: Megaphone },
                 { label: 'By Expert', href: '/admin/outreach/experts', icon: UserCircle },
                 { label: 'Campaigns', href: '/admin/outreach/campaigns', icon: Zap },
+                { label: 'Landing Funnel', href: '/admin/outreach/landing', icon: Globe },
                 { label: 'All Leads', href: '/admin/outreach/leads', icon: Users2 },
                 { label: 'Integrations', href: '/admin/outreach/integrations', icon: KeyRound },
             ],

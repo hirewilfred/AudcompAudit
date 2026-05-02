@@ -137,6 +137,39 @@ export default function SurveyPage() {
                 });
 
                 if (profileError) throw profileError;
+
+                // ── Funnel: register the completed audit as a landing-page
+                // submission so it flows into the per-expert outreach pipeline.
+                try {
+                    const { data: profileRow } = await (supabase
+                        .from('profiles') as any)
+                        .select('full_name, email, organization, phone')
+                        .eq('id', user.id)
+                        .maybeSingle();
+
+                    const params = new URLSearchParams(window.location.search);
+                    await fetch('/api/landing/submit', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            landing_page_slug: 'free-ai-audit',
+                            email: profileRow?.email ?? user.email ?? '',
+                            full_name: profileRow?.full_name ?? null,
+                            organization: profileRow?.organization ?? null,
+                            phone: profileRow?.phone ?? null,
+                            audit_user_id: user.id,
+                            referrer: typeof document !== 'undefined' ? document.referrer || null : null,
+                            utm_source: params.get('utm_source'),
+                            utm_medium: params.get('utm_medium'),
+                            utm_campaign: params.get('utm_campaign'),
+                            utm_term: params.get('utm_term'),
+                            utm_content: params.get('utm_content'),
+                        }),
+                    });
+                } catch (funnelErr) {
+                    // Non-blocking — funnel failure shouldn't break the audit save.
+                    console.warn('Funnel registration failed', funnelErr);
+                }
             }
 
             router.push('/dashboard');
