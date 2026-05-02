@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
     ArrowLeft, KeyRound, CheckCircle2, AlertCircle, Plus, Loader2,
-    EyeOff, Trash2, Power, ShieldAlert, ChevronRight,
+    EyeOff, Trash2, Power, ShieldAlert, ChevronRight, Zap,
 } from 'lucide-react';
 import AdminNavbar from '@/components/AdminNavbar';
 
@@ -162,6 +162,7 @@ export default function IntegrationsPage() {
 
 function IntegrationRow({ row, onRefresh }: { row: Integration; onRefresh: () => void }) {
     const [busy, setBusy] = useState(false);
+    const [testing, setTesting] = useState(false);
 
     const toggle = async () => {
         setBusy(true);
@@ -177,6 +178,17 @@ function IntegrationRow({ row, onRefresh }: { row: Integration; onRefresh: () =>
         if (!confirm(`Delete "${row.label}"? This is irreversible.`)) return;
         setBusy(true);
         await fetch(`/api/admin/integrations?id=${row.id}`, { method: 'DELETE' });
+        onRefresh();
+    };
+
+    const test = async () => {
+        setTesting(true);
+        await fetch('/api/admin/integrations/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: row.id }),
+        });
+        setTesting(false);
         onRefresh();
     };
 
@@ -200,6 +212,14 @@ function IntegrationRow({ row, onRefresh }: { row: Integration; onRefresh: () =>
                     {row.last_test_ok ? 'Test OK' : 'Test failed'}
                 </div>
             )}
+            <button
+                onClick={test}
+                disabled={testing || busy}
+                title="Test connection"
+                className="h-8 w-8 rounded-lg bg-slate-50 hover:bg-blue-50 text-slate-500 hover:text-blue-600 flex items-center justify-center border border-slate-100 transition-colors disabled:opacity-50"
+            >
+                {testing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
+            </button>
             <button
                 onClick={toggle}
                 disabled={busy}
