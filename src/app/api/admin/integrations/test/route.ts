@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { instantlyAdapter } from '@/lib/outreach/providers/instantly';
 import { apifyAdapter } from '@/lib/outreach/providers/apify';
+import { phantombusterAdapter } from '@/lib/outreach/providers/phantombuster';
 
 const adminSupabase = createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -42,6 +43,9 @@ export async function POST(req: NextRequest) {
             break;
         case 'apify':
             result = await apifyAdapter.testConnection();
+            break;
+        case 'phantombuster':
+            result = await phantombusterAdapter.testConnection();
             break;
         default:
             result = { ok: false, error: `Test not implemented for provider "${row.provider}"` };

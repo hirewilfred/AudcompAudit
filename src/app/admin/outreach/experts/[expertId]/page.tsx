@@ -242,26 +242,7 @@ export default function ExpertOutreachDetailPage() {
                             )}
                         </Section>
 
-                        <Section icon={MessageSquare} title={`Icebreaker queue (${data.icebreakerQueue.length})`} tint="amber" mb={false}>
-                            {data.icebreakerQueue.length === 0 ? (
-                                <EmptyRow text="Nothing waiting for approval right now." />
-                            ) : (
-                                <div className="space-y-2">
-                                    {data.icebreakerQueue.slice(0, 8).map((l: any) => (
-                                        <div key={l.id} className="bg-amber-50/40 border border-amber-100 rounded-lg p-3 flex items-center justify-between gap-3">
-                                            <div className="min-w-0">
-                                                <div className="text-sm font-bold text-slate-900 truncate">{l.contact_name || l.contact_email}</div>
-                                                <div className="text-[11px] text-slate-500 truncate">{l.company_name || l.contact_title}</div>
-                                            </div>
-                                            <span className="text-[10px] font-black text-amber-700 uppercase tracking-widest shrink-0">Review</span>
-                                        </div>
-                                    ))}
-                                    {data.icebreakerQueue.length > 8 && (
-                                        <p className="text-[11px] text-slate-500 italic text-center pt-1">+ {data.icebreakerQueue.length - 8} more — bulk approval lands in slice 6.</p>
-                                    )}
-                                </div>
-                            )}
-                        </Section>
+                        <IcebreakerQueue queue={data.icebreakerQueue} expertId={expertId} />
                     </div>
 
                     {/* Landing-page captures */}
@@ -362,6 +343,119 @@ function EmptyRow({ text, linkHref, linkText }: { text: string; linkHref?: strin
                 </Link>
             )}
         </div>
+    );
+}
+
+function IcebreakerQueue({ queue, expertId }: { queue: any[]; expertId: string }) {
+    const [items, setItems] = useState<any[]>(queue);
+    const [selected, setSelected] = useState<Set<string>>(new Set());
+    const [busy, setBusy] = useState(false);
+    useEffect(() => { setItems(queue); }, [queue]);
+
+    const toggle = (id: string) => {
+        const next = new Set(selected);
+        if (next.has(id)) next.delete(id); else next.add(id);
+        setSelected(next);
+    };
+
+    const act = async (action: 'approve' | 'decline', ids?: string[]) => {
+        const target = ids ?? Array.from(selected);
+        if (target.length === 0) return;
+        setBusy(true);
+        const res = await fetch('/api/outreach/leads/approve', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ leadIds: target, action }),
+        });
+        const j = await res.json();
+        if (res.ok) {
+            setItems(prev => prev.filter(l => !target.includes(l.id)));
+            setSelected(new Set());
+        } else {
+            alert(j.error || 'Failed');
+        }
+        setBusy(false);
+    };
+
+    return (
+        <Section icon={MessageSquare} title={`Icebreaker queue (${items.length})`} tint="amber" mb={false}>
+            {items.length === 0 ? (
+                <EmptyRow text="Nothing waiting for approval right now." />
+            ) : (
+                <>
+                    {selected.size > 0 && (
+                        <div className="flex items-center gap-2 mb-3 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+                            <span className="text-xs font-bold text-blue-900">{selected.size} selected</span>
+                            <div className="flex-1" />
+                            <button
+                                disabled={busy}
+                                onClick={() => act('approve')}
+                                className="text-[10px] font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-md transition-colors disabled:opacity-50"
+                            >Approve</button>
+                            <button
+                                disabled={busy}
+                                onClick={() => act('decline')}
+                                className="text-[10px] font-black uppercase tracking-widest bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50"
+                            >Decline</button>
+                        </div>
+                    )}
+                    <div className="space-y-2 max-h-[420px] overflow-y-auto">
+                        {items.map((l: any) => {
+                            const draft = l.custom_fields?.icebreaker
+                                ?? l.custom_fields?.drafts?.icebreaker
+                                ?? null;
+                            const isSel = selected.has(l.id);
+                            return (
+                                <label
+                                    key={l.id}
+                                    className={`flex items-start gap-3 rounded-lg p-3 border cursor-pointer transition-colors ${
+                                        isSel ? 'bg-blue-50 border-blue-200' : 'bg-amber-50/40 border-amber-100 hover:bg-amber-50'
+                                    }`}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={isSel}
+                                        onChange={() => toggle(l.id)}
+                                        className="mt-1 h-4 w-4 accent-blue-600 shrink-0"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <div className="text-sm font-bold text-slate-900 truncate">{l.contact_name || l.contact_email}</div>
+                                                <div className="text-[11px] text-slate-500 truncate">{l.company_name || l.contact_title}</div>
+                                            </div>
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                <button
+                                                    onClick={(e) => { e.preventDefault(); act('approve', [l.id]); }}
+                                                    disabled={busy}
+                                                    title="Approve"
+                                                    className="h-6 w-6 rounded-md bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-50 flex items-center justify-center"
+                                                >
+                                                    <CheckCircle2 className="h-3 w-3" />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { e.preventDefault(); act('decline', [l.id]); }}
+                                                    disabled={busy}
+                                                    title="Decline"
+                                                    className="h-6 w-6 rounded-md bg-white text-rose-700 border border-rose-200 hover:bg-rose-50 flex items-center justify-center"
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {draft && (
+                                            <p className="mt-2 text-[12px] text-slate-700 italic leading-relaxed border-l-2 border-amber-300 pl-2">
+                                                "{typeof draft === 'string' ? draft : JSON.stringify(draft)}"
+                                            </p>
+                                        )}
+                                    </div>
+                                </label>
+                            );
+                        })}
+                    </div>
+                </>
+            )}
+        </Section>
     );
 }
 
