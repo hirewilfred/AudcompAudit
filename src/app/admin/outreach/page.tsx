@@ -80,10 +80,16 @@ export default function OutreachDashboardPage() {
                         <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none">Outreach Dashboard</h1>
                         <p className="text-slate-400 font-medium mt-2 text-sm">22-Agent Sales Pipeline — Live Overview</p>
                     </div>
-                    <Link href="/admin/outreach/campaigns/new"
-                        className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20">
-                        <Plus className="h-4 w-4" /> New Campaign
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <Link href="/admin/outreach/integrations"
+                            className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-5 py-3 rounded-2xl font-black text-sm hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-all">
+                            Integrations
+                        </Link>
+                        <Link href="/admin/outreach/campaigns/new"
+                            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20">
+                            <Plus className="h-4 w-4" /> New Campaign
+                        </Link>
+                    </div>
                 </header>
 
                 {/* Stat Cards */}
