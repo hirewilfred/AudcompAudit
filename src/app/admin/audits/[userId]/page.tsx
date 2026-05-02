@@ -245,49 +245,66 @@ export default function AdminAuditDetailPage() {
             <AdminNavbar />
 
             <main className="pl-64 pr-8 pt-8 pb-20 relative">
-                <Link href="/admin/audits" className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-blue-600 mb-4">
+                <Link href="/admin/audits" className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-blue-600 mb-5">
                     <ArrowLeft className="h-3 w-3" /> Back to Audit Results
                 </Link>
 
-                {/* Customer header + score */}
-                <div className="grid grid-cols-12 gap-6 mb-6">
-                    <div className="col-span-8 bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex items-center gap-5">
-                        <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-700 text-2xl font-black shrink-0">
-                            {(p?.full_name || p?.email || 'U').charAt(0).toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <h1 className="text-2xl font-black text-slate-900">{p?.full_name || 'No name on file'}</h1>
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 mt-1">
-                                {p?.organization && <span className="inline-flex items-center gap-1.5"><Building2 className="h-3 w-3" />{p.organization}</span>}
-                                {p?.email && <a href={`mailto:${p.email}`} className="inline-flex items-center gap-1.5 hover:text-blue-600"><Mail className="h-3 w-3" />{p.email}</a>}
-                                {p?.phone && <span className="inline-flex items-center gap-1.5"><Phone className="h-3 w-3" />{p.phone}</span>}
-                                <span className="text-slate-400 font-mono text-[10px]">{userId.slice(0, 8)}…</span>
-                            </div>
-                            <div className="flex items-center gap-2 mt-3">
-                                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${
-                                    p?.has_completed_audit ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-100'
-                                }`}>{p?.has_completed_audit ? 'Audit complete' : 'In progress'}</span>
-                                {data.expert ? (
-                                    <span className="text-[10px] font-bold text-slate-500 inline-flex items-center gap-1.5">
-                                        Assigned to <span className="text-slate-900 font-black">{data.expert.full_name}</span>
-                                    </span>
-                                ) : (
-                                    <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">Unassigned</span>
-                                )}
-                                {p?._placeholder && (
-                                    <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100">No profile row</span>
-                                )}
-                            </div>
-                        </div>
-                    </div>
+                {/* Customer header + score — dark navy hero */}
+                <div className="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-900 shadow-xl shadow-blue-900/20">
+                    <div
+                        className="absolute inset-0 opacity-30 pointer-events-none"
+                        style={{
+                            backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(96,165,250,0.35) 1px, transparent 0)',
+                            backgroundSize: '24px 24px',
+                        }}
+                    />
+                    <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-blue-500/30 blur-[120px] pointer-events-none" />
+                    <div className="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-indigo-500/20 blur-[120px] pointer-events-none" />
 
-                    <div className={`col-span-4 ${tone.bg} rounded-2xl border ${tone.border} shadow-sm p-6 flex flex-col justify-between`}>
-                        <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Overall AI Readiness</div>
-                        <div className={`text-6xl font-black tabular-nums ${tone.text} leading-none my-2`}>
-                            {overall != null ? `${overall}%` : '—'}
+                    <div className="relative z-10 grid grid-cols-12 gap-6 p-8">
+                        <div className="col-span-8 flex items-center gap-5">
+                            <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center text-white text-2xl font-black shrink-0">
+                                {(p?.full_name || p?.email || 'U').charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h1 className="text-3xl font-black text-white">{p?.full_name || 'No name on file'}</h1>
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-blue-200 mt-1">
+                                    {p?.organization && <span className="inline-flex items-center gap-1.5"><Building2 className="h-3 w-3" />{p.organization}</span>}
+                                    {p?.email && <a href={`mailto:${p.email}`} className="inline-flex items-center gap-1.5 hover:text-white"><Mail className="h-3 w-3" />{p.email}</a>}
+                                    {p?.phone && <span className="inline-flex items-center gap-1.5"><Phone className="h-3 w-3" />{p.phone}</span>}
+                                    <span className="text-blue-300/60 font-mono text-[10px]">{userId.slice(0, 8)}…</span>
+                                </div>
+                                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${
+                                        p?.has_completed_audit ? 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30' : 'bg-white/5 text-blue-200 border-white/10'
+                                    }`}>{p?.has_completed_audit ? 'Audit complete' : 'In progress'}</span>
+                                    {data.expert ? (
+                                        <span className="text-[10px] font-bold text-blue-200 inline-flex items-center gap-1.5">
+                                            Assigned to <span className="text-white font-black">{data.expert.full_name}</span>
+                                        </span>
+                                    ) : (
+                                        <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-200 border border-amber-400/30">Unassigned</span>
+                                    )}
+                                    {p?._placeholder && (
+                                        <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-200 border border-rose-400/30">No profile row</span>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                        <div className="text-[11px] text-slate-500 font-medium">
-                            {data.score?.created_at ? `Scored ${new Date(data.score.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : 'No audit score yet'}
+
+                        <div className="col-span-4 bg-white/8 backdrop-blur border border-white/15 rounded-2xl p-5 flex flex-col justify-between">
+                            <div className="text-[10px] font-black text-blue-200 uppercase tracking-widest">Overall AI Readiness</div>
+                            <div className={`text-6xl font-black tabular-nums leading-none my-2 ${
+                                overall == null ? 'text-blue-200/50'
+                                    : overall >= 75 ? 'text-emerald-300'
+                                    : overall >= 50 ? 'text-amber-300'
+                                    : 'text-rose-300'
+                            }`}>
+                                {overall != null ? `${overall}%` : '—'}
+                            </div>
+                            <div className="text-[11px] text-blue-200 font-medium">
+                                {data.score?.created_at ? `Scored ${new Date(data.score.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : 'No audit score yet'}
+                            </div>
                         </div>
                     </div>
                 </div>

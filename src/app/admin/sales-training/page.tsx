@@ -73,25 +73,44 @@ export default function AdminSalesTrainingPage() {
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
       <AdminNavbar />
 
-      <div className="max-w-screen-2xl mx-auto px-8 py-8">
+      <main className="pl-64 pr-8 pt-8 pb-20 relative">
+        <div className="max-w-7xl mx-auto">
 
-        {/* Header */}
-        <div className="mb-8">
-          <Link href="/admin" className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-blue-700 mb-4 transition">
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Command Center
-          </Link>
+        {/* Hero header — dark navy gradient with dotted texture */}
+        <div className="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-900 p-8 md:p-10 shadow-xl shadow-blue-900/20">
+          {/* dotted texture */}
+          <div
+            className="absolute inset-0 opacity-30 pointer-events-none"
+            style={{
+              backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(96,165,250,0.35) 1px, transparent 0)',
+              backgroundSize: '24px 24px',
+            }}
+          />
+          {/* glow */}
+          <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-blue-500/30 blur-[120px] pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-indigo-500/20 blur-[120px] pointer-events-none" />
 
-          <div className="flex items-end justify-between gap-6 flex-wrap">
-            <div>
-              <div className="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-widest mb-2">
-                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-                Sales Training Hub
+          <div className="relative z-10">
+            <Link href="/admin" className="inline-flex items-center gap-2 text-xs font-bold text-blue-200 hover:text-white mb-5 transition">
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Command Center
+            </Link>
+
+            <div className="flex items-end justify-between gap-6 flex-wrap">
+              <div>
+                <div className="flex items-center gap-2 text-blue-300 font-bold text-xs uppercase tracking-widest mb-3">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Sales Training Hub
+                </div>
+                <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-[1.05]">Train experts to <span className="bg-gradient-to-r from-blue-300 to-indigo-200 bg-clip-text text-transparent">sell AI agents.</span></h1>
+                <p className="text-blue-100/80 text-sm mt-3 max-w-2xl leading-relaxed">
+                  Click any industry to launch the live demo. Open the Sales Kit for ROI talking points, discovery questions, and objection handling.
+                </p>
               </div>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900">Train experts to sell AI agents.</h1>
-              <p className="text-slate-600 text-sm mt-2 max-w-2xl">
-                Click any industry to launch the live demo. Open the Sales Kit for ROI talking points, discovery questions, and objection handling.
-              </p>
+              <div className="hidden md:flex items-center gap-2 rounded-full bg-white/5 backdrop-blur border border-white/10 px-4 py-2">
+                <Sparkles className="h-3.5 w-3.5 text-blue-300" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-blue-100">For experts only</span>
+              </div>
             </div>
           </div>
         </div>
@@ -144,8 +163,8 @@ export default function AdminSalesTrainingPage() {
                       {demo.industry}
                     </span>
                     {demo.available ? (
-                      <span className="inline-flex items-center gap-1 bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         Live
                       </span>
                     ) : (
@@ -162,7 +181,7 @@ export default function AdminSalesTrainingPage() {
                   <div className="grid grid-cols-2 gap-2 mb-5">
                     <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
                       <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">Annual Savings</p>
-                      <p className="text-lg font-black text-emerald-400">{demo.annualSavings}</p>
+                      <p className="text-lg font-black text-emerald-600">{demo.annualSavings}</p>
                     </div>
                     <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
                       <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">Payback</p>
@@ -217,7 +236,8 @@ export default function AdminSalesTrainingPage() {
             ))}
           </div>
         </section>
-      </div>
+        </div>
+      </main>
 
       {/* Sales Kit Modal */}
       <AnimatePresence>
@@ -231,10 +251,10 @@ export default function AdminSalesTrainingPage() {
 
 function StatCard({ icon: Icon, label, value, tone }: { icon: any; label: string; value: string; tone: 'blue' | 'emerald' | 'amber' | 'violet' }) {
   const t = {
-    blue:    { bg: 'bg-blue-500/10',    border: 'border-blue-500/20',    text: 'text-blue-600'    },
-    emerald: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
-    amber:   { bg: 'bg-amber-500/10',   border: 'border-amber-500/20',   text: 'text-amber-400'   },
-    violet:  { bg: 'bg-violet-500/10',  border: 'border-violet-500/20',  text: 'text-violet-400'  },
+    blue:    { bg: 'bg-blue-50',    border: 'border-blue-100',    text: 'text-blue-600'    },
+    emerald: { bg: 'bg-emerald-50', border: 'border-emerald-100', text: 'text-emerald-600' },
+    amber:   { bg: 'bg-amber-50',   border: 'border-amber-100',   text: 'text-amber-600'   },
+    violet:  { bg: 'bg-blue-50',    border: 'border-blue-100',    text: 'text-blue-600'    },
   }[tone];
   return (
     <div className="bg-white shadow-sm rounded-2xl p-5 border border-slate-100 flex items-center gap-4">

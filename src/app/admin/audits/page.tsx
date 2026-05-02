@@ -185,19 +185,29 @@ export default function AdminAuditsPage() {
             <AdminNavbar />
 
             <main className="pl-64 pr-8 pt-8 pb-20 relative">
-                {/* Header */}
-                <header className="flex items-center justify-between mb-8">
-                    <div>
-                        <Link href="/admin" className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-blue-600 mb-3 transition-colors">
+                {/* Hero header — dark navy gradient with dotted texture */}
+                <div className="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-900 p-8 md:p-10 shadow-xl shadow-blue-900/20">
+                    <div
+                        className="absolute inset-0 opacity-30 pointer-events-none"
+                        style={{
+                            backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(96,165,250,0.35) 1px, transparent 0)',
+                            backgroundSize: '24px 24px',
+                        }}
+                    />
+                    <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-blue-500/30 blur-[120px] pointer-events-none" />
+                    <div className="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-indigo-500/20 blur-[120px] pointer-events-none" />
+
+                    <div className="relative z-10">
+                        <Link href="/admin" className="inline-flex items-center gap-2 text-xs font-bold text-blue-200 hover:text-white mb-5 transition-colors">
                             <ArrowLeft className="h-3 w-3" /> Back to Command Center
                         </Link>
-                        <div className="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-widest mb-2">
+                        <div className="flex items-center gap-2 text-blue-300 font-bold text-xs uppercase tracking-widest mb-3">
                             <ClipboardList className="h-3 w-3" /> Audit Results
                         </div>
-                        <h1 className="text-4xl font-black tracking-tight text-slate-900">AI Audit Results</h1>
-                        <p className="text-slate-500 text-sm mt-1">Every customer audit · scores, answers, and the AI roadmap your reps need.</p>
+                        <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-[1.05]">AI Audit <span className="bg-gradient-to-r from-blue-300 to-indigo-200 bg-clip-text text-transparent">Results</span></h1>
+                        <p className="text-blue-100/80 text-sm mt-3 max-w-2xl leading-relaxed">Every customer audit · scores, answers, and the AI roadmap your reps need.</p>
                     </div>
-                </header>
+                </div>
 
                 {/* Stats row */}
                 <div className="grid grid-cols-4 gap-4 mb-8">

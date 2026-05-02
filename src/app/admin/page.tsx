@@ -285,28 +285,38 @@ export default function AdminCommandCenter() {
             <AdminNavbar />
 
             <main className="pl-64 pr-8 pt-8 pb-20 relative">
-                {/* Header */}
-                <header className="flex items-center justify-between mb-8">
-                    <div>
-                        <div className="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-widest mb-2">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            Command Center
+                {/* Hero header — dark navy gradient with dotted texture */}
+                <div className="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-900 p-8 md:p-10 shadow-xl shadow-blue-900/20">
+                    <div
+                        className="absolute inset-0 opacity-30 pointer-events-none"
+                        style={{
+                            backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(96,165,250,0.35) 1px, transparent 0)',
+                            backgroundSize: '24px 24px',
+                        }}
+                    />
+                    <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-blue-500/30 blur-[120px] pointer-events-none" />
+                    <div className="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-indigo-500/20 blur-[120px] pointer-events-none" />
+
+                    <header className="relative z-10 flex items-center justify-between flex-wrap gap-4">
+                        <div>
+                            <div className="flex items-center gap-2 text-blue-300 font-bold text-xs uppercase tracking-widest mb-3">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                Command Center
+                            </div>
+                            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-[1.05]">Audcomp <span className="bg-gradient-to-r from-blue-300 to-indigo-200 bg-clip-text text-transparent">HQ</span></h1>
+                            <p className="text-blue-100/80 text-sm mt-2 max-w-2xl leading-relaxed">Revenue, outreach, and audit pipeline at a glance.</p>
                         </div>
-                        <h1 className="text-4xl font-black tracking-tight text-slate-900">Audcomp HQ</h1>
-                        <p className="text-slate-500 text-sm mt-1">Revenue, outreach, and audit pipeline at a glance.</p>
-                    </div>
-                    <div className="flex items-center gap-3">
                         <button
                             onClick={handleResetMyAudit}
                             disabled={resetting}
                             title="Wipe your own audit and re-take the survey."
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all bg-white text-slate-500 hover:bg-amber-50 hover:text-amber-700 border border-slate-100 hover:border-amber-200 disabled:opacity-50"
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all bg-white/10 backdrop-blur text-blue-100 hover:bg-amber-500/20 hover:text-amber-200 border border-white/15 hover:border-amber-400/40 disabled:opacity-50"
                         >
                             {resetting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
                             {resetting ? 'Resetting…' : 'Reset My Audit'}
                         </button>
-                    </div>
-                </header>
+                    </header>
+                </div>
 
                 {/* KPI strip */}
                 <div className="grid grid-cols-4 gap-4 mb-8">
