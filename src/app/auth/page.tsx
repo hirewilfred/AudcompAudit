@@ -48,11 +48,28 @@ function AuthPageContent() {
 
                 const { data: { user } } = await supabase.auth.getUser();
                 if (user) {
+                    // Check if this email belongs to an Audcomp expert — they get the expert dashboard.
+                    const { data: expertRow } = await supabase
+                        .from('experts')
+                        .select('id, email')
+                        .eq('email', user.email ?? '')
+                        .maybeSingle() as any;
+
+                    if (expertRow?.id) {
+                        router.push(safeNext ?? '/expert');
+                        return;
+                    }
+
                     const { data: profile } = await supabase
                         .from('profiles')
-                        .select('has_completed_audit')
+                        .select('has_completed_audit, is_admin')
                         .eq('id', user.id)
                         .single() as any;
+
+                    if (profile?.is_admin) {
+                        router.push(safeNext ?? '/admin');
+                        return;
+                    }
 
                     router.push(safeNext ?? (profile?.has_completed_audit ? '/dashboard' : '/survey'));
                 }

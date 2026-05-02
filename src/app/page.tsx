@@ -1080,8 +1080,8 @@ export default function Home() {
                 preload="auto"
                 className="h-full w-full object-contain bg-black"
               >
-                <source src="/Videos/AI-Agents-web.webm" type="video/webm" />
-                <source src="/Videos/AI-Agents-web.mp4" type="video/mp4" />
+                <source src="/Videos/AI_Agents8-web.webm" type="video/webm" />
+                <source src="/Videos/AI_Agents8-web.mp4" type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
             </motion.div>
