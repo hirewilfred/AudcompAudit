@@ -28,6 +28,7 @@ export default function AdminNavbar() {
             label: 'AI Outreach',
             items: [
                 { label: 'Outreach Dashboard', href: '/admin/outreach', icon: Megaphone },
+                { label: 'By Expert', href: '/admin/outreach/experts', icon: UserCircle },
                 { label: 'Campaigns', href: '/admin/outreach/campaigns', icon: Zap },
                 { label: 'All Leads', href: '/admin/outreach/leads', icon: Users2 },
                 { label: 'Integrations', href: '/admin/outreach/integrations', icon: KeyRound },
