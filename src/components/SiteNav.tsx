@@ -11,12 +11,12 @@ interface SiteNavProps {
 }
 
 const NAV_LINKS = [
-    { label: 'About',        href: 'https://audcomp.com/about/' },
-    { label: 'Services',     href: 'https://audcomp.com/managed-it-services/' },
-    { label: 'AI Audit',     href: '/' },
-    { label: 'Agent Audit',  href: '/ai-agents' },
-    { label: 'Case Studies', href: '/#case-studies' },
-    { label: 'Contact',      href: 'https://audcomp.com/contact/' },
+    { label: 'AI Audit',       href: '/' },
+    { label: 'AI Receptionist',href: '/ai-receptionist' },
+    { label: 'Custom Agents',  href: '/custom-ai-agents' },
+    { label: 'AI Training',    href: '/ai-training' },
+    { label: 'Audcomp 360',    href: '/audcomp-360' },
+    { label: 'Case Studies',   href: '/#case-studies' },
 ];
 
 export default function SiteNav({ activeCta = 'audit' }: SiteNavProps) {
