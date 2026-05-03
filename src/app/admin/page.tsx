@@ -7,7 +7,7 @@ import AdminNavbar from '@/components/AdminNavbar';
 import {
     Users, ArrowRight, Loader2, ShieldAlert, Activity,
     ClipboardList, RotateCcw, DollarSign, Megaphone,
-    Building2, ChevronRight, AlertTriangle, TrendingUp,
+    Building2, ChevronRight, AlertTriangle, TrendingUp, AlertCircle, Bell, Info, Zap,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -16,6 +16,16 @@ const fmtMoney = (n: number) =>
     n.toLocaleString('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 });
 const fmtDate = (d: string | null | undefined) =>
     d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
+
+type Anomaly = {
+    id: string;
+    severity: 'critical' | 'warning' | 'info';
+    category: 'sla' | 'tech_kpi' | 'stalled' | 'ams' | 'outreach';
+    title: string;
+    detail: string;
+    metric?: string;
+    href?: string;
+};
 
 interface UncollectedRow {
     id: string;
@@ -66,6 +76,8 @@ export default function AdminCommandCenter() {
     const [uncollected, setUncollected] = useState<UncollectedRow[]>([]);
     const [activeCampaigns, setActiveCampaigns] = useState<CampaignRow[]>([]);
     const [recentAudits, setRecentAudits] = useState<AuditRow[]>([]);
+    const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
+    const [anomaliesLoading, setAnomaliesLoading] = useState(true);
 
     const [resetting, setResetting] = useState(false);
     const handleResetMyAudit = async () => {
@@ -218,6 +230,27 @@ export default function AdminCommandCenter() {
         })();
     }, []);
 
+    // Anomalies — separate effect, runs after admin gate, refreshes every 60s
+    useEffect(() => {
+        if (isAdmin !== true) return;
+        let cancelled = false;
+        const load = async () => {
+            try {
+                const res = await fetch('/api/admin/anomalies');
+                if (!res.ok) return;
+                const j = await res.json();
+                if (!cancelled) setAnomalies(j.anomalies ?? []);
+            } catch {
+                // silent
+            } finally {
+                if (!cancelled) setAnomaliesLoading(false);
+            }
+        };
+        load();
+        const interval = setInterval(load, 60_000);
+        return () => { cancelled = true; clearInterval(interval); };
+    }, [isAdmin]);
+
     if (loading) return (
         <div className="flex min-h-screen items-center justify-center bg-[#F4F7FE]">
             <Loader2 className="h-10 w-10 text-blue-600 animate-spin" />
@@ -344,6 +377,9 @@ export default function AdminCommandCenter() {
                         </motion.div>
                     ))}
                 </div>
+
+                {/* ── Things you should know — anomalies feed ── */}
+                <AnomaliesPanel anomalies={anomalies} loading={anomaliesLoading} />
 
                 {/* Two-column body */}
                 <div className="grid grid-cols-12 gap-6 mb-6">
@@ -517,6 +553,110 @@ export default function AdminCommandCenter() {
                     )}
                 </div>
             </main>
+        </div>
+    );
+}
+
+function AnomaliesPanel({ anomalies, loading }: { anomalies: Anomaly[]; loading: boolean }) {
+    const critical = anomalies.filter(a => a.severity === 'critical').length;
+    const warning = anomalies.filter(a => a.severity === 'warning').length;
+    const info = anomalies.filter(a => a.severity === 'info').length;
+    const allClear = !loading && anomalies.length === 0;
+
+    const tone = (s: Anomaly['severity']) => s === 'critical'
+        ? { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', dot: 'bg-rose-500', icon: AlertCircle }
+        : s === 'warning'
+        ? { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', dot: 'bg-amber-500', icon: AlertTriangle }
+        : { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', dot: 'bg-blue-500', icon: Info };
+
+    return (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                    <div className={`h-9 w-9 rounded-xl flex items-center justify-center border ${
+                        critical > 0 ? 'bg-rose-50 border-rose-200 text-rose-600'
+                            : warning > 0 ? 'bg-amber-50 border-amber-200 text-amber-600'
+                            : allClear ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
+                            : 'bg-blue-50 border-blue-200 text-blue-600'
+                    }`}>
+                        <Bell className={`h-4 w-4 ${critical > 0 ? 'animate-pulse' : ''}`} />
+                    </div>
+                    <div>
+                        <h2 className="font-bold text-slate-900">Things you should know</h2>
+                        <p className="text-[11px] text-slate-500 font-medium">SLA breaches, KPI misses, stalled tickets, and money on the table.</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                    {critical > 0 && (
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-full inline-flex items-center gap-1.5">
+                            <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" /> {critical} critical
+                        </span>
+                    )}
+                    {warning > 0 && (
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-full inline-flex items-center gap-1.5">
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> {warning} warning
+                        </span>
+                    )}
+                    {info > 0 && (
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-full inline-flex items-center gap-1.5">
+                            <span className="h-1.5 w-1.5 rounded-full bg-blue-500" /> {info} info
+                        </span>
+                    )}
+                    {allClear && (
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full inline-flex items-center gap-1.5">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> All clear
+                        </span>
+                    )}
+                </div>
+            </div>
+
+            {loading ? (
+                <div className="px-6 py-8 flex items-center justify-center">
+                    <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+                </div>
+            ) : allClear ? (
+                <div className="px-6 py-10 text-center">
+                    <div className="h-10 w-10 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 mx-auto flex items-center justify-center mb-3">
+                        <Zap className="h-5 w-5" />
+                    </div>
+                    <p className="text-sm font-bold text-slate-900">No anomalies right now.</p>
+                    <p className="text-xs text-slate-500 mt-1">SLAs are met, KPIs are on track, AMS clients are within contract.</p>
+                </div>
+            ) : (
+                <div className="divide-y divide-slate-100">
+                    {anomalies.map(a => {
+                        const t = tone(a.severity);
+                        const Icon = t.icon;
+                        const Wrapper: any = a.href ? Link : 'div';
+                        const wrapperProps = a.href ? { href: a.href } : {};
+                        return (
+                            <Wrapper
+                                key={a.id}
+                                {...wrapperProps}
+                                className={`block px-6 py-3.5 hover:bg-slate-50 transition-colors flex items-center gap-4 ${a.href ? 'cursor-pointer' : ''}`}
+                            >
+                                <div className={`h-9 w-9 rounded-lg ${t.bg} ${t.border} border ${t.text} flex items-center justify-center shrink-0`}>
+                                    <Icon className="h-4 w-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${t.bg} ${t.border} ${t.text}`}>
+                                            {a.severity}
+                                        </span>
+                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{a.category.replace('_', ' ')}</span>
+                                        <span className="text-sm font-black text-slate-900">{a.title}</span>
+                                    </div>
+                                    <div className="text-xs text-slate-600 mt-1 line-clamp-1">{a.detail}</div>
+                                </div>
+                                {a.metric && (
+                                    <div className={`text-sm font-black tabular-nums ${t.text} shrink-0`}>{a.metric}</div>
+                                )}
+                                {a.href && <ChevronRight className="h-4 w-4 text-slate-300 shrink-0" />}
+                            </Wrapper>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 }
