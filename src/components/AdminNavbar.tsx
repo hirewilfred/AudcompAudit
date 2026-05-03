@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, UserCircle, Home, LogOut, Building2, Megaphone, Zap, Users2, ClipboardList, GraduationCap, KeyRound, Globe, Activity, Bot, Linkedin } from 'lucide-react';
+import { LayoutDashboard, Users, UserCircle, Home, LogOut, Building2, Megaphone, Zap, Users2, ClipboardList, GraduationCap, KeyRound, Globe, Activity, Bot, Linkedin, Layout } from 'lucide-react';
 
 export default function AdminNavbar() {
     const pathname = usePathname();
@@ -18,10 +18,12 @@ export default function AdminNavbar() {
             ],
         },
         {
-            label: 'AMS Portal',
+            label: 'Service',
             items: [
                 { label: 'AMS Dashboard', href: '/admin/ams', icon: Building2 },
                 { label: 'AMS Clients', href: '/admin/ams/clients', icon: UserCircle },
+                { label: 'Service KPI Dashboard', href: '/admin/service-kpi', icon: Activity },
+                { label: 'Service KPI Setup', href: '/admin/service-kpi/setup', icon: KeyRound },
             ],
         },
         {
@@ -32,6 +34,7 @@ export default function AdminNavbar() {
                 { label: 'Mission Control', href: '/admin/outreach/missions', icon: Bot },
                 { label: 'LinkedIn Posts', href: '/admin/outreach/posts', icon: Linkedin },
                 { label: 'Campaigns', href: '/admin/outreach/campaigns', icon: Zap },
+                { label: 'Landing Pages', href: '/admin/outreach/landing-pages', icon: Layout },
                 { label: 'Landing Funnel', href: '/admin/outreach/landing', icon: Globe },
                 { label: 'All Leads', href: '/admin/outreach/leads', icon: Users2 },
                 { label: 'Integrations', href: '/admin/outreach/integrations', icon: KeyRound },
@@ -40,10 +43,6 @@ export default function AdminNavbar() {
         {
             label: 'Sales Enablement',
             items: [{ label: 'Sales Training Hub', href: '/admin/sales-training', icon: GraduationCap }],
-        },
-        {
-            label: 'Service KPI',
-            items: [{ label: 'Service Dashboard', href: '/admin/service-kpi', icon: Activity }],
         },
     ];
 
