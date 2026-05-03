@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
         const userId = new URL(request.url).searchParams.get('userId');
         if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
 
-        const [profileRes, scoreRes, reportRes] = await Promise.all([
+        const [profileRes, scoreRes, reportRes, responsesRes] = await Promise.all([
             adminSupabase
                 .from('profiles')
                 .select('id, full_name, email, organization, phone, has_completed_audit, assigned_expert_id, created_at, updated_at, directors_notes')
@@ -38,6 +38,11 @@ export async function GET(request: NextRequest) {
                 .select('responses, recommendations, roadmap, narrative, roi_parameters, organization, updated_at')
                 .eq('user_id', userId)
                 .maybeSingle(),
+            adminSupabase
+                .from('audit_responses')
+                .select('question_id, answer, created_at')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false }),
         ]);
 
         let profile: any = profileRes.data || null;
@@ -94,11 +99,22 @@ export async function GET(request: NextRequest) {
             expert = e || null;
         }
 
+        // Keep only the latest answer per question_id (responsesRes is desc by created_at).
+        const latestPerQ = new Map<string, any>();
+        (responsesRes.data || []).forEach((r: any) => {
+            if (!latestPerQ.has(r.question_id)) latestPerQ.set(r.question_id, r);
+        });
+        const auditResponses = Array.from(latestPerQ.values()).map((r: any) => ({
+            question_id: r.question_id,
+            answer: r.answer,
+        }));
+
         return NextResponse.json({
             profile,
             expert,
             score: scoreRes.data || null,
             report: reportRes.data || null,
+            auditResponses,
         });
     } catch (err: any) {
         console.error('audit-detail error', err);

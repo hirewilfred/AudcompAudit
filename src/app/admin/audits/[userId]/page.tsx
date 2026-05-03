@@ -6,12 +6,13 @@ import Link from 'next/link';
 import {
     ArrowLeft, Loader2, ShieldAlert, Mail, Phone, Building2,
     TrendingUp, AlertTriangle, Sparkles, ClipboardList, Target,
-    ExternalLink, Bot, Zap, ChevronRight,
+    ExternalLink, Bot, Zap, ChevronRight, CheckCircle2,
 } from 'lucide-react';
 import AdminNavbar from '@/components/AdminNavbar';
 import { ADVISOR_STEPS, AdvisorResponses } from '@/lib/advisor-questions';
 import { AGENT_ASSESSMENT_STEPS } from '@/lib/agent-assessment';
 import { AGENT_CATALOG } from '@/lib/agent-catalog';
+import { AUDIT_QUESTIONS } from '@/lib/audit-questions';
 
 type DetailResponse = {
     profile: {
@@ -27,7 +28,8 @@ type DetailResponse = {
         _placeholder?: boolean;
     } | null;
     expert: { id: string; full_name: string | null; email: string | null; photo_url: string | null; bookings_url: string | null; } | null;
-    score: { overall_score: number; category_scores: Record<string, number> | null; recommendations: string[] | null; created_at: string; } | null;
+    score: { overall_score: number; category_scores: any; recommendations: string[] | null; created_at: string; } | null;
+    auditResponses?: { question_id: string; answer: number }[];
     report: {
         responses: AdvisorResponses & {
             aa_priority_dept?: string;
@@ -162,11 +164,49 @@ export default function AdminAuditDetailPage() {
 
     const overall = data?.score?.overall_score ?? null;
     const tone = scoreTone(overall);
-    const categoryScores = data?.score?.category_scores || {};
-    const sortedCategories = useMemo(
-        () => Object.entries(categoryScores).map(([k, v]) => [k, Number(v)] as [string, number]).sort((a, b) => b[1] - a[1]),
-        [categoryScores],
-    );
+
+    // Normalize category_scores. Two shapes exist in the DB:
+    //  - array of objects: [{ category: 'strategy', score: 80, fullMark: 100 }, ...]
+    //  - object map: { strategy: 80, ... }
+    const sortedCategories = useMemo<[string, number][]>(() => {
+        const cs = data?.score?.category_scores;
+        if (!cs) return [];
+        const niceLabel = (k: string) =>
+            ({ strategy: 'Strategy & Vision', data: 'Data Foundation', technical: 'Technical Adoption', governance: 'Governance & Safety', operational: 'Operational Readiness' } as Record<string, string>)[k] ?? k;
+        if (Array.isArray(cs)) {
+            return cs
+                .map((c: any) => [niceLabel(c.category ?? c.name ?? ''), Number(c.score ?? c.value ?? 0)] as [string, number])
+                .filter(([k]) => k)
+                .sort((a, b) => b[1] - a[1]);
+        }
+        return Object.entries(cs)
+            .map(([k, v]) => [niceLabel(k), Number(v)] as [string, number])
+            .filter(([, v]) => Number.isFinite(v))
+            .sort((a, b) => b[1] - a[1]);
+    }, [data?.score?.category_scores]);
+
+    // Per-question breakdown — joins audit_responses with AUDIT_QUESTIONS
+    const questionBreakdown = useMemo(() => {
+        const responses = data?.auditResponses || [];
+        if (!responses.length) return [];
+        const answerMap = new Map(responses.map(r => [r.question_id, r.answer]));
+        return AUDIT_QUESTIONS
+            .filter(q => answerMap.has(q.id))
+            .map(q => {
+                const answerValue = answerMap.get(q.id)!;
+                const opt = q.options.find(o => o.value === answerValue) || null;
+                const maxValue = Math.max(...q.options.map(o => o.value));
+                return {
+                    id: q.id,
+                    category: q.category,
+                    question: q.text,
+                    answerLabel: opt?.label ?? `Answered ${answerValue}`,
+                    answerValue,
+                    maxValue,
+                    feedback: opt?.feedback ?? null,
+                };
+            });
+    }, [data?.auditResponses]);
     const lowest = sortedCategories.slice().sort((a, b) => a[1] - b[1]).slice(0, 3);
     const responses = data?.report?.responses || ({} as any);
     const playbook = useMemo(() => responses ? buildSalesPlaybook(responses, overall) : [], [responses, overall]);
@@ -332,7 +372,7 @@ export default function AdminAuditDetailPage() {
                 )}
 
                 {/* Where they need work */}
-                {lowest.length > 0 && (
+                {lowest.length > 0 && lowest.some(([, v]) => Number.isFinite(v)) && (
                     <Section icon={AlertTriangle} title="Where they need work" tint="rose">
                         <div className="grid grid-cols-3 gap-3">
                             {lowest.map(([cat, val]) => (
@@ -342,6 +382,62 @@ export default function AdminAuditDetailPage() {
                                         <span className="text-lg font-black text-rose-700 tabular-nums">{val}%</span>
                                     </div>
                                     <p className="text-xs text-slate-600 leading-relaxed">Below readiness threshold — biggest opportunity for an Audcomp engagement.</p>
+                                </div>
+                            ))}
+                        </div>
+                    </Section>
+                )}
+
+                {/* Per-question breakdown — every audit question + their actual answer + points */}
+                {questionBreakdown.length > 0 && (
+                    <Section icon={ClipboardList} title="Each audit question — their answer + score" tint="blue">
+                        <div className="space-y-3">
+                            {questionBreakdown.map((q, i) => {
+                                const pct = q.maxValue > 0 ? Math.round((q.answerValue / q.maxValue) * 100) : 0;
+                                const t = scoreTone(pct);
+                                const catLabel = ({ strategy: 'Strategy', data: 'Data', technical: 'Technical', governance: 'Governance', operational: 'Operational' } as Record<string, string>)[q.category] ?? q.category;
+                                return (
+                                    <div key={q.id} className="bg-gradient-to-br from-blue-50/60 to-white border border-blue-100 rounded-xl p-4">
+                                        <div className="flex items-start justify-between gap-3 mb-2">
+                                            <div className="flex items-start gap-3 min-w-0">
+                                                <span className="shrink-0 inline-flex items-center justify-center h-7 w-7 rounded-md bg-blue-600 text-white text-[10px] font-black tabular-nums">Q{i + 1}</span>
+                                                <div className="min-w-0">
+                                                    <div className="text-[10px] font-black text-blue-700 uppercase tracking-widest mb-0.5">{catLabel}</div>
+                                                    <p className="text-sm font-bold text-slate-900 leading-snug">{q.question}</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right shrink-0">
+                                                <div className={`text-base font-black tabular-nums ${t.text}`}>{q.answerValue}<span className="text-slate-400 text-xs font-bold">/{q.maxValue}</span></div>
+                                                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Score</div>
+                                            </div>
+                                        </div>
+                                        <div className="ml-10">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <CheckCircle2 className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                                                <span className="text-xs font-bold text-slate-700">{q.answerLabel}</span>
+                                            </div>
+                                            <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden mb-2">
+                                                <div className={`h-full bg-gradient-to-r ${t.bar}`} style={{ width: `${Math.min(100, pct)}%` }} />
+                                            </div>
+                                            {q.feedback && (
+                                                <p className="text-[11px] text-slate-500 italic leading-relaxed">{q.feedback}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </Section>
+                )}
+
+                {/* What we recommended to the customer (audit_scores.recommendations) */}
+                {data?.score?.recommendations && data.score.recommendations.length > 0 && (
+                    <Section icon={Sparkles} title="What we recommended to the customer" tint="blue">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {data.score.recommendations.map((rec, i) => (
+                                <div key={i} className="bg-gradient-to-br from-blue-50/60 to-white border border-blue-100 rounded-xl p-4 flex gap-3">
+                                    <span className="shrink-0 inline-flex items-center justify-center h-7 w-7 rounded-md bg-blue-600 text-white text-[10px] font-black tabular-nums">R{i + 1}</span>
+                                    <p className="text-sm text-slate-700 leading-relaxed">{rec}</p>
                                 </div>
                             ))}
                         </div>
