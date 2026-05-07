@@ -294,6 +294,13 @@ function AuthPageContent() {
                             {isLogin ? 'Sign up' : 'Sign in'}
                         </button>
                     </p>
+
+                    <p className="mt-4 text-center text-[12px] text-gray-400">
+                        Audcomp staff?{' '}
+                        <Link href="/staff" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                            Internal portal →
+                        </Link>
+                    </p>
                 </motion.div>
             </div>
         </div>
