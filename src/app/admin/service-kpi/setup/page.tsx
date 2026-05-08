@@ -101,6 +101,21 @@ export default function ServiceKpiSetupPage() {
         loadCounts();
     };
 
+    const runSyncAll = async () => {
+        const kinds = ['locations', 'departments', 'boards'] as const;
+        setSyncStatus(s => kinds.reduce((acc, k) => ({ ...acc, [k]: 'pending' }), { ...s }));
+        const results = await Promise.all(
+            kinds.map(k =>
+                fetch(`/api/connectwise/sync/${k}`, { method: 'POST' })
+                    .then(r => r.json())
+                    .then(r => [k, r] as const)
+                    .catch(err => [k, { ok: false, error: err.message ?? 'Network error' }] as const)
+            )
+        );
+        setSyncStatus(s => results.reduce((acc, [k, r]) => ({ ...acc, [k]: r }), { ...s }));
+        loadCounts();
+    };
+
     const copyEnv = async () => {
         await navigator.clipboard.writeText(ENV_TEMPLATE);
         setCopied(true);
@@ -191,30 +206,62 @@ export default function ServiceKpiSetupPage() {
                         )}
 
                         {step.id === 'sync' && (
-                            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                {(['locations', 'departments', 'boards'] as const).map(k => {
-                                    const s = syncStatus[k];
-                                    const pending = s === 'pending';
-                                    const result = (s && s !== 'pending') ? s : null;
-                                    return (
-                                        <button
-                                            key={k}
-                                            onClick={() => runSync(k)}
-                                            disabled={pending}
-                                            className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-                                        >
-                                            <span className="capitalize flex items-center gap-2">
-                                                {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 text-blue-600" />}
-                                                Sync {k}
-                                            </span>
-                                            {result && (
-                                                <span className={`text-xs ${result.ok ? 'text-emerald-600' : 'text-red-600'}`}>
-                                                    {result.ok ? `${result.count ?? 0}` : 'fail'}
+                            <div className="mt-4">
+                                <div className="mb-3 flex items-center justify-between gap-3 flex-wrap">
+                                    <button
+                                        onClick={runSyncAll}
+                                        disabled={(['locations','departments','boards'] as const).some(k => syncStatus[k] === 'pending')}
+                                        className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-bold text-white hover:from-blue-500 hover:to-indigo-500 shadow-md shadow-blue-600/20 disabled:opacity-60"
+                                    >
+                                        {(['locations','departments','boards'] as const).some(k => syncStatus[k] === 'pending')
+                                            ? <Loader2 className="h-4 w-4 animate-spin" />
+                                            : <RefreshCw className="h-4 w-4" />
+                                        }
+                                        Sync everything
+                                    </button>
+                                    <span className="text-xs text-slate-500">Runs locations, departments, and boards in parallel.</span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    {(['locations', 'departments', 'boards'] as const).map(k => {
+                                        const s = syncStatus[k];
+                                        const pending = s === 'pending';
+                                        const result = (s && s !== 'pending') ? s : null;
+                                        return (
+                                            <button
+                                                key={k}
+                                                onClick={() => runSync(k)}
+                                                disabled={pending}
+                                                title={result && !result.ok ? (result.error ?? 'fail') : undefined}
+                                                className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                                            >
+                                                <span className="capitalize flex items-center gap-2">
+                                                    {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 text-blue-600" />}
+                                                    Sync {k}
                                                 </span>
+                                                {result && (
+                                                    <span className={`text-xs ${result.ok ? 'text-emerald-600' : 'text-red-600'}`}>
+                                                        {result.ok ? `${result.count ?? 0}` : 'fail'}
+                                                    </span>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                {(['locations','departments','boards'] as const)
+                                    .map(k => syncStatus[k])
+                                    .filter((s): s is { ok: false; error?: string } => !!s && s !== 'pending' && (s as any).ok === false)
+                                    .slice(0, 1)
+                                    .map((errResult, i) => (
+                                        <div key={i} className="mt-3 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-700">
+                                            <strong className="font-bold">Sync failed:</strong> {errResult.error ?? 'Unknown error'}
+                                            {(errResult.error ?? '').includes('403') && (
+                                                <p className="mt-1 text-red-600">
+                                                    The API member's role doesn't have <em>Inquire</em> permission on these endpoints. In ConnectWise: <strong>System → Members → API Members → [your key] → Role ID</strong> — make sure that role has <em>System &gt; Locations</em>, <em>System &gt; Departments</em>, and <em>Service &gt; Service Boards</em> set to <strong>All</strong> for Inquire-Level access.
+                                                </p>
                                             )}
-                                        </button>
-                                    );
-                                })}
+                                        </div>
+                                    ))
+                                }
                             </div>
                         )}
                     </section>
