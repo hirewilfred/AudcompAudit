@@ -39,7 +39,9 @@ function Inner() {
     // signup only
     const [fullName, setFullName] = useState('');
     const [phone, setPhone] = useState('');
-    const [role, setRole] = useState<'admin' | 'expert' | 'staff' | 'sales'>('staff');
+    // Self-signup roles only — admin must be granted by an existing admin
+    // from /admin/users.
+    const [role, setRole] = useState<'expert' | 'staff' | 'sales'>('staff');
     const [inviteCode, setInviteCode] = useState('');
 
     const routeAfterAuth = async () => {
@@ -129,7 +131,8 @@ function Inner() {
                     <ul className="space-y-2 text-sm text-blue-100/80">
                         {[
                             'Skips the customer AI audit questionnaire',
-                            'Auto-routes admins, experts, and sales to their dashboards',
+                            'Auto-routes experts and sales to their dashboards',
+                            'Admin role is granted only by another admin from /admin/users',
                             'Email-confirmed instantly via service-role provisioning',
                         ].map(line => (
                             <li key={line} className="flex items-start gap-2">
@@ -205,7 +208,6 @@ function Inner() {
                                             <option value="staff">Staff</option>
                                             <option value="expert">Expert</option>
                                             <option value="sales">Sales</option>
-                                            <option value="admin">Admin</option>
                                         </select>
                                     </Field>
                                 </div>

@@ -8,13 +8,18 @@ const adminSupabase = createSupabaseClient(
 
 const REQUIRED_CODE = process.env.INTERNAL_INVITE_CODE; // set in Vercel env
 
+// Self-signup CANNOT mint admins. Admin promotion only happens via
+// /api/admin/set-admin from the admin dashboard, performed by an existing
+// admin. Even if the client posts role='admin' here, we silently downgrade.
+type SelfSignupRole = 'expert' | 'staff' | 'sales';
+
 interface Body {
     invite_code: string;
     email: string;
     password: string;
     full_name: string;
     phone?: string;
-    role?: 'admin' | 'expert' | 'staff' | 'sales';
+    role?: SelfSignupRole | 'admin';
 }
 
 const isEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
@@ -39,7 +44,12 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Full name required' }, { status: 400 });
         }
 
-        const role = body.role ?? 'staff';
+        // Strip 'admin' — self-signup is never allowed to mint admins.
+        const ALLOWED_SELF_ROLES: SelfSignupRole[] = ['expert', 'staff', 'sales'];
+        const requested = (body.role ?? 'staff') as SelfSignupRole | 'admin';
+        const role: SelfSignupRole = ALLOWED_SELF_ROLES.includes(requested as SelfSignupRole)
+            ? (requested as SelfSignupRole)
+            : 'staff';
         const email = body.email.trim().toLowerCase();
 
         // Create the auth user via service role + email_confirm so the user can
@@ -48,7 +58,7 @@ export async function POST(req: NextRequest) {
             email,
             password: body.password,
             email_confirm: true,
-            user_metadata: { full_name: body.full_name.trim(), role, phone: body.phone ?? null, is_staff: true },
+            user_metadata: { full_name: body.full_name.trim(), role, phone: body.phone ?? null, is_staff: true, is_admin: false },
         });
         if (createErr || !created.user) {
             return NextResponse.json({ error: createErr?.message ?? 'Could not create user' }, { status: 500 });
@@ -64,7 +74,9 @@ export async function POST(req: NextRequest) {
             is_staff: true,
             staff_role: role,
             has_completed_audit: true, // staff bypass the audit
-            is_admin: role === 'admin',
+            is_admin: false,            // never via self-signup; admin role
+                                        //   must be granted by an existing
+                                        //   admin from the admin dashboard.
             updated_at: new Date().toISOString(),
         };
 
