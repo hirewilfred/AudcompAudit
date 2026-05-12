@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { logSyncRun } from '@/lib/connectwise/sync';
 import { fetchTickets, ticketToRow } from '@/lib/connectwise/tickets';
+import { authorizeSync } from '@/lib/connectwise/auth';
 
 export const runtime = 'nodejs';
 
@@ -12,7 +13,9 @@ function minutesUntilBreach(requiredDate: string | null) {
     return Math.round((new Date(requiredDate).getTime() - Date.now()) / 60_000);
 }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+    const unauth = await authorizeSync(req);
+    if (unauth) return unauth;
     try {
         const result = await logSyncRun('sla_check', async () => {
             const supabase = await createClient();
@@ -49,3 +52,5 @@ export async function POST() {
         return NextResponse.json({ ok: false, error: (err as Error).message }, { status: 502 });
     }
 }
+
+export const GET = POST;

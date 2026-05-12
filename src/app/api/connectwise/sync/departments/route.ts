@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { cwFetchAll } from '@/lib/connectwise/client';
 import { createClient } from '@/lib/supabase/server';
 import { logSyncRun } from '@/lib/connectwise/sync';
+import { authorizeSync } from '@/lib/connectwise/auth';
 
 export const runtime = 'nodejs';
 
@@ -11,7 +12,9 @@ interface CwDepartment {
     location?: { id: number; name: string };
 }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+    const unauth = await authorizeSync(req);
+    if (unauth) return unauth;
     try {
         const result = await logSyncRun('departments', async () => {
             const supabase = await createClient();
@@ -34,3 +37,5 @@ export async function POST() {
         return NextResponse.json({ ok: false, error: (err as Error).message }, { status: 502 });
     }
 }
+
+export const GET = POST;

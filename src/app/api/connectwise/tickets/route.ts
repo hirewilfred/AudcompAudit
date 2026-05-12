@@ -52,12 +52,18 @@ export async function GET(req: NextRequest) {
     }
 
     const { data, error } = await q;
+    const allowSample = process.env.NODE_ENV !== 'production';
     if (error) {
-        // Fall back to sample data if the table isn't migrated yet so the UI is still viewable.
-        return NextResponse.json({ ok: true, sample: true, tickets: sampleFor(scope), warning: error.message });
+        if (allowSample) {
+            return NextResponse.json({ ok: true, sample: true, tickets: sampleFor(scope), warning: error.message });
+        }
+        return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     }
     if (!data || data.length === 0) {
-        return NextResponse.json({ ok: true, sample: true, tickets: sampleFor(scope) });
+        if (allowSample) {
+            return NextResponse.json({ ok: true, sample: true, tickets: sampleFor(scope) });
+        }
+        return NextResponse.json({ ok: true, sample: false, tickets: [] });
     }
     return NextResponse.json({ ok: true, sample: false, tickets: data });
 }

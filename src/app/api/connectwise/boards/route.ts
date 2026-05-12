@@ -10,11 +10,18 @@ export async function GET() {
         .from('cw_monitored_boards')
         .select('*')
         .order('board_name', { ascending: true });
+    const allowSample = process.env.NODE_ENV !== 'production';
     if (error) {
-        return NextResponse.json({ ok: true, sample: true, boards: SAMPLE_BOARD_ROWS, warning: error.message });
+        if (allowSample) {
+            return NextResponse.json({ ok: true, sample: true, boards: SAMPLE_BOARD_ROWS, warning: error.message });
+        }
+        return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     }
     if (!data || data.length === 0) {
-        return NextResponse.json({ ok: true, sample: true, boards: SAMPLE_BOARD_ROWS });
+        if (allowSample) {
+            return NextResponse.json({ ok: true, sample: true, boards: SAMPLE_BOARD_ROWS });
+        }
+        return NextResponse.json({ ok: true, sample: false, boards: [] });
     }
     return NextResponse.json({ ok: true, sample: false, boards: data });
 }
