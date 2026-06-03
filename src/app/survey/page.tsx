@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AUDIT_QUESTIONS } from '@/lib/audit-questions';
-import { ChevronRight, ChevronLeft, Sparkles, CheckCircle2, Loader2, Info, User, ChevronDown } from 'lucide-react';
+import { ChevronRight, ChevronLeft, CheckCircle2, Loader2, Info, User, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -182,34 +182,32 @@ export default function SurveyPage() {
 
     if (isCheckingAuth) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-[#F4F7FE]">
-                <Loader2 className="h-10 w-10 text-blue-600 animate-spin" />
+            <div className="flex min-h-screen items-center justify-center bg-[#fbfbfd]">
+                <Loader2 className="h-6 w-6 text-[#1d1d1f]/40 animate-spin" />
             </div>
         );
     }
 
     if (isFinishing) {
         return (
-            <div className="flex min-h-screen flex-col items-center justify-center bg-[#F4F7FE] text-slate-900">
+            <div className="flex min-h-screen flex-col items-center justify-center bg-[#fbfbfd] text-[#1d1d1f]">
                 <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
                     className="flex flex-col items-center text-center px-6"
                 >
-                    <div className="mb-10 relative">
-                        <div className="absolute inset-0 animate-ping rounded-full bg-blue-600/10 blur-xl" />
-                        <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP Logo" className="h-16 w-auto relative z-10 animate-pulse brightness-0" />
-                    </div>
-                    <h2 className="text-4xl font-black mb-4">Finalizing Your Roadmap...</h2>
-                    <p className="max-w-md text-slate-500 mb-8 font-medium">
+                    <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP Logo" className="h-8 w-auto mb-10 opacity-80" />
+                    <h2 className="display display-tight text-[40px] sm:text-[52px] mb-4">Finalizing your roadmap.</h2>
+                    <p className="max-w-md text-[17px] text-[#6e6e73] mb-10 leading-[1.45]">
                         Our engine is processing your assessment to build a custom AI strategy for your scale.
                     </p>
-                    <div className="w-64 h-3 bg-white rounded-full overflow-hidden shadow-inner border border-slate-100">
+                    <div className="w-64 h-1 bg-[#1d1d1f]/8 rounded-full overflow-hidden">
                         <motion.div
-                            className="h-full bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.4)]"
+                            className="h-full bg-[#1d1d1f]"
                             initial={{ width: 0 }}
                             animate={{ width: "100%" }}
-                            transition={{ duration: 2 }}
+                            transition={{ duration: 2, ease: 'easeOut' }}
                         />
                     </div>
                 </motion.div>
@@ -218,119 +216,117 @@ export default function SurveyPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F4F7FE] text-slate-800 selection:bg-blue-600/10">
-            {/* Header */}
-            <header className="fixed top-0 z-50 flex w-full items-center justify-between px-10 py-6 bg-white shadow-sm">
-                <div className="flex items-center gap-2">
-                    <Link href="/">
-                        <img
-                            src="/images/AUDCOMP-LOGO.png"
-                            alt="AUDCOMP Logo"
-                            className="h-8 w-auto brightness-0"
-                        />
-                    </Link>
-                    <span className="font-bold tracking-tight border-l border-slate-200 ml-2 pl-4 text-slate-400">Readiness Audit</span>
-                </div>
-                <div className="flex items-center gap-4">
-                    <span className="text-sm font-bold text-slate-400">Step {currentStep + 1} of {totalSteps}</span>
-                    <div className="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <motion.div
-                            className="h-full bg-blue-600"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${progress}%` }}
-                        />
+        <div className="min-h-screen bg-[#fbfbfd] text-[#1d1d1f]">
+            <header className="sticky top-0 z-50 border-b hairline bg-white/72 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/60">
+                <div className="mx-auto flex h-12 max-w-[1024px] items-center justify-between px-6">
+                    <div className="flex items-center gap-3">
+                        <Link href="/">
+                            <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP Logo" className="h-5 w-auto opacity-90" />
+                        </Link>
+                        <span className="text-[12px] text-[#6e6e73] border-l hairline pl-3">Readiness Audit</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <span className="text-[12px] text-[#6e6e73]">Step {currentStep + 1} of {totalSteps}</span>
+                        <div className="w-24 h-1 bg-[#1d1d1f]/8 rounded-full overflow-hidden">
+                            <motion.div
+                                className="h-full bg-[#1d1d1f]"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${progress}%` }}
+                                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                            />
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <main className="mx-auto flex min-h-screen max-w-4xl flex-col items-center justify-start px-6 pt-32 pb-24">
+            <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-start justify-start px-6 pt-20 sm:pt-28 pb-24">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={isExpertStep ? 'expert-step' : currentQuestion.id}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                         className="w-full"
                     >
-                        <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-blue-600 border border-blue-100/50">
-                            <Sparkles className="h-3 w-3" />
-                            {isExpertStep ? "Expert Assignment" : currentQuestion.category}
+                        <div className="eyebrow mb-4">
+                            {isExpertStep ? "Expert assignment" : currentQuestion.category}
                         </div>
 
-                        <h1 className="mb-10 text-4xl font-black sm:text-6xl leading-[1.1] text-slate-900 tracking-tight">
+                        <h1 className="mb-12 display display-tight text-[#1d1d1f] text-[32px] sm:text-[48px] lg:text-[56px] [text-wrap:balance]">
                             {isExpertStep ? "Are you working with a sales rep or an AI expert?" : currentQuestion.text}
                         </h1>
 
-                        <div className="grid gap-4 mt-8">
+                        <div className="grid gap-3">
                             {isExpertStep ? (
-                                <div className="space-y-6">
-                                    <div className="p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm">
-                                        <label className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 block">Select Your Assigned Expert</label>
-                                        <div className="relative">
-                                            <User className="absolute left-6 top-1/2 h-6 w-6 -translate-y-1/2 text-slate-400" />
-                                            <select
-                                                required
-                                                value={selectedExpertId}
-                                                onChange={(e) => setSelectedExpertId(e.target.value)}
-                                                className="w-full rounded-[24px] border border-slate-100 bg-slate-50 py-6 pl-16 pr-12 text-xl text-slate-900 outline-none transition-all focus:border-blue-600 focus:bg-white focus:ring-8 focus:ring-blue-600/5 font-bold appearance-none cursor-pointer"
-                                            >
-                                                {fetchingExperts ? (
-                                                    <option>Loading experts...</option>
-                                                ) : experts.length === 0 ? (
-                                                    <option value="">No experts found in system</option>
-                                                ) : (
-                                                    <>
-                                                        <option value="" disabled>Who are you dealing with?</option>
-                                                        <option value="not-sure">I'm not sure / Not working with anyone yet</option>
-                                                        {experts.map((expert) => (
-                                                            <option key={expert.id} value={expert.id}>
-                                                                {expert.full_name}
-                                                            </option>
-                                                        ))}
-                                                    </>
-                                                )}
-                                            </select>
-                                            <div className="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 text-slate-400">
-                                                {fetchingExperts ? (
-                                                    <Loader2 className="h-5 w-5 animate-spin" />
-                                                ) : (
-                                                    <ChevronDown className="h-6 w-6" />
-                                                )}
-                                            </div>
+                                <div className="p-8 rounded-[24px] bg-white border hairline">
+                                    <label className="eyebrow mb-3 block">Select your assigned expert</label>
+                                    <div className="relative">
+                                        <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#86868b]" strokeWidth={1.5} />
+                                        <select
+                                            required
+                                            value={selectedExpertId}
+                                            onChange={(e) => setSelectedExpertId(e.target.value)}
+                                            className="w-full rounded-[14px] border hairline bg-white py-4 pl-11 pr-10 text-[15px] text-[#1d1d1f] outline-none transition-all focus:border-[#1d1d1f]/30 focus:ring-2 focus:ring-[#1d1d1f]/5 appearance-none cursor-pointer"
+                                        >
+                                            {fetchingExperts ? (
+                                                <option>Loading experts…</option>
+                                            ) : experts.length === 0 ? (
+                                                <option value="">No experts found in system</option>
+                                            ) : (
+                                                <>
+                                                    <option value="" disabled>Who are you dealing with?</option>
+                                                    <option value="not-sure">I&apos;m not sure / not working with anyone yet</option>
+                                                    {experts.map((expert) => (
+                                                        <option key={expert.id} value={expert.id}>
+                                                            {expert.full_name}
+                                                        </option>
+                                                    ))}
+                                                </>
+                                            )}
+                                        </select>
+                                        <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#86868b]">
+                                            {fetchingExperts ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <ChevronDown className="h-4 w-4" strokeWidth={1.5} />
+                                            )}
                                         </div>
-                                        <p className="mt-6 text-sm font-medium text-slate-400 leading-relaxed italic border-t border-slate-50 pt-6">
-                                            This will link your custom roadmap directly to your advisor so they can review your results before your session.
-                                        </p>
                                     </div>
+                                    <p className="mt-5 text-[13px] text-[#6e6e73] leading-[1.5]">
+                                        This links your roadmap to your advisor so they can review your results before your session.
+                                    </p>
                                 </div>
                             ) : (
                                 currentQuestion.options.map((option, idx) => (
                                     <button
                                         key={idx}
                                         onClick={() => handleSelect(option.value)}
-                                        className={`group relative flex w-full items-center justify-between rounded-[32px] border p-8 text-left transition-all hover:scale-[1.01] ${answers[currentQuestion.id] === option.value
-                                            ? 'border-blue-600 bg-white shadow-xl shadow-blue-900/5 ring-1 ring-blue-600/5'
-                                            : 'border-slate-100 bg-white/50 hover:border-slate-200 hover:bg-white'
+                                        className={`group relative flex w-full items-center rounded-[18px] border p-6 text-left transition-all duration-200 ${answers[currentQuestion.id] === option.value
+                                            ? 'border-[#1d1d1f] bg-white'
+                                            : 'border-transparent bg-white hover:border-[#1d1d1f]/15'
                                             }`}
+                                        style={{ borderColor: answers[currentQuestion.id] === option.value ? '#1d1d1f' : undefined }}
                                     >
-                                        <div className="flex items-center gap-6">
-                                            <div className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-colors ${answers[currentQuestion.id] === option.value
-                                                ? 'border-blue-600 bg-blue-600'
-                                                : 'border-slate-200 bg-transparent'
+                                        <div className="flex items-start gap-4 w-full">
+                                            <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors mt-1 ${answers[currentQuestion.id] === option.value
+                                                ? 'border-[#1d1d1f] bg-[#1d1d1f]'
+                                                : 'border-[#1d1d1f]/20 bg-transparent'
                                                 }`}>
                                                 {answers[currentQuestion.id] === option.value && (
-                                                    <CheckCircle2 className="h-5 w-5 text-white" />
+                                                    <CheckCircle2 className="h-4 w-4 text-white" strokeWidth={2} />
                                                 )}
                                             </div>
-                                            <div>
-                                                <span className="text-xl font-bold text-slate-800">{option.label}</span>
+                                            <div className="flex-1">
+                                                <span className="text-[17px] font-medium text-[#1d1d1f] tracking-tight">{option.label}</span>
                                                 {option.feedback && answers[currentQuestion.id] === option.value && (
                                                     <motion.div
                                                         initial={{ height: 0, opacity: 0 }}
                                                         animate={{ height: 'auto', opacity: 1 }}
-                                                        className="mt-3 flex items-start gap-2 text-sm text-blue-600 font-bold bg-blue-50/50 p-3 rounded-2xl border border-blue-100/20"
+                                                        transition={{ duration: 0.3 }}
+                                                        className="mt-3 flex items-start gap-2 text-[13px] text-[#6e6e73] bg-[#f5f5f7] p-3 rounded-[12px]"
                                                     >
-                                                        <Info className="h-4 w-4 mt-0.5 shrink-0" />
+                                                        <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" strokeWidth={1.5} />
                                                         <span>{option.feedback}</span>
                                                     </motion.div>
                                                 )}
@@ -344,30 +340,29 @@ export default function SurveyPage() {
                 </AnimatePresence>
 
                 {error && (
-                    <div className="mt-8 flex items-center gap-2 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-600 border border-red-100">
-                        <Info className="h-4 w-4" />
+                    <div className="mt-8 w-full flex items-center gap-2 rounded-[12px] bg-red-50 border border-red-100 p-4 text-[13px] text-red-700">
+                        <Info className="h-3.5 w-3.5" />
                         {error}
                     </div>
                 )}
 
-                {/* Navigation */}
                 <div className="mt-16 flex w-full items-center justify-between">
                     <button
                         onClick={prevStep}
                         disabled={currentStep === 0}
-                        className="flex items-center gap-2 text-slate-400 font-bold hover:text-slate-800 disabled:opacity-0 transition-colors"
+                        className="apple-pill apple-pill-ghost disabled:opacity-0"
                     >
-                        <ChevronLeft className="h-6 w-6" />
-                        Go Back
+                        <ChevronLeft className="h-3.5 w-3.5" />
+                        Back
                     </button>
 
                     <button
                         onClick={nextStep}
                         disabled={!isExpertStep ? answers[currentQuestion.id] === undefined : selectedExpertId === ''}
-                        className={`group flex items-center justify-center gap-3 rounded-[24px] bg-blue-600 px-10 py-5 text-lg font-black text-white transition-all hover:scale-105 shadow-xl shadow-blue-600/20 disabled:opacity-50 disabled:grayscale`}
+                        className="apple-pill apple-pill-primary disabled:opacity-40"
                     >
-                        {currentStep === totalSteps - 1 ? 'Analyze Now' : 'Continue'}
-                        <ChevronRight className="h-6 w-6 transition-transform group-hover:translate-x-1" />
+                        {currentStep === totalSteps - 1 ? 'Analyze' : 'Continue'}
+                        <ChevronRight className="h-3.5 w-3.5" />
                     </button>
                 </div>
             </main>

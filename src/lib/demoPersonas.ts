@@ -12,7 +12,7 @@ import {
   DEMO_QUEUED_POSTS as FLORIST_QUEUED,
 } from './demoData';
 
-export type PersonaSlug = 'florist' | 'dental' | 'brandhaven';
+export type PersonaSlug = 'florist' | 'dental' | 'brandhaven' | 'uem';
 
 export interface AgentWorkflowStep {
   step: number;
@@ -279,6 +279,84 @@ const COGECO_EXPLAIN: Record<string, { howItWorks: string; savesPerWeek: string;
   'warranty-callback':          { howItWorks: 'Triages 30-day, 6-month, 1-year walkthroughs · collects punch lists via SMS · schedules trades.',                               savesPerWeek: '1.5 hrs', replaces: 'Word-of-mouth referrals from happier owners' },
 };
 
+// ── UEM — Engineering / Planning ────────────────────────────────────────────
+const UEM_AGENTS: DemoAgent[] = [
+  { name: 'proposal-intelligence', label: 'Proposal Intelligence Agent', description: 'Drafts proposal sections, PIFs, and pulls relevant past project experience.', status: 'running', currentTask: 'Drafting cover letter for Niagara Falls watermain project', outcomeMetric: '60% faster drafts', weeklyHoursSaved: 48 },
+  { name: 'rfp-monitoring', label: 'RFP Monitoring Agent', description: 'Scans Ontario procurement portals 24/7 and delivers a ranked briefing.', status: 'running', currentTask: 'Scanning Bids&Tenders · found 2 stormwater RFPs in Niagara', outcomeMetric: 'Zero missed RFPs', weeklyHoursSaved: 15 },
+  { name: 'meeting-intelligence', label: 'Meeting Intelligence Agent', description: 'Converts rough notes to branded minutes and extracts trackable action items.', status: 'running', currentTask: 'Formatting minutes for project kickoff · extracted 4 action items', outcomeMetric: 'Same-day turnaround', weeklyHoursSaved: 18 },
+  { name: 'planning-intelligence', label: 'Planning Intelligence Agent', description: 'Reviews site plans against zoning bylaws and monitors policy updates.', status: 'running', currentTask: 'Reviewing site plan against Niagara Falls industrial setbacks', outcomeMetric: '4-6h → 1-2h research', weeklyHoursSaved: 16 },
+  { name: 'field-inspection', label: 'Field Inspection Agent', description: 'Generates draft inspection reports and flags deviations from specs for QA/QC.', status: 'running', currentTask: 'Pulling inspection data from project server for contract admin report', outcomeMetric: '45-60 min reports', weeklyHoursSaved: 18 },
+  { name: 'cad-automation', label: 'CAD Automation Agent', description: 'Identifies missing CAD components and automates repetitive drafting tasks.', status: 'running', currentTask: 'Scanning Civil 3D file for missing components · creating subassemblies', outcomeMetric: '15 min component check', weeklyHoursSaved: 30 },
+  { name: 'asset-management', label: 'Asset Management AI', description: 'Processes condition data and generates O. Reg. 588/17 deterioration models.', status: 'idle', currentTask: 'Last run: Generated capital prioritization for municipal client', outcomeMetric: '2-3 wk AM reports', weeklyHoursSaved: 35 },
+  { name: 'financial-operations', label: 'Financial Operations Agent', description: 'Generates draft invoices from billing data and tracks outstanding payments.', status: 'idle', currentTask: 'Last run: drafted 14 end-of-month invoices', outcomeMetric: '8-12 hrs bookkeeping saved', weeklyHoursSaved: 8 },
+];
+
+const UEM_ACTIVITY = [
+  { agent: 'proposal-intelligence', status: 'succeeded' as const, task: 'Drafted PIF for Niagara Falls watermain project from briefing notes' },
+  { agent: 'rfp-monitoring', status: 'succeeded' as const, task: 'Monday briefing delivered: 5 relevant RFPs found this week' },
+  { agent: 'meeting-intelligence', status: 'running' as const, task: 'Summarizing 2024 Planning Act amendments into a 2-page brief' },
+  { agent: 'planning-intelligence', status: 'succeeded' as const, task: 'Flagged 2 zoning non-conformances in site plan review' },
+  { agent: 'field-inspection', status: 'succeeded' as const, task: 'Draft inspection report generated · 3 deviations highlighted for QA' },
+  { agent: 'cad-automation', status: 'running' as const, task: 'Auto-generating preliminary drafting layout from standard template' },
+];
+
+const UEM_KPIS: PersonaConfig['kpiRow'] = [
+  { label: 'Weekly Savings', value: '$17k', sub: '6 Quick Win Agents', tone: 'emerald' },
+  { label: 'Proposals Drafted', value: 8, sub: '60% faster turnaround', tone: 'blue' },
+  { label: 'RFPs Captured', value: 3, sub: 'from 24/7 portal monitoring', tone: 'violet' },
+  { label: 'Action Items', value: 100, sub: '% capture rate in minutes', tone: 'cyan' },
+];
+
+const UEM_PITCH = {
+  headline: 'Engineering & Planning teams get $819K/year in recovered capacity back.',
+  subhead: 'UEM deployed 6 quick-win agents in 30 days to automate proposals, RFP monitoring, and CAD tasks.',
+  problemBefore: 'Senior staff spend 12+ hours manually drafting proposals. RFP opportunities are missed. Inspection reports take hours. CAD drafters waste time on repetitive subassemblies.',
+  solutionAfter: 'Proposal Agent drafts in 3 hours. RFP Monitor scans Merx 24/7. Field Agent drafts reports in 45 minutes. CAD Agent catches missing components in 15 minutes.',
+};
+
+const UEM_WORKFLOWS: AgentWorkflow[] = [
+  {
+    agentName: 'proposal-intelligence',
+    scenario: 'New RFP assignment requires a full proposal draft',
+    trigger: 'New RFP assignment in Sharepoint project folder',
+    beforeAgents: { duration: '12+ hours', description: 'Senior staff rebuilds proposal manually, searching past proposals to copy-paste relevant experience.' },
+    withAgents: { duration: '3 hours', description: 'Agent learns from past proposals, auto-drafts Scope, Team, and Approach, pulling perfect past project references.' },
+    steps: [
+      { step: 1, label: 'Scan RFP requirements', detail: 'Parses the new RFP document for key deliverables and scope.', human_minutes: 60, agent_seconds: 15 },
+      { step: 2, label: 'Cross-reference past proposals', detail: 'Finds matching past project experience based on client and geography.', human_minutes: 180, agent_seconds: 30 },
+      { step: 3, label: 'Auto-draft sections', detail: 'Drafts Scope of Work, Team Qualifications, and Project Approach.', human_minutes: 360, agent_seconds: 90 },
+      { step: 4, label: 'Format and proofread', detail: 'Reformats to UEM standard template and voice.', human_minutes: 120, agent_seconds: 20 },
+    ],
+    outcome: 'First-draft time reduced from 8–12h to 2–3h per proposal. More proposals submitted per year.',
+    pitchLine: '"Your senior engineers are doing $25/hr copy-pasting. We give them those 9 hours back on every single proposal."',
+  },
+  {
+    agentName: 'rfp-monitoring',
+    scenario: 'Monitoring Ontario procurement portals for relevant opportunities',
+    trigger: 'Scheduled 4-hour scan of Merx, Bids&Tenders, Bonfire',
+    beforeAgents: { duration: '15 hours/week', description: 'Staff sporadically checks portals when not heads-down on projects. Opportunities are missed.' },
+    withAgents: { duration: '0 hours/week', description: 'Agent scans all portals 24/7, scores opportunities by fit, and delivers a ranked briefing every Monday.' },
+    steps: [
+      { step: 1, label: 'Scan all portals', detail: 'Checks Merx, Bids&Tenders, Bonfire, and municipal sites.', human_minutes: 240, agent_seconds: 45 },
+      { step: 2, label: 'Filter and score', detail: 'Filters by UEM service profile and scores fit (1-10).', human_minutes: 120, agent_seconds: 15 },
+      { step: 3, label: 'Deliver weekly briefing', detail: 'Monday 07:00 briefing sent to principals with top 5 RFPs.', human_minutes: 60, agent_seconds: 5 },
+    ],
+    outcome: 'Zero missed procurement opportunities. 2-4 additional RFPs captured per year.',
+    pitchLine: '"How many $150K RFPs did you miss last year because your team was too busy doing the work to look for the work?"',
+  }
+];
+
+const UEM_EXPLAIN: Record<string, { howItWorks: string; savesPerWeek: string; replaces: string }> = {
+  'proposal-intelligence': { howItWorks: 'Learns from past proposals to auto-draft sections and PIFs.', savesPerWeek: '48 hrs', replaces: 'Senior staff copy-pasting' },
+  'rfp-monitoring': { howItWorks: 'Scans Ontario portals 24/7 and delivers a ranked Monday briefing.', savesPerWeek: '15 hrs', replaces: 'Manual portal checking' },
+  'meeting-intelligence': { howItWorks: 'Converts notes to branded minutes and extracts action items.', savesPerWeek: '18 hrs', replaces: 'Admin minute-taking' },
+  'planning-intelligence': { howItWorks: 'Monitors policy updates and reviews site plans against bylaws.', savesPerWeek: '16 hrs', replaces: 'Manual policy research' },
+  'field-inspection': { howItWorks: 'Pulls data and drafts inspection reports from company templates.', savesPerWeek: '18 hrs', replaces: 'Manual report formatting' },
+  'cad-automation': { howItWorks: 'Identifies missing components and creates subassemblies.', savesPerWeek: '30 hrs', replaces: 'Repetitive CAD drafting' },
+  'asset-management': { howItWorks: 'Processes condition data for O. Reg. 588/17 AM plans.', savesPerWeek: '35 hrs', replaces: 'Weeks of manual modeling' },
+  'financial-operations': { howItWorks: 'Generates draft invoices and automates bookkeeping.', savesPerWeek: '8 hrs', replaces: 'Manual invoice drafting' },
+};
+
 export const DEMO_PERSONAS: Record<PersonaSlug, PersonaConfig> = {
   florist: {
     slug: 'florist',
@@ -342,6 +420,27 @@ export const DEMO_PERSONAS: Record<PersonaSlug, PersonaConfig> = {
     pitch: COGECO_PITCH,
     workflows: COGECO_WORKFLOWS,
     agentExplanations: COGECO_EXPLAIN,
+  },
+  uem: {
+    slug: 'uem',
+    businessName: 'UEM Consulting',
+    tagline: 'Engineering & Planning · Ontario',
+    industry: 'Engineering / Planning',
+    accent: 'cyan',
+    iconKey: 'Hammer',
+    location: 'Ontario',
+    nextEvent: { name: 'Q3 Board Meeting', daysOut: 12 },
+    hourlyRate: 110,
+    humanCostMonthly: 73913,
+    agents: UEM_AGENTS,
+    kpiRow: UEM_KPIS,
+    activityLines: UEM_ACTIVITY,
+    campaigns: [],
+    events: [],
+    queuedPosts: [],
+    pitch: UEM_PITCH,
+    workflows: UEM_WORKFLOWS,
+    agentExplanations: UEM_EXPLAIN,
   },
 };
 

@@ -43,6 +43,119 @@
   --input: 214.3 31.8% 91.4%;
   --ring: 221.2 83.2% 53.3%;
   --radius: 1rem;
+
+  /* ── Apple-style motion + surface tokens ────────────────────── */
+  --apple-canvas: #fbfbfd;
+  --apple-canvas-alt: #f5f5f7;
+  --apple-ink: #1d1d1f;
+  --apple-ink-muted: #6e6e73;
+  --apple-hairline: rgba(0, 0, 0, 0.08);
+  --apple-accent: #f97316;        /* brand orange, used sparingly */
+  --apple-accent-ink: #c2410c;
+
+  /* Easings (power2.out / expo.out equivalents) */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-strong: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-soft: cubic-bezier(0.4, 0, 1, 1);
+
+  /* Durations */
+  --d-micro: 160ms;
+  --d-ui: 220ms;
+  --d-pop: 280ms;
+  --d-section: 600ms;
+  --d-hero: 900ms;
+}
+
+/* Apple-style typographic defaults on the body */
+html {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv11", "kern";
+  text-rendering: optimizeLegibility;
+}
+
+/* Display-class headlines (Apple-tight tracking, balanced wrap) */
+.display {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+.display-tight {
+  letter-spacing: -0.035em;
+}
+.eyebrow {
+  text-transform: none;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--apple-ink-muted);
+}
+
+/* Apple-style pill CTA */
+.apple-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 980px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  transition: transform var(--d-micro) var(--ease-out-soft),
+              background-color var(--d-micro) var(--ease-out-soft),
+              box-shadow var(--d-micro) var(--ease-out-soft);
+  will-change: transform;
+}
+.apple-pill:hover { transform: translateY(-1px); }
+.apple-pill-primary {
+  background: var(--apple-ink);
+  color: white;
+}
+.apple-pill-primary:hover { background: #2d2d30; }
+.apple-pill-accent {
+  background: var(--apple-accent);
+  color: white;
+}
+.apple-pill-accent:hover { background: var(--apple-accent-ink); }
+.apple-pill-ghost {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--apple-ink);
+}
+.apple-pill-ghost:hover { background: rgba(0, 0, 0, 0.08); }
+
+/* Section reveal — applied on viewport intersect via framer */
+.reveal-init { opacity: 0; transform: translateY(16px); }
+
+/* Hover lift token */
+.lift {
+  transition: transform var(--d-ui) var(--ease-out-soft),
+              box-shadow var(--d-ui) var(--ease-out-soft);
+}
+.lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.12);
+}
+
+/* Subtle hairline divider */
+.hairline { border-color: var(--apple-hairline); }
+
+/* Respect reduced motion — replace all motion with instant state */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .scroll-row-left, .scroll-row-right { animation: none !important; }
+  .reveal-init { opacity: 1 !important; transform: none !important; }
+  .lift:hover { transform: none !important; }
+  .apple-pill:hover { transform: none !important; }
 }
 
 [data-theme='dark'] {

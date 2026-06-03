@@ -211,6 +211,38 @@ export const DEMO_CATALOG: DemoIndustry[] = [
     accent: 'from-lime-500/20 to-emerald-500/20',
     available: false,
   },
+  {
+    slug: 'uem',
+    industry: 'Engineering & Planning',
+    persona: 'UEM Consulting',
+    location: 'Ontario',
+    employees: 150,
+    hero: '6 quick-win agents combined: $819K/year in recovered staff capacity.',
+    pain: 'Senior staff spend 12+ hours manually drafting proposals. Procurement portals are checked inconsistently, missing opportunities. Planning research is slow and CAD work is repetitive.',
+    outcome: 'Proposal drafting time cut by 60-70%. 24/7 RFP monitoring prevents missed opportunities. CAD tasks and inspection reports automated.',
+    annualSavings: '$819,000',
+    payback: '1.0 months',
+    agents: ['Proposal Intelligence', 'RFP Monitoring', 'Meeting Intelligence', 'Planning Intelligence', 'Field Inspection', 'CAD Automation', 'Asset Management AI', 'Financial Operations'],
+    discoveryQuestions: [
+      'How many hours per week do your senior engineers/planners spend writing proposals from scratch?',
+      'How many RFP opportunities do you estimate you miss each quarter because your team is heads-down on active projects?',
+      'What does a partner-hour cost vs a junior-hour, and which one is doing data entry for field inspections today?',
+      'How much time is lost manually cross-referencing zoning bylaws and official municipal plans?',
+    ],
+    talkingPoints: [
+      'Six quick-win agents deployed in under 30 days — delivering $819K/year in recovered staff capacity.',
+      'Proposal Intelligence agent learns your past templates, cutting first-draft time from 12 hours to 2-3 hours.',
+      'RFP Monitoring Agent checks Merx, Bids&Tenders, and Bonfire 24/7, delivering a ranked briefing every Monday morning.',
+      'CAD Automation Agent identifies missing components and creates subassemblies in 15 minutes instead of 3 hours.',
+    ],
+    objections: [
+      { q: 'Every engineering proposal is unique. Can an AI write it?', a: 'The agent writes the boilerplate—qualifications, past project experience, and standard approaches. Your engineers focus on the 30% that is a unique technical solution.' },
+      { q: 'How does it handle confidential client data in planning or CAD files?', a: 'The models are ring-fenced. Your data never leaves your environment and is never used to train external models.' },
+    ],
+    demoPath: '/demo/uem',
+    accent: 'from-cyan-500/20 to-blue-500/20',
+    available: true,
+  },
 ];
 
 export const DEMO_TRAINING_RESOURCES = [

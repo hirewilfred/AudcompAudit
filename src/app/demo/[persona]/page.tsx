@@ -90,6 +90,7 @@ export default function DemoPersonaPage() {
     { slug: 'florist',     label: 'Petal & Stem' },
     { slug: 'dental',      label: 'Bright Smile' },
     { slug: 'brandhaven',  label: 'Cogeco Homes' },
+    { slug: 'uem',         label: 'UEM Consulting' },
   ];
 
   return (

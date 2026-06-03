@@ -406,95 +406,79 @@ function AdvisorResultsContent() {
 
     if (isCheckingAuth) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-[#F4F7FE]">
-                <Loader2 className="h-10 w-10 text-blue-600 animate-spin" />
+            <div className="flex min-h-screen items-center justify-center bg-[#fbfbfd]">
+                <Loader2 className="h-6 w-6 text-[#1d1d1f]/40 animate-spin" />
             </div>
         );
     }
 
     return (
-        <div id="ai-advisor-print" className="min-h-screen bg-[#F4F7FE] text-slate-800 selection:bg-blue-600/10">
-            {/* Background Accent */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] right-[-5%] h-[600px] w-[600px] rounded-full bg-blue-600/5 blur-[120px]" />
-                <div className="absolute bottom-[-10%] left-[-5%] h-[600px] w-[600px] rounded-full bg-indigo-600/5 blur-[120px]" />
-            </div>
-
-            {/* Header */}
-            <header className="no-print sticky top-0 z-50 flex w-full items-center justify-between px-10 py-6 bg-white/80 backdrop-blur-xl border-b border-slate-100">
-                <div className="flex items-center gap-12">
-                    <Link href="/">
-                        <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP" className="h-9 w-auto brightness-0" />
-                    </Link>
-                    <nav className="hidden lg:flex items-center gap-2">
-                        <span className="px-6 py-2.5 rounded-full bg-slate-900 text-white text-sm font-black shadow-lg shadow-slate-900/10">
-                            AI Advisor Report
-                        </span>
+        <div id="ai-advisor-print" className="min-h-screen bg-[#fbfbfd] text-[#1d1d1f]">
+            {/* Header — Apple thin glass */}
+            <header className="no-print sticky top-0 z-50 border-b hairline bg-white/72 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/60">
+                <div className="mx-auto flex h-12 max-w-7xl items-center justify-between px-6">
+                    <div className="flex items-center gap-6">
+                        <Link href="/">
+                            <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP" className="h-5 w-auto opacity-90" />
+                        </Link>
+                        <span className="hidden lg:inline text-[12px] text-[#6e6e73] border-l hairline pl-4">AI Advisor Report</span>
                         {adminUserId && (
-                            <div className="px-4 py-2 rounded-full bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-widest border border-amber-100">
-                                Admin View Mode
-                            </div>
+                            <span className="hidden lg:inline-flex items-center rounded-full bg-[#fef3c7] px-2.5 py-0.5 text-[11px] text-[#b45309]">
+                                Admin view
+                            </span>
                         )}
-                    </nav>
-                </div>
-                <div className="flex items-center gap-4">
+                    </div>
                     <Link
                         href={adminUserId ? "/admin" : "/dashboard"}
-                        className="px-6 py-2.5 rounded-full bg-white border border-slate-100 text-slate-500 hover:text-blue-600 hover:border-blue-100 text-sm font-black transition-all"
+                        className="text-[12px] text-[#1d1d1f]/85 hover:text-[#1d1d1f] transition-colors"
                     >
                         {adminUserId ? "Back to Admin" : "Back to Dashboard"}
                     </Link>
                 </div>
             </header>
 
-            <main className="mx-auto max-w-7xl px-10 pt-12 pb-24 relative z-10">
-                
-                {/* Page Title */}
+            <main className="mx-auto max-w-7xl px-6 lg:px-10 pt-12 pb-24 relative z-10">
+
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
                     className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6"
                 >
                     <div>
-                        <h2 className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] mb-3">AI Strategy Report</h2>
-                        <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none">Strategic AI Roadmap</h1>
+                        <div className="eyebrow mb-3">AI strategy report</div>
+                        <h1 className="display display-tight text-[#1d1d1f] text-[40px] sm:text-[56px]">Strategic AI roadmap.</h1>
                     </div>
                     <div className="no-print flex items-center gap-3">
                         <button
                             onClick={() => window.print()}
-                            className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-white border border-slate-100 text-slate-500 hover:text-blue-600 hover:border-blue-100 text-sm font-black transition-all"
+                            className="apple-pill apple-pill-ghost"
                         >
-                            <FileText className="h-4 w-4" /> Export PDF
+                            <FileText className="h-3.5 w-3.5" strokeWidth={1.5} /> Export PDF
                         </button>
                     </div>
                 </motion.div>
 
                 {/* Executive Summary */}
                 <motion.section
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 16 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="mb-12 bg-white rounded-[48px] p-10 md:p-12 shadow-sm border border-slate-100/50 relative overflow-hidden"
+                    viewport={{ once: true, margin: '-15%' }}
+                    transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                    className="mb-12 bg-white rounded-[28px] p-10 md:p-12 border hairline"
                 >
-                    <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none">
-                        <BrainCircuit className="h-64 w-64" />
+                    <div className="flex items-center gap-3 mb-6">
+                        <BrainCircuit className="h-5 w-5 text-[#1d1d1f]" strokeWidth={1.5} />
+                        <h2 className="display display-tight text-[#1d1d1f] text-[24px]">Executive summary</h2>
                     </div>
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-3 mb-8">
-                            <div className="h-10 w-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/20">
-                                <BrainCircuit className="h-5 w-5" />
-                            </div>
-                            <h2 className="text-2xl font-black tracking-tight text-slate-900">Executive Summary</h2>
+                    {loadingNarrative ? (
+                        <div className="flex items-center gap-3 text-[#6e6e73] py-4">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span className="text-[14px]">Generating your personalized AI roadmap…</span>
                         </div>
-                        {loadingNarrative ? (
-                            <div className="flex items-center gap-3 text-slate-400 font-bold py-4">
-                                <Loader2 className="h-5 w-5 animate-spin" />
-                                Generating your personalized AI roadmap...
-                            </div>
-                        ) : (
-                            <p className="text-lg font-medium text-slate-600 leading-relaxed max-w-4xl">{narrative}</p>
-                        )}
-                    </div>
+                    ) : (
+                        <p className="text-[17px] text-[#1d1d1f]/85 leading-[1.55] max-w-4xl">{narrative}</p>
+                    )}
                 </motion.section>
 
                 {/* Bento Grid */}
@@ -1163,8 +1147,8 @@ function AdvisorResultsContent() {
 export default function AdvisorResultsPage() {
     return (
         <Suspense fallback={
-            <div className="flex min-h-screen items-center justify-center bg-[#F4F7FE]">
-                <Loader2 className="h-10 w-10 text-blue-600 animate-spin" />
+            <div className="flex min-h-screen items-center justify-center bg-[#fbfbfd]">
+                <Loader2 className="h-6 w-6 text-[#1d1d1f]/40 animate-spin" />
             </div>
         }>
             <AdvisorResultsContent />

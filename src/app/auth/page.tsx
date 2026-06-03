@@ -11,7 +11,7 @@ export default function AuthPage() {
     // useSearchParams must sit inside a Suspense boundary when this page is
     // statically prerendered.
     return (
-        <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-white"><Loader2 className="h-6 w-6 text-blue-600 animate-spin" /></div>}>
+        <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#fbfbfd]"><Loader2 className="h-6 w-6 text-[#1d1d1f]/40 animate-spin" /></div>}>
             <AuthPageContent />
         </Suspense>
     );
@@ -102,179 +102,148 @@ function AuthPageContent() {
     };
 
     return (
-        <div className="flex min-h-screen bg-white">
+        <div className="flex min-h-screen bg-[#fbfbfd]">
 
-            {/* ── LEFT PANEL — photo + testimonial ── */}
-            <div className="relative hidden w-[38%] shrink-0 lg:flex flex-col overflow-hidden">
-                {/* Background image */}
+            {/* Left panel — photo + testimonial */}
+            <div className="relative hidden w-[42%] shrink-0 lg:flex flex-col overflow-hidden">
                 <img
                     src="/images/office-team.png"
                     alt="Audcomp Team"
                     className="absolute inset-0 h-full w-full object-cover"
                 />
-                {/* Dark gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-950/90 via-gray-900/40 to-gray-900/30" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-black/15" />
 
-                {/* Logo */}
-                <div className="relative z-10 p-8">
+                <div className="relative z-10 p-10">
                     <Link href="/">
-                        <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP" className="h-9 w-auto" />
+                        <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP" className="h-6 w-auto" />
                     </Link>
                 </div>
 
-                {/* Testimonial at bottom */}
-                <div className="relative z-10 mt-auto p-8 pb-10">
-                    <blockquote className="mb-5 text-[22px] font-bold leading-snug text-white">
-                        "The AI audit identified savings we didn't know existed — in under 10 minutes."
+                <div className="relative z-10 mt-auto p-10 pb-12">
+                    <blockquote className="mb-6 display display-tight text-[26px] sm:text-[30px] text-white">
+                        &ldquo;The AI audit identified savings we didn&apos;t know existed — in under 10 minutes.&rdquo;
                     </blockquote>
                     <div>
                         <div className="text-[14px] font-semibold text-white">Sarah Mitchell</div>
-                        <div className="text-[12px] text-gray-400">Operations Manager, Clearview Accounting</div>
+                        <div className="text-[12px] text-white/60">Operations Manager, Clearview Accounting</div>
                     </div>
                 </div>
             </div>
 
-            {/* ── RIGHT PANEL — form ── */}
-            <div className="flex flex-1 items-center justify-center px-6 py-12 bg-white">
+            {/* Right panel — form */}
+            <div className="flex flex-1 items-center justify-center px-6 py-16 bg-[#fbfbfd]">
                 <motion.div
-                    initial={{ opacity: 0, y: 16 }}
+                    initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
                     className="w-full max-w-[400px]"
                 >
-                    {/* Heading */}
-                    <div className="mb-8">
-                        <h1 className="text-[28px] font-bold tracking-tight text-gray-900">
-                            {isLogin ? 'Welcome back to AUDCOMP' : 'Create your account'}
+                    <div className="mb-10">
+                        <h1 className="display display-tight text-[36px] sm:text-[44px] text-[#1d1d1f]">
+                            {isLogin ? 'Welcome back.' : 'Create your account.'}
                         </h1>
-                        <p className="mt-2 text-[14px] text-gray-500">
+                        <p className="mt-3 text-[15px] text-[#6e6e73] leading-[1.5]">
                             {isLogin
                                 ? 'Sign in to access your AI audit results and roadmap.'
                                 : 'Join 500+ Canadian businesses already using AI to save money.'}
                         </p>
                     </div>
 
-                    {/* Error */}
                     {error && (
-                        <div className="mb-5 flex items-center gap-2 rounded-lg bg-red-50 border border-red-100 px-4 py-3 text-[13px] font-medium text-red-600">
+                        <div className="mb-5 flex items-center gap-2 rounded-[12px] bg-red-50 border border-red-100 px-4 py-3 text-[13px] text-red-700">
                             <AlertCircle className="h-4 w-4 shrink-0" />
                             {error}
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-3">
 
-                        {/* Sign-up only fields */}
                         {!isLogin && (
                             <>
-                                <div>
-                                    <label className="mb-1.5 block text-[12px] font-medium text-gray-500">Full Name</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={fullName}
-                                        onChange={e => setFullName(e.target.value)}
-                                        placeholder="John Doe"
-                                        className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-[14px] text-gray-900 placeholder-gray-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="mb-1.5 block text-[12px] font-medium text-gray-500">Company Name</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={companyName}
-                                        onChange={e => setCompanyName(e.target.value)}
-                                        placeholder="Acme Corp"
-                                        className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-[14px] text-gray-900 placeholder-gray-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="mb-1.5 block text-[12px] font-medium text-gray-500">Phone Number</label>
-                                    <input
-                                        type="tel"
-                                        required
-                                        value={phone}
-                                        onChange={e => setPhone(e.target.value)}
-                                        placeholder="+1 (555) 000-0000"
-                                        className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-[14px] text-gray-900 placeholder-gray-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20"
-                                    />
-                                </div>
+                                <input
+                                    type="text"
+                                    required
+                                    value={fullName}
+                                    onChange={e => setFullName(e.target.value)}
+                                    placeholder="Full name"
+                                    className="w-full rounded-[12px] border hairline bg-white px-4 py-3 text-[14px] text-[#1d1d1f] placeholder-[#86868b] outline-none transition focus:border-[#1d1d1f]/30 focus:ring-2 focus:ring-[#1d1d1f]/5"
+                                />
+                                <input
+                                    type="text"
+                                    required
+                                    value={companyName}
+                                    onChange={e => setCompanyName(e.target.value)}
+                                    placeholder="Company"
+                                    className="w-full rounded-[12px] border hairline bg-white px-4 py-3 text-[14px] text-[#1d1d1f] placeholder-[#86868b] outline-none transition focus:border-[#1d1d1f]/30 focus:ring-2 focus:ring-[#1d1d1f]/5"
+                                />
+                                <input
+                                    type="tel"
+                                    required
+                                    value={phone}
+                                    onChange={e => setPhone(e.target.value)}
+                                    placeholder="Phone"
+                                    className="w-full rounded-[12px] border hairline bg-white px-4 py-3 text-[14px] text-[#1d1d1f] placeholder-[#86868b] outline-none transition focus:border-[#1d1d1f]/30 focus:ring-2 focus:ring-[#1d1d1f]/5"
+                                />
                             </>
                         )}
 
-                        {/* Email */}
-                        <div>
-                            <label className="mb-1.5 block text-[12px] font-medium text-gray-500">Email</label>
-                            <input
-                                type="email"
-                                required
-                                value={email}
-                                onChange={e => setEmail(e.target.value)}
-                                placeholder="name@company.com"
-                                className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-[14px] text-gray-900 placeholder-gray-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20"
-                            />
-                        </div>
+                        <input
+                            type="email"
+                            required
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                            placeholder="Email"
+                            className="w-full rounded-[12px] border hairline bg-white px-4 py-3 text-[14px] text-[#1d1d1f] placeholder-[#86868b] outline-none transition focus:border-[#1d1d1f]/30 focus:ring-2 focus:ring-[#1d1d1f]/5"
+                        />
 
-                        {/* Password */}
-                        <div>
-                            <label className="mb-1.5 block text-[12px] font-medium text-gray-500">Password</label>
-                            <input
-                                type="password"
-                                required
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
-                                placeholder="••••••••••"
-                                className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-[14px] text-gray-900 placeholder-gray-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20"
-                            />
-                        </div>
+                        <input
+                            type="password"
+                            required
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            placeholder="Password"
+                            className="w-full rounded-[12px] border hairline bg-white px-4 py-3 text-[14px] text-[#1d1d1f] placeholder-[#86868b] outline-none transition focus:border-[#1d1d1f]/30 focus:ring-2 focus:ring-[#1d1d1f]/5"
+                        />
 
-                        {/* Forgot + Remember row (login only) */}
                         {isLogin && (
-                            <div className="flex items-center justify-between pt-0.5">
-                                <label className="flex cursor-pointer items-center gap-2.5 text-[13px] text-gray-500">
-                                    {/* Toggle switch */}
+                            <div className="flex items-center justify-between pt-1">
+                                <label className="flex cursor-pointer items-center gap-2.5 text-[13px] text-[#6e6e73]">
                                     <button
                                         type="button"
                                         onClick={() => setRemember(!remember)}
-                                        className={`relative h-5 w-9 rounded-full transition-colors duration-200 focus:outline-none ${remember ? 'bg-orange-500' : 'bg-gray-200'}`}
+                                        className={`relative h-5 w-9 rounded-full transition-colors duration-200 focus:outline-none ${remember ? 'bg-[#1d1d1f]' : 'bg-[#1d1d1f]/15'}`}
                                     >
                                         <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${remember ? 'translate-x-4' : 'translate-x-0.5'}`} />
                                     </button>
-                                    Remember sign in details
+                                    Remember me
                                 </label>
-                                <button type="button" className="text-[13px] font-semibold text-orange-500 hover:text-orange-600 transition-colors">
+                                <button type="button" className="text-[13px] text-[#1d1d1f]/70 hover:text-[#1d1d1f] transition-colors">
                                     Forgot password?
                                 </button>
                             </div>
                         )}
 
-                        {/* Submit */}
                         <button
                             type="submit"
                             disabled={loading}
-                            className="mt-1 flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-[14px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-                            style={{ backgroundColor: '#F97316' }}
+                            className="mt-3 w-full apple-pill apple-pill-primary justify-center py-3.5 disabled:opacity-50"
                         >
                             {loading
-                                ? <Loader2 className="h-5 w-5 animate-spin" />
-                                : isLogin ? 'Log in' : 'Create Account'}
+                                ? <Loader2 className="h-4 w-4 animate-spin" />
+                                : isLogin ? 'Sign in' : 'Create account'}
                         </button>
                     </form>
 
-                    {/* Divider */}
-                    <div className="my-5 flex items-center gap-3">
-                        <div className="h-px flex-1 bg-gray-200" />
-                        <span className="text-[12px] font-medium text-gray-400">OR</span>
-                        <div className="h-px flex-1 bg-gray-200" />
+                    <div className="my-6 flex items-center gap-3">
+                        <div className="h-px flex-1 bg-[#1d1d1f]/8" />
+                        <span className="text-[11px] text-[#86868b]">or</span>
+                        <div className="h-px flex-1 bg-[#1d1d1f]/8" />
                     </div>
 
-                    {/* Google */}
                     <button
                         type="button"
-                        className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-[14px] font-semibold text-gray-700 transition hover:bg-gray-100"
+                        className="flex w-full items-center justify-center gap-3 rounded-[12px] border hairline bg-white px-4 py-3 text-[14px] font-medium text-[#1d1d1f] transition hover:bg-[#f5f5f7]"
                     >
-                        {/* Google "G" icon */}
                         <svg width="18" height="18" viewBox="0 0 24 24">
                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -284,20 +253,19 @@ function AuthPageContent() {
                         Continue with Google
                     </button>
 
-                    {/* Toggle login/signup */}
-                    <p className="mt-6 text-center text-[13px] text-gray-400">
+                    <p className="mt-8 text-center text-[13px] text-[#6e6e73]">
                         {isLogin ? "Don't have an account? " : 'Already have an account? '}
                         <button
                             onClick={() => { setIsLogin(!isLogin); setError(null); }}
-                            className="font-semibold text-orange-500 hover:text-orange-600 transition-colors"
+                            className="font-medium text-[#1d1d1f] hover:underline transition-colors"
                         >
                             {isLogin ? 'Sign up' : 'Sign in'}
                         </button>
                     </p>
 
-                    <p className="mt-4 text-center text-[12px] text-gray-400">
+                    <p className="mt-3 text-center text-[12px] text-[#86868b]">
                         Audcomp staff?{' '}
-                        <Link href="/staff" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                        <Link href="/staff" className="text-[#1d1d1f] hover:underline transition-colors">
                             Internal portal →
                         </Link>
                     </p>

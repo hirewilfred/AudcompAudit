@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion';
 import {
-    Binary,
     Calculator,
     Rocket,
     ArrowRight,
@@ -13,213 +12,201 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+const APPLE_EASE = [0.22, 1, 0.36, 1] as const;
+const APPLE_EASE_STRONG = [0.16, 1, 0.3, 1] as const;
+
 const successStories = [
     {
         company: "Summit Manufacturing",
         industry: "Custom Fabrication",
         challenge: "Spending 20+ hours weekly on manual inventory reconciliation and order tracking.",
-        solution: "Deployed a custom Inventory Agent that syncs shop floor data with procurement in real-time.",
-        result: "18 Hours/Week Saved",
-        metric: "90% Reduction in manual data entry"
+        solution: "Deployed a custom Inventory Agent that syncs shop floor data with procurement in real time.",
+        result: "18 hrs / week saved",
+        metric: "90% reduction in manual data entry"
     },
     {
         company: "Lakeside Legal",
         industry: "Professional Services",
         challenge: "Inbound inquiry overload was causing 48-hour response delays for potential clients.",
-        solution: "Implemented an AI Triage system to classify, prioritize, and draft initial responses.",
-        result: "40% Higher Lead Conversion",
-        metric: "< 5 Minute response time for high-value leads"
+        solution: "Implemented an AI triage system to classify, prioritize, and draft initial responses.",
+        result: "40% higher lead conversion",
+        metric: "< 5 minute response time for high-value leads"
     },
     {
         company: "Echo Logistics",
         industry: "Transportation & Supply",
         challenge: "Reactive maintenance and unpredictable dispatch gaps affecting profit margins.",
-        solution: "Integrated a Predictive Dispatch Engine using historical route data and AI forecasting.",
-        result: "$54k Annual Labor Savings",
-        metric: "15% Efficiency gain across 12-truck fleet"
+        solution: "Integrated a predictive dispatch engine using historical route data and AI forecasting.",
+        result: "$54k annual labor savings",
+        metric: "15% efficiency gain across 12-truck fleet"
     }
 ];
 
 const steps = [
     {
         number: "01",
-        title: "The AI Discovery Audit",
-        desc: "We begin with a deep dive into your current workflows. This 15-minute diagnostic identifies high-friction manual processes that are prime candidates for AI automation.",
+        title: "The AI discovery audit",
+        desc: "We begin with a deep dive into your current workflows. A 15-minute diagnostic identifies high-friction manual processes that are prime candidates for AI automation.",
         icon: Search,
-        color: "blue",
-        features: ["Workflow Analysis", "Data Security Review", "Tool Compatibility Check"]
+        features: ["Workflow analysis", "Data security review", "Tool compatibility check"]
     },
     {
         number: "02",
-        title: "Precision ROI Mapping",
-        desc: "Using our proprietary ROI AI Calculator, we translate theoretical efficiency into hard numbers: hours saved, labor costs reduced, and projected annual yield.",
+        title: "Precision ROI mapping",
+        desc: "Using our proprietary ROI engine, we translate theoretical efficiency into hard numbers — hours saved, labor costs reduced, and projected annual yield.",
         icon: Calculator,
-        color: "indigo",
-        features: ["Labor Cost Modeling", "Efficiency Projections", "Payback Period Analysis"]
+        features: ["Labor cost modeling", "Efficiency projections", "Payback period analysis"]
     },
     {
         number: "03",
-        title: "Strategic Implementation Roadmap",
+        title: "Strategic implementation roadmap",
         desc: "We deliver a customized, four-phase timeline. From assessment to full-scale autonomous agent deployment, your path to AI maturity is clearly defined.",
         icon: Zap,
-        color: "sky",
-        features: ["Phase-by-Phase Timeline", "Risk Mitigation Strategy", "Technology Stack Selection"]
+        features: ["Phase-by-phase timeline", "Risk mitigation strategy", "Technology stack selection"]
     },
     {
         number: "04",
-        title: "Guided Execution & Support",
-        desc: "You're never alone. Our assigned AI experts guide your team through the transition, ensuring seamless integration and measurable success at every milestone.",
+        title: "Guided execution & support",
+        desc: "You're never alone. Assigned AI experts guide your team through the transition, ensuring seamless integration and measurable success at every milestone.",
         icon: Rocket,
-        color: "emerald",
-        features: ["Expert Assigned Support", "Continuous Optimization", "Team Upskilling"]
+        features: ["Expert-assigned support", "Continuous optimization", "Team upskilling"]
     }
 ];
 
 export default function HowItWorks() {
     return (
-        <div className="relative min-h-screen bg-[#050B1A] text-white overflow-hidden">
-            {/* Background Orbs */}
-            <div className="absolute top-[-20%] left-[-10%] h-[800px] w-[800px] rounded-full bg-blue-600/5 blur-[120px]" />
-            <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-600/5 blur-[120px]" />
+        <div className="relative min-h-screen bg-[#fbfbfd] text-[#1d1d1f]">
 
-            <header className="fixed top-0 z-50 flex w-full items-center justify-between px-8 py-6 backdrop-blur-md border-b border-white/5">
-                <Link href="/" className="flex items-center">
-                    <img
-                        src="/images/AUDCOMP-LOGO.png"
-                        alt="AUDCOMP"
-                        className="h-10 w-auto"
-                    />
-                </Link>
-                <Link
-                    href="/"
-                    className="text-sm font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors"
-                >
-                    Back to Home
-                </Link>
+            {/* Apple-style thin glass nav */}
+            <header className="sticky top-0 z-50 border-b hairline bg-white/72 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/60">
+                <div className="mx-auto flex h-12 max-w-[1024px] items-center justify-between px-6">
+                    <Link href="/" className="flex items-center">
+                        <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP" className="h-5 w-auto opacity-90" />
+                    </Link>
+                    <Link href="/" className="text-[12px] font-normal text-[#1d1d1f]/85 hover:text-[#1d1d1f] transition-colors">
+                        Back to home
+                    </Link>
+                </div>
             </header>
 
-            <main className="relative z-10 pt-40 pb-32">
-                <div className="mx-auto max-w-7xl px-6">
-                    {/* Hero Section */}
-                    <div className="text-center mb-32">
+            <main className="relative pt-24 sm:pt-32 pb-32">
+                <div className="mx-auto max-w-[1024px] px-6">
+
+                    {/* Hero */}
+                    <div className="text-center mb-32 sm:mb-40">
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/5 px-4 py-1.5 text-xs font-black uppercase tracking-[0.2em] text-blue-400 mb-8"
+                            transition={{ duration: 0.6, ease: APPLE_EASE }}
+                            className="eyebrow mb-5"
                         >
-                            <Binary className="h-4 w-4" />
-                            Our Methodology
+                            Our methodology
                         </motion.div>
                         <motion.h1
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            className="text-5xl md:text-7xl font-black tracking-tight mb-8"
+                            transition={{ duration: 0.9, ease: APPLE_EASE_STRONG }}
+                            className="display display-tight text-[#1d1d1f] text-[48px] sm:text-[72px] lg:text-[88px]"
                         >
-                            The Path to <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">AI Excellence</span>
+                            The path to <br />
+                            AI excellence.
                         </motion.h1>
                         <motion.p
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="mx-auto max-w-2xl text-lg text-slate-400 leading-relaxed font-bold"
+                            transition={{ duration: 0.8, delay: 0.18, ease: APPLE_EASE }}
+                            className="mx-auto mt-6 max-w-2xl text-[19px] sm:text-[21px] leading-[1.4] text-[#6e6e73] [text-wrap:balance]"
                         >
-                            Transforming your business with AI isn't about chasing trends. It's about a structured, data-driven approach to efficiency and growth. Here is how we make it happen.
+                            Transforming your business with AI isn&apos;t about chasing trends. It&apos;s a structured, data-driven approach to efficiency and growth.
                         </motion.p>
                     </div>
 
-                    {/* Steps Section */}
-                    <div className="space-y-32">
+                    {/* Steps — alternating layout, Apple-restrained */}
+                    <div className="space-y-32 sm:space-y-40">
                         {steps.map((step, i) => (
                             <motion.section
-                                key={i}
-                                initial={{ opacity: 0, y: 40 }}
+                                key={step.number}
+                                initial={{ opacity: 0, y: 24 }}
                                 whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.8 }}
-                                className={`flex flex-col ${i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-16 md:gap-24`}
+                                viewport={{ once: true, margin: '-20%' }}
+                                transition={{ duration: 0.8, ease: APPLE_EASE_STRONG }}
+                                className={`flex flex-col ${i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-12 md:gap-20`}
                             >
-                                {/* Visual Side */}
+                                {/* Visual side */}
                                 <div className="flex-1 w-full">
-                                    <div className="relative group">
-                                        <div className={`absolute -inset-4 rounded-[48px] bg-gradient-to-br from-${step.color}-600/20 to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700`} />
-                                        <div className="relative aspect-square md:aspect-video rounded-[48px] bg-slate-900/50 border border-white/5 overflow-hidden flex items-center justify-center group-hover:border-blue-500/30 transition-all duration-700">
-                                            <div className="absolute top-0 right-0 p-8">
-                                                <span className={`text-8xl font-black text-${step.color}-500/10`}>{step.number}</span>
-                                            </div>
-                                            <step.icon className={`h-24 w-24 text-${step.color}-500/80 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]`} />
+                                    <div className="relative aspect-[4/3] rounded-[28px] bg-[#f5f5f7] overflow-hidden flex items-center justify-center">
+                                        <div className="absolute top-0 right-0 p-8">
+                                            <span className="text-[120px] font-semibold tracking-tighter text-[#1d1d1f]/[0.06] leading-none">
+                                                {step.number}
+                                            </span>
                                         </div>
+                                        <step.icon className="h-20 w-20 text-[#1d1d1f]/30" strokeWidth={1.2} />
                                     </div>
                                 </div>
 
-                                {/* Content Side */}
+                                {/* Content side */}
                                 <div className="flex-1">
-                                    <h3 className={`text-sm font-black uppercase tracking-[0.3em] text-${step.color}-500 mb-6`}>
-                                        Step {step.number}
-                                    </h3>
-                                    <h2 className="text-4xl font-black text-white mb-8 tracking-tight leading-tight">
+                                    <div className="eyebrow mb-4">Step {step.number}</div>
+                                    <h2 className="display display-tight text-[#1d1d1f] text-[36px] sm:text-[48px] mb-6">
                                         {step.title}
                                     </h2>
-                                    <p className="text-lg text-slate-400 font-bold leading-relaxed mb-10">
+                                    <p className="text-[19px] leading-[1.45] text-[#6e6e73] mb-8 [text-wrap:balance]">
                                         {step.desc}
                                     </p>
-                                    <div className="space-y-4">
+                                    <ul className="space-y-3">
                                         {step.features.map((feature, idx) => (
-                                            <div key={idx} className="flex items-center gap-3">
-                                                <div className={`h-5 w-5 rounded-full bg-${step.color}-500/10 border border-${step.color}-500/20 flex items-center justify-center`}>
-                                                    <CheckCircle2 className={`h-3 w-3 text-${step.color}-400`} />
-                                                </div>
-                                                <span className="text-sm font-black text-slate-300 tracking-wide">{feature}</span>
-                                            </div>
+                                            <li key={idx} className="flex items-center gap-3">
+                                                <CheckCircle2 className="h-4 w-4 text-[#1d1d1f]/60" strokeWidth={1.5} />
+                                                <span className="text-[15px] text-[#1d1d1f]">{feature}</span>
+                                            </li>
                                         ))}
-                                    </div>
+                                    </ul>
                                 </div>
                             </motion.section>
                         ))}
                     </div>
 
-                    {/* Success Stories Section */}
-                    <div className="mt-48">
+                    {/* Success stories */}
+                    <div className="mt-40 sm:mt-48">
                         <div className="text-center mb-16">
-                            <h2 className="text-sm font-black text-indigo-500 uppercase tracking-[0.3em] mb-4">Success Stories</h2>
-                            <h3 className="text-4xl font-black text-white tracking-tight">Real Results for Real SMBs</h3>
+                            <div className="eyebrow mb-3">Success stories</div>
+                            <h3 className="display display-tight text-[#1d1d1f] text-[40px] sm:text-[56px]">
+                                Real results for real SMBs.
+                            </h3>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                             {successStories.map((story, i) => (
                                 <motion.div
-                                    key={i}
-                                    initial={{ opacity: 0, y: 20 }}
+                                    key={story.company}
+                                    initial={{ opacity: 0, y: 16 }}
                                     whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ delay: i * 0.1 }}
-                                    className="p-8 rounded-[40px] bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-blue-500/20 transition-all duration-500 group"
+                                    viewport={{ once: true, margin: '-15%' }}
+                                    transition={{ delay: i * 0.08, duration: 0.7, ease: APPLE_EASE }}
+                                    className="lift p-8 rounded-[22px] bg-white border hairline"
                                 >
                                     <div className="flex items-center justify-between mb-8">
                                         <div className="flex flex-col">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{story.industry}</span>
-                                            <span className="text-lg font-black text-white">{story.company}</span>
+                                            <span className="text-[11px] text-[#86868b]">{story.industry}</span>
+                                            <span className="text-[17px] font-semibold text-[#1d1d1f] tracking-tight">{story.company}</span>
                                         </div>
-                                        <div className="h-10 w-10 rounded-2xl bg-blue-600/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
-                                            <TrendingUp className="h-5 w-5" />
+                                        <TrendingUp className="h-5 w-5 text-[#1d1d1f]/40" strokeWidth={1.5} />
+                                    </div>
+
+                                    <div className="space-y-5">
+                                        <div>
+                                            <p className="eyebrow mb-1.5">Challenge</p>
+                                            <p className="text-[14px] leading-[1.5] text-[#1d1d1f]/80">{story.challenge}</p>
+                                        </div>
+                                        <div>
+                                            <p className="eyebrow mb-1.5">Solution</p>
+                                            <p className="text-[14px] leading-[1.5] text-[#1d1d1f]/80">{story.solution}</p>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-6">
-                                        <div>
-                                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-500/60 mb-2">The Challenge</p>
-                                            <p className="text-xs font-bold text-slate-400 group-hover:text-slate-300 transition-colors">{story.challenge}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-500/60 mb-2">The AI Solution</p>
-                                            <p className="text-xs font-bold text-slate-400 group-hover:text-slate-300 transition-colors">{story.solution}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-10 pt-8 border-t border-white/5 text-center">
-                                        <p className="text-2xl font-black text-white mb-1">{story.result}</p>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">{story.metric}</p>
+                                    <div className="mt-8 pt-6 border-t hairline">
+                                        <p className="display display-tight text-[#1d1d1f] text-[22px] mb-1">{story.result}</p>
+                                        <p className="text-[12px] text-[#6e6e73]">{story.metric}</p>
                                     </div>
                                 </motion.div>
                             ))}
@@ -228,27 +215,25 @@ export default function HowItWorks() {
 
                     {/* Final CTA */}
                     <motion.section
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        className="mt-48 text-center p-16 rounded-[64px] bg-gradient-to-br from-blue-600/10 via-indigo-600/5 to-transparent border border-white/5 relative overflow-hidden group"
+                        initial={{ opacity: 0, y: 16 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: '-20%' }}
+                        transition={{ duration: 0.8, ease: APPLE_EASE_STRONG }}
+                        className="mt-40 text-center py-24 rounded-[32px] bg-[#f5f5f7]"
                     >
-                        <div className="absolute top-0 right-0 p-20 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Zap className="h-64 w-64" />
-                        </div>
-                        <h2 className="text-4xl md:text-5xl font-black mb-8 tracking-tight">Ready to see your <br className="md:hidden" /> AI Roadmap?</h2>
-                        <Link
-                            href="/auth"
-                            className="inline-flex items-center gap-3 rounded-2xl bg-white px-10 py-5 text-lg font-black text-slate-900 transition-all hover:bg-blue-50 hover:scale-105 shadow-xl shadow-blue-500/10"
-                        >
-                            Start Free AI Audit
-                            <ArrowRight className="h-5 w-5" />
+                        <h2 className="display display-tight text-[#1d1d1f] text-[40px] sm:text-[64px] mb-8 px-6">
+                            Ready to see your AI roadmap?
+                        </h2>
+                        <Link href="/auth" className="apple-pill apple-pill-accent">
+                            Start free AI audit
+                            <ArrowRight className="h-3.5 w-3.5" />
                         </Link>
                     </motion.section>
                 </div>
             </main>
 
-            <footer className="border-t border-white/5 py-12 text-center text-[10px] font-black uppercase tracking-[0.3em] text-slate-600">
-                © 2026 AUDCOMP Information Technology Solutions. All Rights Reserved.
+            <footer className="border-t hairline bg-[#f5f5f7] py-10 text-center text-[11px] text-[#86868b]">
+                © 2026 AUDCOMP Information Technology Solutions. All rights reserved.
             </footer>
         </div>
     );

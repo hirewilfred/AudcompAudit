@@ -137,33 +137,32 @@ export default function AIAdvisorPage() {
 
     if (isCheckingAuth) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-[#F4F7FE]">
-                <Loader2 className="h-10 w-10 text-blue-600 animate-spin" />
+            <div className="flex min-h-screen items-center justify-center bg-[#fbfbfd]">
+                <Loader2 className="h-6 w-6 text-[#1d1d1f]/40 animate-spin" />
             </div>
         );
     }
 
     if (isSubmitting) {
         return (
-            <div className="flex min-h-screen flex-col items-center justify-center bg-[#F4F7FE] text-slate-900">
+            <div className="flex min-h-screen flex-col items-center justify-center bg-[#fbfbfd] text-[#1d1d1f]">
                 <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
                     className="flex flex-col items-center text-center px-6"
                 >
-                    <div className="mb-8 flex h-20 w-20 items-center justify-center rounded-2xl bg-blue-600/10">
-                        <BrainCircuit className="h-10 w-10 text-blue-600 animate-pulse" />
-                    </div>
-                    <h2 className="text-3xl font-black mb-3">Building Your Roadmap...</h2>
-                    <p className="text-slate-500 mb-8 font-medium max-w-sm">
+                    <BrainCircuit className="h-10 w-10 text-[#1d1d1f]/40 mb-8 animate-pulse" strokeWidth={1.2} />
+                    <h2 className="display display-tight text-[36px] sm:text-[48px] mb-3">Building your roadmap.</h2>
+                    <p className="text-[17px] text-[#6e6e73] mb-10 max-w-sm leading-[1.45]">
                         Analyzing your environment and matching you with the best AI solutions.
                     </p>
-                    <div className="w-64 h-3 bg-white rounded-full overflow-hidden shadow-inner border border-slate-100">
+                    <div className="w-64 h-1 bg-[#1d1d1f]/8 rounded-full overflow-hidden">
                         <motion.div
-                            className="h-full bg-blue-600"
+                            className="h-full bg-[#1d1d1f]"
                             initial={{ width: 0 }}
                             animate={{ width: '100%' }}
-                            transition={{ duration: 1.5 }}
+                            transition={{ duration: 1.5, ease: 'easeOut' }}
                         />
                     </div>
                 </motion.div>
@@ -172,78 +171,70 @@ export default function AIAdvisorPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F4F7FE] text-slate-800">
-            {/* Header */}
-            <header className="fixed top-0 z-50 flex w-full items-center justify-between px-8 py-5 bg-white shadow-sm">
-                <div className="flex items-center gap-3">
-                    <Link href="/">
-                        <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP" className="h-8 w-auto brightness-0" />
-                    </Link>
-                    <span className="font-bold tracking-tight border-l border-slate-200 ml-2 pl-4 text-slate-400">
-                        AI Adoption Advisor
-                    </span>
-                </div>
-                <div className="flex items-center gap-4">
-                    <span className="text-sm font-bold text-slate-400">
-                        Step {currentStep + 1} of {totalSteps}
-                    </span>
-                    <div className="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <motion.div
-                            className="h-full bg-blue-600"
-                            animate={{ width: `${progress}%` }}
-                            transition={{ duration: 0.3 }}
-                        />
+        <div className="min-h-screen bg-[#fbfbfd] text-[#1d1d1f]">
+            <header className="sticky top-0 z-50 border-b hairline bg-white/72 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/60">
+                <div className="mx-auto flex h-12 max-w-[1024px] items-center justify-between px-6">
+                    <div className="flex items-center gap-3">
+                        <Link href="/">
+                            <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP" className="h-5 w-auto opacity-90" />
+                        </Link>
+                        <span className="text-[12px] text-[#6e6e73] border-l hairline pl-3">AI Adoption Advisor</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <span className="text-[12px] text-[#6e6e73]">Step {currentStep + 1} of {totalSteps}</span>
+                        <div className="w-24 h-1 bg-[#1d1d1f]/8 rounded-full overflow-hidden">
+                            <motion.div
+                                className="h-full bg-[#1d1d1f]"
+                                animate={{ width: `${progress}%` }}
+                                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                            />
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-start justify-start px-6 pt-32 pb-24">
+            <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-start justify-start px-6 pt-20 sm:pt-28 pb-24">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={step.id}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                         className="w-full"
                     >
-                        {/* Step badge */}
-                        <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-blue-600 border border-blue-100/50">
-                            <BrainCircuit className="h-3 w-3" />
+                        <div className="eyebrow mb-4">
                             Step {currentStep + 1} — {step.id.replace(/_/g, ' ')}
                         </div>
 
-                        <h1 className="mb-3 text-4xl font-black sm:text-5xl leading-tight text-slate-900 tracking-tight">
+                        <h1 className="mb-3 display display-tight text-[32px] sm:text-[48px] lg:text-[56px] text-[#1d1d1f] [text-wrap:balance]">
                             {step.title}
                         </h1>
-                        <p className="mb-10 text-lg text-slate-500 font-medium">{step.subtitle}</p>
+                        <p className="mb-12 text-[19px] text-[#6e6e73] leading-[1.45]">{step.subtitle}</p>
 
                         <div className="space-y-8">
                             {step.fields.map(field => (
                                 <div key={field.id}>
                                     {step.fields.length > 1 && (
-                                        <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-4">
-                                            {field.label}
-                                        </label>
+                                        <label className="eyebrow block mb-4">{field.label}</label>
                                     )}
 
-                                    {/* Radio cards */}
                                     {field.type === 'radio' && (
                                         <>
-                                        {/* M365 auto-detect banner — shown only for the m365_tier field */}
                                         {field.id === 'm365_tier' && (
-                                            <div className="mb-5">
+                                            <div className="mb-4">
                                                 {m365Connected ? (
-                                                    <div className="flex items-center gap-3 rounded-[18px] border border-green-200 bg-green-50 px-5 py-4">
-                                                        <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
+                                                    <div className="flex items-center gap-3 rounded-[14px] bg-[#1d1d1f]/[0.04] px-5 py-4">
+                                                        <CheckCircle2 className="h-4 w-4 shrink-0 text-[#1d1d1f]" strokeWidth={1.5} />
                                                         <div>
-                                                            <p className="text-sm font-black text-green-800">Microsoft 365 Connected</p>
-                                                            <p className="text-xs text-green-600 mt-0.5">
+                                                            <p className="text-[14px] font-medium text-[#1d1d1f]">Microsoft 365 connected</p>
+                                                            <p className="text-[12px] text-[#6e6e73] mt-0.5">
                                                                 Detected: {TIER_LABELS[responses['m365_tier'] as string] ?? responses['m365_tier']}
                                                             </p>
                                                         </div>
                                                         <button
                                                             onClick={handleConnectM365}
-                                                            className="ml-auto text-xs font-bold text-green-600 hover:text-green-800 transition-colors"
+                                                            className="ml-auto text-[12px] text-[#6e6e73] hover:text-[#1d1d1f] transition-colors"
                                                         >
                                                             Re-detect
                                                         </button>
@@ -252,7 +243,7 @@ export default function AIAdvisorPage() {
                                                     <button
                                                         onClick={handleConnectM365}
                                                         disabled={isConnectingM365}
-                                                        className="flex w-full items-center justify-center gap-3 rounded-[18px] border border-blue-200 bg-blue-50 px-5 py-4 text-sm font-black text-blue-700 transition-all hover:bg-blue-100 disabled:opacity-60 disabled:pointer-events-none"
+                                                        className="flex w-full items-center justify-center gap-3 rounded-[14px] border hairline bg-white px-5 py-4 text-[14px] font-medium text-[#1d1d1f] transition-colors hover:bg-[#f5f5f7] disabled:opacity-60 disabled:pointer-events-none"
                                                     >
                                                         {isConnectingM365 ? (
                                                             <>
@@ -261,9 +252,9 @@ export default function AIAdvisorPage() {
                                                             </>
                                                         ) : (
                                                             <>
-                                                                <Link2 className="h-4 w-4" />
+                                                                <Link2 className="h-4 w-4" strokeWidth={1.5} />
                                                                 Auto-detect via Microsoft 365
-                                                                <span className="ml-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-500">Recommended</span>
+                                                                <span className="ml-1 rounded-full bg-[#1d1d1f]/[0.06] px-2 py-0.5 text-[11px] text-[#6e6e73]">Recommended</span>
                                                             </>
                                                         )}
                                                     </button>
@@ -275,24 +266,24 @@ export default function AIAdvisorPage() {
                                                 <button
                                                     key={opt.value}
                                                     onClick={() => handleSelect(field.id, opt.value)}
-                                                    className={`group flex w-full items-center justify-between rounded-[24px] border p-6 text-left transition-all hover:scale-[1.01] ${responses[field.id] === opt.value
-                                                        ? 'border-blue-600 bg-white shadow-xl shadow-blue-900/5 ring-1 ring-blue-600/5'
-                                                        : 'border-slate-100 bg-white/70 hover:border-slate-200 hover:bg-white'
+                                                    className={`group flex w-full items-center rounded-[18px] border p-6 text-left transition-all duration-200 ${responses[field.id] === opt.value
+                                                        ? 'border-[#1d1d1f] bg-white'
+                                                        : 'border-transparent bg-white hover:border-[#1d1d1f]/15'
                                                         }`}
                                                 >
-                                                    <div className="flex items-center gap-5">
-                                                        <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${responses[field.id] === opt.value
-                                                            ? 'border-blue-600 bg-blue-600'
-                                                            : 'border-slate-200 bg-transparent'
+                                                    <div className="flex items-start gap-4 w-full">
+                                                        <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors mt-1 ${responses[field.id] === opt.value
+                                                            ? 'border-[#1d1d1f] bg-[#1d1d1f]'
+                                                            : 'border-[#1d1d1f]/20 bg-transparent'
                                                             }`}>
                                                             {responses[field.id] === opt.value && (
-                                                                <CheckCircle2 className="h-4 w-4 text-white" />
+                                                                <CheckCircle2 className="h-4 w-4 text-white" strokeWidth={2} />
                                                             )}
                                                         </div>
-                                                        <div>
-                                                            <span className="text-base font-bold text-slate-800">{opt.label}</span>
+                                                        <div className="flex-1">
+                                                            <span className="text-[16px] font-medium text-[#1d1d1f] tracking-tight">{opt.label}</span>
                                                             {opt.description && (
-                                                                <p className="text-sm text-slate-400 mt-0.5">{opt.description}</p>
+                                                                <p className="text-[13px] text-[#6e6e73] mt-1 leading-[1.5]">{opt.description}</p>
                                                             )}
                                                         </div>
                                                     </div>
@@ -302,24 +293,22 @@ export default function AIAdvisorPage() {
                                         </>
                                     )}
 
-                                    {/* Select dropdown */}
                                     {field.type === 'select' && (
                                         <div className="relative">
                                             <select
                                                 value={(responses[field.id] as string) || ''}
                                                 onChange={e => handleSelectChange(field.id, e.target.value)}
-                                                className="w-full rounded-[20px] border border-slate-200 bg-white py-5 pl-6 pr-12 text-base text-slate-900 outline-none transition-all focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 font-semibold appearance-none cursor-pointer shadow-sm"
+                                                className="w-full rounded-[14px] border hairline bg-white py-4 pl-5 pr-12 text-[15px] text-[#1d1d1f] outline-none transition-all focus:border-[#1d1d1f]/30 focus:ring-2 focus:ring-[#1d1d1f]/5 appearance-none cursor-pointer"
                                             >
-                                                <option value="" disabled>Select an option...</option>
+                                                <option value="" disabled>Select an option…</option>
                                                 {field.options.map(opt => (
                                                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                                                 ))}
                                             </select>
-                                            <ChevronDown className="pointer-events-none absolute right-5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                                            <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#86868b]" strokeWidth={1.5} />
                                         </div>
                                     )}
 
-                                    {/* Multi-select cards */}
                                     {field.type === 'multiselect' && (
                                         <div className="grid gap-3 sm:grid-cols-2">
                                             {field.options.map(opt => {
@@ -328,21 +317,21 @@ export default function AIAdvisorPage() {
                                                     <button
                                                         key={opt.value}
                                                         onClick={() => handleMultiSelect(field.id, opt.value)}
-                                                        className={`group flex w-full items-start gap-4 rounded-[20px] border p-5 text-left transition-all hover:scale-[1.01] ${selected
-                                                            ? 'border-blue-600 bg-white shadow-lg shadow-blue-900/5 ring-1 ring-blue-600/5'
-                                                            : 'border-slate-100 bg-white/70 hover:border-slate-200 hover:bg-white'
+                                                        className={`group flex w-full items-start gap-4 rounded-[16px] border p-5 text-left transition-all duration-200 ${selected
+                                                            ? 'border-[#1d1d1f] bg-white'
+                                                            : 'border-transparent bg-white hover:border-[#1d1d1f]/15'
                                                             }`}
                                                     >
-                                                        <div className={`flex h-6 w-6 shrink-0 mt-0.5 items-center justify-center rounded-md border-2 transition-colors ${selected
-                                                            ? 'border-blue-600 bg-blue-600'
-                                                            : 'border-slate-200 bg-transparent'
+                                                        <div className={`flex h-5 w-5 shrink-0 mt-0.5 items-center justify-center rounded-md border transition-colors ${selected
+                                                            ? 'border-[#1d1d1f] bg-[#1d1d1f]'
+                                                            : 'border-[#1d1d1f]/20 bg-transparent'
                                                             }`}>
-                                                            {selected && <CheckCircle2 className="h-3.5 w-3.5 text-white" />}
+                                                            {selected && <CheckCircle2 className="h-3 w-3 text-white" strokeWidth={2} />}
                                                         </div>
                                                         <div>
-                                                            <span className="text-sm font-bold text-slate-800">{opt.label}</span>
+                                                            <span className="text-[14px] font-medium text-[#1d1d1f] tracking-tight">{opt.label}</span>
                                                             {opt.description && (
-                                                                <p className="text-xs text-slate-400 mt-0.5">{opt.description}</p>
+                                                                <p className="text-[12px] text-[#6e6e73] mt-1 leading-[1.5]">{opt.description}</p>
                                                             )}
                                                         </div>
                                                     </button>
@@ -356,24 +345,23 @@ export default function AIAdvisorPage() {
                     </motion.div>
                 </AnimatePresence>
 
-                {/* Navigation */}
                 <div className="mt-12 flex w-full items-center justify-between">
                     <button
                         onClick={prevStep}
                         disabled={currentStep === 0}
-                        className="flex items-center gap-2 text-slate-400 font-bold hover:text-slate-800 disabled:opacity-0 transition-colors"
+                        className="apple-pill apple-pill-ghost disabled:opacity-0"
                     >
-                        <ChevronLeft className="h-5 w-5" />
+                        <ChevronLeft className="h-3.5 w-3.5" />
                         Back
                     </button>
 
                     <button
                         onClick={nextStep}
                         disabled={!isStepComplete()}
-                        className="group flex items-center justify-center gap-3 rounded-[20px] bg-blue-600 px-8 py-4 text-base font-black text-white transition-all hover:scale-105 shadow-xl shadow-blue-600/20 disabled:opacity-50 disabled:pointer-events-none"
+                        className="apple-pill apple-pill-primary disabled:opacity-40"
                     >
-                        {currentStep === totalSteps - 1 ? 'Generate My Roadmap' : 'Continue'}
-                        <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                        {currentStep === totalSteps - 1 ? 'Generate roadmap' : 'Continue'}
+                        <ChevronRight className="h-3.5 w-3.5" />
                     </button>
                 </div>
             </main>

@@ -12,17 +12,19 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-/* â”€â”€â”€ Animation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Animation (Apple-style: soft ease-out, longer durations, less Y) ─── */
+const APPLE_EASE = [0.22, 1, 0.36, 1] as const;
+const APPLE_EASE_STRONG = [0.16, 1, 0.3, 1] as const;
 const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 16 },
   show: (i = 0) => ({
     opacity: 1, y: 0,
-    transition: { duration: 0.5, delay: i * 0.1, ease: 'easeOut' as const },
+    transition: { duration: 0.7, delay: i * 0.06, ease: APPLE_EASE },
   }),
 };
 
-/* â”€â”€â”€ Brand tokens (matching audcomp.com) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-const DARK  = '#1a1a2e';
+/* ─── Brand tokens ─────────────────────────────────────────────────── */
+const INK = '#1d1d1f';
 const ORANGE = '#F97316';
 
 /* â”€â”€â”€ Case studies (6) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -440,19 +442,17 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-white text-gray-900" style={{ fontFamily: "'Open Sans', 'Arimo', system-ui, sans-serif" }}>
+    <div className="relative min-h-screen bg-[#fbfbfd] text-[#1d1d1f]">
 
-      {/* ══ UNIFIED NAVIGATION ══════════════════════════════════════════ */}
-      <header className="sticky top-0 z-50 bg-gray-900 shadow-lg border-b border-gray-800">
-        <div className="mx-auto flex max-w-7xl items-center gap-5 px-6 py-3">
+      {/* ══ APPLE-STYLE NAV — thin, glass blur, ink type ═══════════════ */}
+      <header className="sticky top-0 z-50 border-b hairline bg-white/72 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/60">
+        <div className="mx-auto flex h-12 max-w-[1024px] items-center gap-6 px-6">
 
-          {/* Logo */}
           <Link href="/" className="shrink-0 flex items-center">
-            <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP" className="h-10 w-auto" />
+            <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP" className="h-5 w-auto opacity-90" />
           </Link>
 
-          {/* Nav links */}
-          <nav className="hidden items-center gap-5 lg:flex flex-1">
+          <nav className="hidden flex-1 items-center justify-center gap-8 lg:flex">
             {[
               { label: 'About', href: 'https://audcomp.com/about/' },
               { label: 'Services', href: 'https://audcomp.com/managed-it-services/' },
@@ -462,32 +462,19 @@ export default function Home() {
               { label: 'Contact', href: 'https://audcomp.com/contact/' },
             ].map(item => (
               <Link key={item.label} href={item.href}
-                className="text-[13px] font-medium text-gray-300 transition-colors hover:text-white whitespace-nowrap">
+                className="text-[12px] font-normal text-[#1d1d1f]/85 transition-colors duration-150 hover:text-[#1d1d1f] whitespace-nowrap">
                 {item.label}
               </Link>
             ))}
           </nav>
 
-          {/* Phone + Email */}
-          <div className="hidden xl:flex items-center gap-4 text-[12px] text-gray-400 shrink-0">
-            <a href="tel:905-304-1775" className="flex items-center gap-1.5 hover:text-white transition-colors whitespace-nowrap">
-              <Phone className="h-3.5 w-3.5" /> 905-304-1775
-            </a>
-            <span className="text-gray-700">|</span>
-            <a href="mailto:info@audcomp.com" className="flex items-center gap-1.5 hover:text-white transition-colors whitespace-nowrap">
-              <Mail className="h-3.5 w-3.5" /> info@audcomp.com
-            </a>
-          </div>
-
-          {/* Two buttons — different colours */}
           <div className="hidden lg:flex items-center gap-2 shrink-0">
             <a href="https://audcomp.myportallogin.com/" target="_blank" rel="noopener noreferrer"
-              className="rounded-lg px-4 py-2 text-[12px] font-semibold text-white bg-gray-600 hover:bg-gray-500 transition-colors whitespace-nowrap">
+              className="text-[12px] font-normal text-[#1d1d1f]/70 hover:text-[#1d1d1f] transition-colors whitespace-nowrap">
               My Audcomp
             </a>
             <Link href="/auth"
-              className="rounded-lg px-4 py-2 text-[12px] font-semibold text-white transition-opacity hover:opacity-90 whitespace-nowrap"
-              style={{ backgroundColor: ORANGE }}>
+              className="ml-2 inline-flex items-center rounded-full bg-[#1d1d1f] px-4 py-1.5 text-[12px] font-medium text-white transition-colors hover:bg-[#2d2d30] whitespace-nowrap">
               Free AI Audit
             </Link>
           </div>
@@ -498,8 +485,7 @@ export default function Home() {
       <main>
 
         {/* â•â• HERO (light background with image) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-        <section className="relative w-full overflow-hidden bg-black h-screen min-h-[720px]">
-          {/* Fallback gradient — visible if the video can't decode/autoplay */}
+        <section className="relative w-full overflow-hidden bg-black" style={{ height: 'calc(100vh - 48px)', minHeight: 640 }}>
           <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-black" />
           <video
             ref={heroVideoRef}
@@ -514,92 +500,52 @@ export default function Home() {
             <source src="/Videos/Agent_intro-web.mp4" type="video/mp4" />
           </video>
 
-          {/* Cinematic gradient — dark left, fading to reveal video right */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-black/20" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
+          {/* Single soft vignette */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/10 to-black/55" />
 
-          {/* Content — left aligned, full-screen layout */}
-          <div className="relative z-10 mx-auto h-full max-w-[1500px] px-6 sm:px-12 lg:px-20 flex flex-col justify-center">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7 }}
-              className="mb-6 inline-flex items-center gap-3"
-            >
-              <span className="inline-flex items-center rounded-md bg-orange-500 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-white">
-                AI
-              </span>
-              <h1 className="text-white text-[44px] sm:text-[64px] lg:text-[80px] font-semibold tracking-tight leading-none">
-                Workforce
-              </h1>
-            </motion.div>
-
-            <motion.h2
-              initial={{ opacity: 0, y: 24 }}
+          {/* Centered hero — Apple choreography */}
+          <div className="relative z-10 mx-auto flex h-full max-w-[980px] flex-col items-center justify-center px-6 text-center">
+            <motion.h1
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-              className="max-w-[680px] text-white text-[36px] sm:text-[52px] lg:text-[68px] font-semibold leading-[1.05] tracking-tight"
+              transition={{ duration: 0.9, ease: APPLE_EASE_STRONG }}
+              className="display display-tight text-white text-[44px] sm:text-[72px] lg:text-[96px]"
             >
-              <span className="text-orange-500">The Modern</span> Workforce <br />
-              Is <span className="text-orange-500">Already</span> Here.
-            </motion.h2>
+              AI that works for you.
+            </motion.h1>
 
             <motion.p
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.35 }}
-              className="mt-8 max-w-md text-[15px] sm:text-[17px] leading-relaxed text-white/75"
+              transition={{ duration: 0.8, delay: 0.18, ease: APPLE_EASE }}
+              className="mt-5 max-w-xl text-[18px] sm:text-[21px] leading-[1.4] text-white/85 [text-wrap:balance]"
             >
-              Custom AI agents that work alongside your team — scored to your readiness, sequenced by ROI, deployed in weeks.
+              Custom AI agents — scored to your readiness, sequenced by ROI, deployed in weeks.
             </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              className="mt-10 flex items-center gap-5"
+              transition={{ duration: 0.8, delay: 0.32, ease: APPLE_EASE }}
+              className="mt-10 flex flex-wrap items-center justify-center gap-3"
             >
               <Link
                 href="/auth?next=/ai-agents/assessment"
-                className="group inline-flex items-center gap-3 rounded-full bg-orange-500 px-8 py-4 text-[14px] font-bold uppercase tracking-wider text-white shadow-[0_20px_50px_-15px_rgba(249,115,22,0.7)] hover:bg-orange-600 transition"
+                className="apple-pill apple-pill-accent"
               >
-                Start Free AI Audit
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                Start free AI audit
+                <ArrowRight className="h-3.5 w-3.5" />
               </Link>
               <button
                 type="button"
                 onClick={() => setFilmOpen(true)}
-                className="group inline-flex items-center gap-2 text-[13px] font-semibold text-white/90 hover:text-white transition"
+                className="apple-pill bg-white/10 text-white backdrop-blur-md hover:bg-white/15"
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/40 group-hover:border-white">
-                  <ChevronRight className="h-4 w-4" />
-                </span>
-                Watch the Film
+                Watch the film
+                <ChevronRight className="h-3.5 w-3.5" />
               </button>
             </motion.div>
           </div>
-
-          {/* Right-side vertical scroll progress indicator */}
-          <div className="absolute right-6 lg:right-10 top-1/2 -translate-y-1/2 z-10 flex flex-col items-center gap-2">
-            <div className="h-24 w-[2px] bg-white/15 rounded-full overflow-hidden">
-              <motion.div
-                initial={{ height: 0 }}
-                animate={{ height: '100%' }}
-                transition={{ duration: 2, ease: 'easeOut' }}
-                className="w-full bg-orange-500"
-              />
-            </div>
-          </div>
-
-          {/* Bottom scroll cue */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.4, duration: 0.6 }}
-            className="absolute bottom-8 right-6 lg:right-10 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-white/5 backdrop-blur-sm text-white hover:bg-white/15 cursor-pointer"
-          >
-            <ChevronRight className="h-4 w-4 rotate-90" />
-          </motion.div>
         </section>
 
         <section className="hidden relative overflow-hidden bg-gradient-to-b from-gray-50 to-white py-20 sm:py-28">
@@ -783,18 +729,18 @@ export default function Home() {
         </section>
 
         {/* â•â• STATS (dark bar like audcomp.com) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-        <section className="bg-gray-900 py-10">
-          <div className="mx-auto max-w-7xl px-6">
-            <div className="grid grid-cols-2 gap-y-6 text-center lg:grid-cols-4">
+        <section className="bg-[#fbfbfd] border-y hairline py-20 sm:py-24">
+          <div className="mx-auto max-w-[980px] px-6">
+            <div className="grid grid-cols-2 gap-y-12 text-center lg:grid-cols-4">
               {[
-                { n: '39+', s: 'Years in Business' },
-                { n: '500+', s: 'Organizations Audited' },
-                { n: '$2.4M', s: 'Avg. Annual Savings Identified' },
-                { n: '94%', s: 'Readiness Score Accuracy' },
+                { n: '39+', s: 'Years in business' },
+                { n: '500+', s: 'Organizations audited' },
+                { n: '$2.4M', s: 'Avg. annual savings identified' },
+                { n: '94%', s: 'Readiness score accuracy' },
               ].map((stat, i) => (
-                <motion.div key={stat.n} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i}>
-                  <div className="text-[32px] font-bold tracking-tight text-white">{stat.n}</div>
-                  <div className="mt-1 text-[13px] text-gray-400">{stat.s}</div>
+                <motion.div key={stat.n} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-20%' }} custom={i}>
+                  <div className="display display-tight text-[44px] sm:text-[52px] text-[#1d1d1f]">{stat.n}</div>
+                  <div className="mt-2 text-[13px] text-[#6e6e73]">{stat.s}</div>
                 </motion.div>
               ))}
             </div>
@@ -802,55 +748,48 @@ export default function Home() {
         </section>
 
         {/* ══ SERVICES ═════════════════════════════════════════════════ */}
-        <section className="bg-[#faf9f6]/80 py-24 sm:py-32">
-          <div className="mx-auto max-w-7xl px-6">
-            
-            <div className="mb-16 text-center">
-              <motion.h2 variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
-                className="text-[40px] font-bold leading-tight tracking-tight text-gray-900 sm:text-[52px]">
-                Precision <span className="font-medium italic" style={{ color: '#F97316' }}>Technology</span> <br /> Solutions
+        <section className="bg-[#f5f5f7] py-28 sm:py-40">
+          <div className="mx-auto max-w-[1024px] px-6">
+
+            <div className="mb-20 text-center">
+              <motion.h2 variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-20%' }}
+                className="display display-tight text-[#1d1d1f] text-[40px] sm:text-[56px] lg:text-[64px]">
+                Precision technology solutions.
               </motion.h2>
-              <motion.p variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={1}
-                className="mx-auto mt-6 max-w-2xl text-[16px] leading-relaxed text-gray-400">
-                Tailored expertise to solve your organization's most complex digital challenges.
-                From infrastructure to intelligent automation.
+              <motion.p variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-20%' }} custom={1}
+                className="mx-auto mt-5 max-w-xl text-[19px] leading-[1.4] text-[#6e6e73] [text-wrap:balance]">
+                Tailored expertise to solve your organization&apos;s most complex digital challenges — from infrastructure to intelligent automation.
               </motion.p>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-2 lg:gap-6">
               {services.map((s, i) => (
                 <motion.div
                   key={s.title}
                   variants={fadeUp}
                   initial="hidden"
                   whileInView="show"
-                  viewport={{ once: true }}
+                  viewport={{ once: true, margin: '-15%' }}
                   custom={i}
-                  className="group relative h-[520px] overflow-hidden rounded-[2.5rem] bg-gray-100 shadow-sm"
+                  className="group lift relative h-[460px] overflow-hidden rounded-[28px] bg-white"
                 >
-                  {/* Full Background Photo */}
                   <img
                     src={s.image}
                     alt={s.title}
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04]"
                   />
-                  
-                  {/* Subtle Top Gradient for depth */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
 
-                  {/* Dark Floating Card (Reference Style) */}
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <div className="relative rounded-[1.75rem] bg-[#0c1221]/95 p-6 backdrop-blur-md transition-all duration-300 group-hover:bg-[#0c1221] group-hover:p-7 shadow-2xl">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 ring-1 ring-orange-400/20 mb-4 transition-transform group-hover:scale-110">
-                        <s.icon className="h-5 w-5 text-orange-500" />
-                      </div>
-                      <h3 className="text-[19px] font-black leading-tight text-white mb-2 tracking-tight">
-                        {s.title}
-                      </h3>
-                      <p className="max-h-0 overflow-hidden text-[13px] leading-relaxed text-gray-400 opacity-0 transition-all duration-300 group-hover:max-h-24 group-hover:opacity-100 group-hover:mt-2">
-                        {s.desc}
-                      </p>
+                  <div className="absolute inset-x-0 bottom-0 p-8">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/30 backdrop-blur-md mb-5">
+                      <s.icon className="h-4 w-4 text-white" />
                     </div>
+                    <h3 className="display display-tight text-white text-[26px] sm:text-[30px] mb-2">
+                      {s.title}
+                    </h3>
+                    <p className="max-w-md text-[14px] leading-[1.5] text-white/80">
+                      {s.desc}
+                    </p>
                   </div>
                 </motion.div>
               ))}
@@ -859,21 +798,21 @@ export default function Home() {
         </section>
 
         {/* â•â• SCROLLING CASE STUDIES (marquee) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-        <section id="case-studies" className="bg-gray-50 py-20 sm:py-28 overflow-hidden">
-          <div className="mx-auto max-w-7xl px-6">
-            <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
-              className="mb-3 text-center text-[12px] font-semibold uppercase tracking-widest text-orange-500">
-              Case Studies
+        <section id="case-studies" className="bg-[#fbfbfd] py-28 sm:py-40 overflow-hidden">
+          <div className="mx-auto max-w-[1024px] px-6">
+            <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-20%' }}
+              className="mb-4 text-center eyebrow">
+              Case studies
             </motion.div>
 
-            <motion.h2 variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={1}
-              className="mb-4 text-center text-[30px] font-bold tracking-tight text-gray-900 sm:text-[40px]">
-              AI Is Already Working for Businesses Like Yours
+            <motion.h2 variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-20%' }} custom={1}
+              className="mb-4 text-center display display-tight text-[#1d1d1f] text-[40px] sm:text-[56px] lg:text-[64px]">
+              Already working for businesses like yours.
             </motion.h2>
 
-            <motion.p variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={2}
-              className="mx-auto mb-14 max-w-lg text-center text-[15px] leading-relaxed text-gray-600">
-              Real Canadian SMBs. Real savings. Click any card to see the full story.
+            <motion.p variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-20%' }} custom={2}
+              className="mx-auto mb-16 max-w-lg text-center text-[19px] leading-[1.4] text-[#6e6e73]">
+              Real Canadian SMBs. Real savings. Click any card for the full story.
             </motion.p>
           </div>
 
@@ -884,13 +823,13 @@ export default function Home() {
                 <button
                   key={`r1-${idx}`}
                   onClick={() => setSelectedStudy(study)}
-                  className="group relative w-[380px] shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-xl hover:-translate-y-1 text-left"
+                  className="group lift relative w-[360px] shrink-0 overflow-hidden rounded-[22px] border hairline bg-white text-left"
                 >
                   <div className="relative h-[180px] overflow-hidden">
                     <img src={study.image} alt={study.industry}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                    <div className="absolute left-3 top-3 rounded-md bg-orange-500 px-2.5 py-1 text-[10px] font-semibold text-white">
+                    <div className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-medium text-[#1d1d1f] backdrop-blur-md">
                       {study.industry}
                     </div>
                     <div className="absolute bottom-3 left-4 right-4">
@@ -922,13 +861,13 @@ export default function Home() {
                 <button
                   key={`r2-${idx}`}
                   onClick={() => setSelectedStudy(study)}
-                  className="group relative w-[380px] shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-xl hover:-translate-y-1 text-left"
+                  className="group lift relative w-[360px] shrink-0 overflow-hidden rounded-[22px] border hairline bg-white text-left"
                 >
                   <div className="relative h-[180px] overflow-hidden">
                     <img src={study.image} alt={study.industry}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                    <div className="absolute left-3 top-3 rounded-md bg-orange-500 px-2.5 py-1 text-[10px] font-semibold text-white">
+                    <div className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-medium text-[#1d1d1f] backdrop-blur-md">
                       {study.industry}
                     </div>
                     <div className="absolute bottom-3 left-4 right-4">
@@ -957,34 +896,34 @@ export default function Home() {
         {/* â•â• FEATURES SECTION REMOVED â•â• */}
 
         {/* â•â• HOW IT WORKS (light gray bg) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-        <section id="how-it-works" className="bg-gray-50 py-20 sm:py-28">
-          <div className="mx-auto max-w-7xl px-6">
-            <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
-              className="mb-3 text-center text-[12px] font-semibold uppercase tracking-widest text-orange-500">
-              Process â€” 10 Minutes
+        <section id="how-it-works" className="bg-[#f5f5f7] py-28 sm:py-40">
+          <div className="mx-auto max-w-[1024px] px-6">
+            <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-20%' }}
+              className="mb-4 text-center eyebrow">
+              Process — 10 minutes
             </motion.div>
 
-            <motion.h2 variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={1}
-              className="mb-12 text-center text-[30px] font-bold tracking-tight text-gray-900 sm:text-[40px]">
-              From Zero to Roadmap in Three Steps
+            <motion.h2 variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-20%' }} custom={1}
+              className="mb-16 text-center display display-tight text-[#1d1d1f] text-[40px] sm:text-[56px] lg:text-[64px]">
+              Zero to roadmap. Three steps.
             </motion.h2>
 
             <div className="grid gap-5 md:grid-cols-3">
               {[
-                { n: '01', title: 'Complete the Audit Survey', body: 'Answer 28 questions about your team, workflows, existing tools, and goals. No technical knowledge required â€” designed for owners and operations leaders.' },
-                { n: '02', title: 'Receive Your Scored Report', body: 'Our engine scores your readiness across 6 dimensions and benchmarks you against 500+ Canadian SMBs in your sector.' },
-                { n: '03', title: 'Execute Your Roadmap', body: 'A prioritized, week-by-week action plan with tool recommendations, ROI projections, and quick wins you can start this week.' },
+                { n: '01', title: 'Complete the audit', body: 'Answer 28 questions about your team, workflows, tools, and goals. No technical knowledge required — designed for owners and operations leaders.' },
+                { n: '02', title: 'Receive your scored report', body: 'Our engine scores readiness across 6 dimensions and benchmarks you against 500+ Canadian SMBs in your sector.' },
+                { n: '03', title: 'Execute your roadmap', body: 'A prioritized, week-by-week action plan with tool recommendations, ROI projections, and quick wins you can start this week.' },
               ].map((step, i) => (
-                <motion.div key={step.n} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i}
-                  className="rounded-xl border border-gray-200 bg-white p-7 shadow-sm">
-                  <div className="mb-5 flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-500 text-[16px] font-bold text-white">
+                <motion.div key={step.n} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-15%' }} custom={i}
+                  className="lift rounded-[22px] bg-white p-8">
+                  <div className="mb-6 flex items-baseline gap-3">
+                    <span className="text-[44px] font-semibold tracking-tight text-[#1d1d1f]" style={{ fontFeatureSettings: '"tnum"' }}>
                       {step.n}
-                    </div>
-                    <div className="h-px flex-1 bg-gray-200" />
+                    </span>
+                    <span className="h-px flex-1 bg-[#1d1d1f]/8" />
                   </div>
-                  <h3 className="mb-2 text-[16px] font-bold text-gray-900">{step.title}</h3>
-                  <p className="text-[13px] leading-relaxed text-gray-600">{step.body}</p>
+                  <h3 className="mb-2 text-[20px] font-semibold tracking-tight text-[#1d1d1f]">{step.title}</h3>
+                  <p className="text-[15px] leading-[1.5] text-[#6e6e73]">{step.body}</p>
                 </motion.div>
               ))}
             </div>
@@ -992,50 +931,48 @@ export default function Home() {
         </section>
 
         {/* â•â• BOTTOM CTA (dark section like audcomp.com) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-        <section className="bg-gray-900 py-20 sm:py-28">
-          <div className="mx-auto max-w-3xl px-6 text-center">
-            <div className="mb-4 text-[12px] font-semibold uppercase tracking-widest text-orange-400">
+        <section className="bg-[#fbfbfd] py-32 sm:py-44">
+          <div className="mx-auto max-w-2xl px-6 text-center">
+            <div className="mb-4 eyebrow">
               Free for Canadian businesses under 200 employees
             </div>
 
-            <h2 className="mb-4 text-[30px] font-bold tracking-tight text-white sm:text-[42px]">
-              Elevate Your Business with AI
+            <h2 className="mb-5 display display-tight text-[#1d1d1f] text-[40px] sm:text-[64px] lg:text-[80px]">
+              Elevate your business with AI.
             </h2>
 
-            <p className="mx-auto mb-8 max-w-md text-[15px] leading-relaxed text-gray-400">
-              Join 500+ Canadian organizations that have mapped their path to
-              AI-driven growth. Results in 10 minutes.
+            <p className="mx-auto mb-10 max-w-md text-[19px] leading-[1.4] text-[#6e6e73]">
+              Join 500+ Canadian organizations that have mapped their path to AI-driven growth. Results in 10 minutes.
             </p>
 
-            <Link href="/auth"
-              className="group inline-flex items-center gap-2 rounded-lg bg-orange-500 px-8 py-4 text-[14px] font-semibold text-white transition-all hover:bg-orange-600 shadow-lg shadow-orange-500/25">
-              Get Your Free AI Audit
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            <Link href="/auth" className="apple-pill apple-pill-accent">
+              Get your free AI audit
+              <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         </section>
       </main>
 
       {/* â•â• FOOTER (dark, matching audcomp.com) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-      <footer className="border-t border-gray-800 bg-gray-950 py-10">
-        <div className="mx-auto max-w-7xl px-6">
+      <footer className="border-t hairline bg-[#f5f5f7] py-10">
+        <div className="mx-auto max-w-[1024px] px-6">
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
             <Link href="/">
-              <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP" className="h-8 w-auto opacity-60" />
+              <img src="/images/AUDCOMP-LOGO.png" alt="AUDCOMP" className="h-6 w-auto opacity-60" />
             </Link>
-            <div className="flex flex-wrap justify-center gap-6 text-[12px] text-gray-400">
+            <div className="flex flex-wrap justify-center gap-6 text-[12px] text-[#6e6e73]">
               {[
                 { label: 'Managed IT Services', href: 'https://audcomp.com/managed-it-services/' },
                 { label: 'Cyber Security', href: 'https://audcomp.com/security-services/' },
                 { label: 'Cloud Solutions', href: 'https://audcomp.com/cloud-solutions/' },
                 { label: 'Contact', href: 'https://audcomp.com/contact/' },
               ].map(item => (
-                <a key={item.label} href={item.href} className="transition-colors hover:text-gray-200">{item.label}</a>
+                <a key={item.label} href={item.href} className="transition-colors hover:text-[#1d1d1f]">{item.label}</a>
               ))}
             </div>
           </div>
-          <div className="mt-6 border-t border-gray-800 pt-6 text-center text-[11px] text-gray-500">
-            Â© 2026 Audcomp Information Technology Solutions Â· #100, 611 Tradewind Dr, Ancaster, Ontario L9G 4V5 Â· 905-304-1775
+          <div className="mt-6 border-t hairline pt-6 text-center text-[11px] text-[#86868b]">
+            © 2026 Audcomp Information Technology Solutions · #100, 611 Tradewind Dr, Ancaster, Ontario L9G 4V5 · 905-304-1775
           </div>
         </div>
       </footer>
