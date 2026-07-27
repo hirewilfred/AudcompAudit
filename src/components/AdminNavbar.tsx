@@ -45,7 +45,8 @@ const SECTIONS = [
     {
         label: 'HireWilfred',
         items: [
-            { label: 'Ops Console', href: '/admin/hirewilfred', icon: Gauge },
+            { label: 'Ops Console — Live', href: '/admin/hirewilfred/live', icon: Gauge },
+            { label: 'Ops Console — Demo', href: '/admin/hirewilfred', icon: LayoutDashboard },
             { label: 'Agent Console', href: '/admin/hirewilfred/agents', icon: Bot },
             { label: 'Client Portal', href: '/admin/hirewilfred/portal', icon: Layout },
         ],

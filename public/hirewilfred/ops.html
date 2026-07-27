@@ -280,6 +280,7 @@ select.status-sel:focus{outline:2px solid var(--accent);outline-offset:-1px;}
             </div>
             <div class="spacer"></div>
             <div class="row" style="gap:0.5rem;">
+                <span id="dataBadge"></span>
                 <span id="connBadge"></span>
                 <button class="btn" onclick="exportData()">Export JSON</button>
                 <button class="btn primary" onclick="openDeal()">+ New deal</button>
@@ -402,6 +403,12 @@ select.status-sel:focus{outline:2px solid var(--accent);outline-offset:-1px;}
             </div>
 
             <div class="board" id="board"></div>
+
+            <div class="panel" style="margin-top:1rem;">
+                <h2>Book reconciliation <span class="muted">· signed vs projected</span></h2>
+                <p class="panel-note">Signed is the sum of billed phase fees; projected is quoted-but-unsigned. These should tie out against the delivery tracker — if they don't, the tracker is right and this needs correcting.</p>
+                <div class="table-wrap"><table id="reconTable"></table></div>
+            </div>
 
             <div class="panel" style="margin-top:1rem;">
                 <h2>Closed <span class="muted">· won &amp; lost</span></h2>
@@ -841,9 +848,21 @@ select.status-sel:focus{outline:2px solid var(--accent);outline-offset:-1px;}
                 <div class="field"><label for="dJuniors">Juniors</label><input id="dJuniors" type="number" min="0" value="0"></div>
             </div>
             <div class="inline-fields three">
-                <div class="field"><label for="dMrr">MRR (CAD)</label><input id="dMrr" type="number" min="0" value="4997"></div>
-                <div class="field"><label for="dDiscovery">Discovery fee</label><input id="dDiscovery" type="number" min="0" value="3000"></div>
-                <div class="field"><label for="dOnboard">Build fee</label><input id="dOnboard" type="number" min="0" value="1500"></div>
+                <div class="field"><label for="dMrr">MRR (CAD)</label><input id="dMrr" type="number" min="0" step="1" value="4997"></div>
+                <div class="field"><label for="dDiscovery">Discovery fee</label><input id="dDiscovery" type="number" min="0" step="1" value="3000"></div>
+                <div class="field"><label for="dOnboard">Build fee</label><input id="dOnboard" type="number" min="0" step="1" value="1500"></div>
+            </div>
+            <div class="inline-fields three">
+                <div class="field"><label for="dP1">Phase 1 — Audit</label><input id="dP1" type="number" min="0" step="1" value="0"></div>
+                <div class="field"><label for="dP2">Phase 2 — Agents</label><input id="dP2" type="number" min="0" step="1" value="0"></div>
+                <div class="field"><label for="dP3">Phase 3 — Hardening</label><input id="dP3" type="number" min="0" step="1" value="0"></div>
+            </div>
+            <div class="inline-fields">
+                <div class="field"><label for="dProjected">Projected (unsigned)</label><input id="dProjected" type="number" min="0" step="1" value="0">
+                    <div class="hint">Quoted but not signed. Clear this once the phase fees are set.</div></div>
+                <div class="field"><label for="dWon">Contract signed</label>
+                    <select id="dWon"><option value="">Not yet</option><option value="1">WON</option></select>
+                    <div class="hint">Independent of phase — a signed client can still be mid-audit.</div></div>
             </div>
             <div class="inline-fields three">
                 <div class="field"><label for="dInfra">Infra tier</label><select id="dInfra"></select></div>
@@ -1026,15 +1045,38 @@ function seedOpps(){
     ];
 }
 
+/* Delivery stages, named for the phases the business actually bills against.
+   WON is deliberately NOT a stage — a signed client can sit in any phase, so
+   it is a separate flag (see dealProb / wonDeals). */
 const STAGES = [
-    { id:'meeting',   name:'Initial meeting',  prob:15, colour:'var(--ord-1)', note:'First conversation held. Problem understood, no numbers yet.' },
-    { id:'quoted',    name:'Quoted',           prob:35, colour:'var(--ord-2)', note:'Scenario priced and sent. Waiting on a yes to the audit.' },
-    { id:'discovery', name:'Discovery & audit',prob:65, colour:'var(--ord-3)', note:'Paid audit under way — workflows mapped, agent roster proposed. Typically $3,000.' },
-    { id:'building',  name:'Agent building',   prob:85, colour:'var(--ord-4)', note:'Agents being configured and wired to their tools. Revenue is contracted, not yet recurring.' },
-    { id:'live',      name:'Live',             prob:100,colour:'var(--ord-5)', note:'Deployed and billing. Moves to the book of business.' }
+    { id:'meeting',   name:'First meeting',      prob:15, colour:'var(--ord-1)', note:'First conversation held or booked. Problem understood, no numbers yet.' },
+    { id:'quoted',    name:'Quoted',             prob:35, colour:'var(--ord-2)', note:'Scope priced and sent. Waiting on a yes.' },
+    { id:'discovery', name:'Phase 1 — Audit',    prob:65, colour:'var(--ord-3)', note:'Paid audit under way — workflows mapped, agent roster proposed.' },
+    { id:'building',  name:'Phase 2 — Agents',   prob:85, colour:'var(--ord-4)', note:'Agents being configured and wired to their tools.' },
+    { id:'live',      name:'Phase 3 — Hardening',prob:95, colour:'var(--ord-5)', note:'Live and being hardened — monitoring, evals, handover.' }
 ];
 
-function defaults(){ return {
+/* Two independent datasets in one console:
+     ?data=live  → the real book, its own storage, no demo rows
+     (default)   → the demo book used for walkthroughs
+   They never share storage, so nothing typed into the demo can reach the
+   live numbers. */
+const DATASET = new URLSearchParams(location.search).get('data') === 'live' ? 'live' : 'demo';
+const IS_LIVE = DATASET === 'live';
+
+function defaults(){ return IS_LIVE ? liveDefaults() : demoDefaults(); }
+
+function liveDefaults(){
+    const d = demoDefaults();
+    d.deals     = seedLiveDeals();
+    d.opps      = [];      // the desk starts empty — no invented leads
+    d.reps      = [];
+    d.scenarios = [];
+    d.feed      = [];
+    return d;
+}
+
+function demoDefaults(){ return {
     assumptions:{
         fx:1.37, cacheHit:70, cacheReadMult:0.1,
         platformPerClient:38,
@@ -1090,10 +1132,50 @@ function defaults(){ return {
     wFilter:{ campaign:'all', rep:'all', status:'open', q:'' }
 };}
 
+/* -------------------------------------------------------------------------
+   Live book, as at 2026-07-27. Sourced from the delivery tracker; the phase
+   splits reconcile to its own totals — $21,000 closed, $85,000 projected.
+   Fees are per PHASE, not recurring: p1 audit, p2 agents, p3 hardening.
+   `projected` is the quoted-but-unsigned figure and is mutually exclusive
+   with the phase amounts.
+   ------------------------------------------------------------------------- */
+function seedLiveDeals(){
+    const d = (o)=>Object.assign({
+        id:uid(), contact:'', owner:'Vince', vertical:'General SME', package:'custom',
+        seniors:0, juniors:0, mrr:0, discovery:0, onboard:0,
+        p1:0, p2:0, p3:0, projected:0, won:false,
+        infra:'shared', intensity:1, close:'', next:'', created:Date.now()
+    },o);
+    return [
+        // Signed. Stage = furthest phase with money against it.
+        d({ name:'MCBC',                   stage:'live',      won:true, p1:1800, p3:3600,
+            next:'Phase 1 audit and Phase 3 hardening billed — confirm Phase 2 scope' }),
+        d({ name:'UEM',                    stage:'discovery', won:true, p1:3600,
+            next:'Phase 1 audit under way' }),
+        d({ name:'Hanscomb Limited',       stage:'discovery', won:true, p1:3000,
+            next:'Phase 1 audit under way' }),
+        d({ name:'Press Lock',             stage:'live',      won:true, p3:9000,
+            next:'Phase 3 hardening billed' }),
+
+        // Projected. First meeting held or booked; nothing signed yet.
+        d({ name:'AIC',                    stage:'meeting', projected:15000, close:'2026-08-05',
+            next:'First meeting booked for 5 Aug' }),
+        d({ name:'SteriMax',               stage:'meeting', projected:20000, close:'2026-07-27',
+            next:'First meeting booked for 27 Jul' }),
+        d({ name:'Stelco',                 stage:'meeting', projected:40000,
+            next:'First meeting held — scope and quote' }),
+        d({ name:'PSL',                    stage:'meeting', projected:5000,
+            next:'First meeting held — scope and quote' }),
+        d({ name:'Envirotex Products Inc', stage:'meeting', projected:5000,
+            next:'No meeting booked yet — get one in the diary' })
+    ];
+}
+
 function seedDeals(){
     const d = (o)=>Object.assign({
         id:uid(), contact:'', owner:'Vince', vertical:'General SME', package:'department',
         seniors:6, juniors:0, mrr:4997, discovery:3000, onboard:1500,
+        p1:0, p2:0, p3:0, projected:0, won:false,
         infra:'shared', intensity:1, close:'', next:'', created:Date.now()
     },o);
     return [
@@ -1149,7 +1231,7 @@ const ROUTES = [
 /* =========================================================================
    2. STATE
    ========================================================================= */
-const KEY = 'hwOps.v1';
+const KEY = IS_LIVE ? 'hwOps.live.v1' : 'hwOps.v1';
 let DB;
 
 function uid(){ return 'x' + Math.random().toString(36).slice(2,9); }
@@ -1267,8 +1349,26 @@ function pkg(id){ return DB.packages.find(p=>p.id===id) || DB.packages[2]; }
 function stage(id){ return STAGES.find(s=>s.id===id) || STAGES[0]; }
 function prob(id){ return (DB.stageProbs[id] != null ? DB.stageProbs[id] : stage(id).prob) / 100; }
 
-// First-year contract value of a deal.
-function dealACV(d){ return d.mrr * 12 + (d.discovery||0) + (d.onboard||0); }
+// Money booked against the delivery phases (p1 audit, p2 agents, p3 hardening).
+function phaseTotal(d){ return (d.p1||0) + (d.p2||0) + (d.p3||0); }
+
+// First-year value: recurring plus one-off fees plus phase fees. Project work
+// carries no MRR, retainers carry no phases, so the sum covers both shapes.
+function dealACV(d){
+    return (d.mrr||0) * 12 + (d.discovery||0) + (d.onboard||0) + phaseTotal(d) + (d.projected||0);
+}
+
+// A signed deal is 100% regardless of which phase it sits in — WON and phase
+// are independent in the tracker this mirrors.
+function dealProb(d){ return d.won ? 1 : prob(d.stage); }
+
+// Project work: billed by phase, no retainer and no agent roster running yet.
+// The recurring cost model (tokens, infra, management) does not describe these
+// and would report a meaningless negative margin against zero revenue, so they
+// are reported separately rather than folded into the book.
+function isProject(d){
+    return (d.mrr||0) === 0 && (phaseTotal(d) + (d.projected||0)) > 0;
+}
 function dealEcon(d){
     return economics({
         seniors:d.seniors, juniors:d.juniors, intensity:d.intensity,
@@ -1277,8 +1377,9 @@ function dealEcon(d){
     });
 }
 
-const openDeals = () => DB.deals.filter(d => d.stage !== 'live' && d.stage !== 'lost');
-const liveDeals = () => DB.deals.filter(d => d.stage === 'live');
+// "Won" is the flag, not the stage — a signed client can still be mid-phase.
+const openDeals = () => DB.deals.filter(d => !d.won && d.stage !== 'live' && d.stage !== 'lost');
+const liveDeals = () => DB.deals.filter(d => d.won || d.stage === 'live');
 
 /* =========================================================================
    5. TOOLTIP
@@ -1445,26 +1546,40 @@ document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', ()=>g
 /* ---------- overview ---------- */
 function renderOverview(){
     const open = openDeals(), live = liveDeals();
-    const weighted = open.reduce((s,d)=> s + dealACV(d)*prob(d.stage), 0);
+    const weighted = open.reduce((s,d)=> s + dealACV(d)*dealProb(d), 0);
     const rawPipe  = open.reduce((s,d)=> s + dealACV(d), 0);
-    const mrr      = live.reduce((s,d)=> s + d.mrr, 0);
-    const bookEcon = live.map(dealEcon);
+    const retainer = live.filter(d => !isProject(d));
+    const project  = live.filter(d => isProject(d));
+    const mrr      = retainer.reduce((s,d)=> s + d.mrr, 0);
+    const bookEcon = retainer.map(dealEcon);
     const cogs     = bookEcon.reduce((s,e)=> s + e.cogs, 0);
     const grossM   = mrr - cogs;
     const gmPct    = mrr>0 ? grossM/mrr : 0;
     const burn     = bookEcon.reduce((s,e)=> s + e.tokens, 0);
+    const signedProject = project.reduce((s,d)=> s + phaseTotal(d), 0);
 
-    document.getElementById('kpiRow').innerHTML = [
-        kpiTile('Recurring revenue', cad(mrr), live.length + ' live client' + (live.length===1?'':'s') + ' · ' + cad(mrr*12) + '/yr', 'accent'),
-        kpiTile('Gross margin', pct(gmPct), cad(grossM) + '/mo after tokens, infra and management', gmPct*100 >= DB.assumptions.targetMargin ? 'margin' : ''),
-        kpiTile('Weighted pipeline', cad(weighted), cad(rawPipe) + ' unweighted across ' + open.length + ' open deals', 'copper'),
-        kpiTile('Token burn', cad(burn), (burn/Math.max(mrr,1)*100).toFixed(1) + '% of revenue · GPU break-even at ' + cad(DB.assumptions.gpuMonthly), ''),
-        kpiTile('Discovery booked', cad(DB.deals.filter(d=>['discovery','building','live'].includes(d.stage)).reduce((s,d)=>s+(d.discovery||0),0)), 'One-time audit revenue, signed', '')
-    ].join('');
+    const tiles = [];
+    if(mrr > 0){
+        tiles.push(kpiTile('Recurring revenue', cad(mrr), retainer.length + ' retainer client' + (retainer.length===1?'':'s') + ' · ' + cad(mrr*12) + '/yr', 'accent'));
+        tiles.push(kpiTile('Gross margin', pct(gmPct), cad(grossM) + '/mo after tokens, infra and management', gmPct*100 >= DB.assumptions.targetMargin ? 'margin' : ''));
+    }
+    if(signedProject > 0){
+        tiles.push(kpiTile('Signed project fees', cad(signedProject), project.length + ' client' + (project.length===1?'':'s') + ' billed by phase', 'accent'));
+    }
+    tiles.push(kpiTile('Weighted pipeline', cad(weighted), cad(rawPipe) + ' unweighted across ' + open.length + ' open deal' + (open.length===1?'':'s'), 'copper'));
+    if(mrr > 0){
+        tiles.push(kpiTile('Token burn', cad(burn), (burn/mrr*100).toFixed(1) + '% of recurring revenue · GPU break-even at ' + cad(DB.assumptions.gpuMonthly), ''));
+    } else if(burn > 0){
+        tiles.push(kpiTile('Token burn', cad(burn), 'Modelled monthly run cost · no retainer revenue to measure it against yet', ''));
+    }
+    const auditFees = DB.deals.reduce((s,d)=> s + (d.discovery||0) + (d.p1||0), 0);
+    tiles.push(kpiTile('Audit revenue', cad(auditFees), 'Discovery and Phase 1 fees, signed', ''));
+    document.getElementById('kpiRow').innerHTML = tiles.join('');
 
     // funnel
+    // Open only — a signed client sitting in Phase 1 is delivery, not pipeline.
     const rows = STAGES.filter(s=>s.id!=='live').map(s => {
-        const ds = DB.deals.filter(d=>d.stage===s.id);
+        const ds = open.filter(d=>d.stage===s.id);
         const raw = ds.reduce((a,d)=>a+dealACV(d),0);
         const w   = raw * prob(s.id);
         return {
@@ -1482,7 +1597,7 @@ function renderOverview(){
     document.getElementById('funnelTable').innerHTML =
         '<thead><tr><th>Stage</th><th class="num">Deals</th><th class="num">ACV</th><th class="num">Prob.</th><th class="num">Weighted</th></tr></thead><tbody>' +
         STAGES.filter(s=>s.id!=='live').map(s=>{
-            const ds = DB.deals.filter(d=>d.stage===s.id);
+            const ds = open.filter(d=>d.stage===s.id);
             const raw = ds.reduce((a,d)=>a+dealACV(d),0);
             return '<tr><td><strong>'+esc(s.name)+'</strong></td><td class="num">'+ds.length+'</td><td class="num">'+cad(raw)+'</td><td class="num">'+Math.round(prob(s.id)*100)+'%</td><td class="num"><strong>'+cad(raw*prob(s.id))+'</strong></td></tr>';
         }).join('') +
@@ -1491,34 +1606,59 @@ function renderOverview(){
     // margin split of the signed book
     const infraTot = bookEcon.reduce((s,e)=>s+e.infra,0);
     const mgmtTot  = bookEcon.reduce((s,e)=>s+e.mgmt,0);
-    stacked(document.getElementById('bookMargin'), [
-        { label:'Token burn',    value:burn,     colour:'var(--series-tokens)' },
-        { label:'Infrastructure',value:infraTot, colour:'var(--series-infra)'  },
-        { label:'Management',    value:mgmtTot,  colour:'var(--series-mgmt)'   },
-        { label:'Gross margin',  value:Math.max(grossM,0), colour:'var(--series-margin)' }
-    ], mrr, { caption:'Recurring revenue ' + cad(mrr) + ' / month' });
+    if(mrr > 0){
+        stacked(document.getElementById('bookMargin'), [
+            { label:'Token burn',    value:burn,     colour:'var(--series-tokens)' },
+            { label:'Infrastructure',value:infraTot, colour:'var(--series-infra)'  },
+            { label:'Management',    value:mgmtTot,  colour:'var(--series-mgmt)'   },
+            { label:'Gross margin',  value:Math.max(grossM,0), colour:'var(--series-margin)' }
+        ], mrr, { caption:'Recurring revenue ' + cad(mrr) + ' / month' });
+    } else {
+        // No retainers yet — a recurring-margin split would be a bar of zeros.
+        document.getElementById('bookMargin').innerHTML =
+            '<p class="note">No recurring revenue on the book yet — every signed client is billed by project phase. ' +
+            'This split needs a retainer to measure against; the phase fees are broken out under ' +
+            '<strong>Pipeline → Book reconciliation</strong>.</p>' +
+            (signedProject ? '<div class="kpis" style="margin-top:0.9rem;grid-template-columns:1fr 1fr;">' +
+                kpiTile('Signed to date', cad(signedProject), 'Across ' + project.length + ' clients', 'margin') +
+                kpiTile('Projected', cad(DB.deals.filter(d=>!d.won).reduce((s,d)=>s+(d.projected||0),0)), 'Quoted, not yet signed', 'copper') +
+            '</div>' : '');
+    }
 
-    // burn trend — modelled ramp as clients came on
-    lineChart(document.getElementById('burnChart'), burnSeries(burn), {
-        refValue: DB.assumptions.gpuMonthly,
-        refLabel: 'Dedicated GPU ' + cad(DB.assumptions.gpuMonthly) + '/mo',
-        seriesName:'Token cost',
-        aria:'Modelled monthly token cost, trailing twelve months'
-    });
+    // burn trend — modelled ramp as clients came on. A flat zero line reads as
+    // a broken chart, so say why it is empty instead of drawing one.
+    if(burn > 0){
+        lineChart(document.getElementById('burnChart'), burnSeries(burn), {
+            refValue: DB.assumptions.gpuMonthly,
+            refLabel: 'Dedicated GPU ' + cad(DB.assumptions.gpuMonthly) + '/mo',
+            seriesName:'Token cost',
+            aria:'Modelled monthly token cost, trailing twelve months'
+        });
+    } else {
+        document.getElementById('burnChart').innerHTML =
+            '<p class="note">No agents running against a retainer yet, so there is no token burn to plot. ' +
+            'This fills in once a client moves to Phase 2 and the roster goes live.</p>';
+    }
 
     // attention
     const flags = [];
-    live.forEach(d => {
+    retainer.forEach(d => {
         const e = dealEcon(d);
         if(e.marginPct*100 < DB.assumptions.targetMargin)
             flags.push(['bad','Margin below target', esc(d.name) + ' is running at ' + pct(e.marginPct) + ' gross against a ' + DB.assumptions.targetMargin + '% target — ' + cad(e.tokens) + '/mo of that is token burn at ' + d.intensity + '× usage.']);
+    });
+    project.filter(d => d.stage === 'live' && !d.p2).forEach(d => {
+        flags.push(['warn','Phase 2 not scoped', esc(d.name) + ' has hardening billed but no Phase 2 agent fee recorded. Either it was skipped deliberately or it is missing from the tracker.']);
+    });
+    DB.deals.filter(d => !d.won && (d.projected||0) > 0 && !d.close).forEach(d => {
+        flags.push(['warn','No meeting date', esc(d.name) + ' carries ' + cad(d.projected) + ' projected with no first-meeting date set.']);
     });
     open.filter(d => d.stage==='quoted').forEach(d => {
         flags.push(['warn','Quote outstanding', esc(d.name) + ' — ' + cad(dealACV(d)) + ' first-year. Next: ' + esc(d.next||'no next step recorded')]);
     });
     if(burn > DB.assumptions.gpuMonthly)
         flags.push(['warn','Token spend past the GPU line','Modelled burn of ' + cad(burn) + '/mo now exceeds a dedicated GPU at ' + cad(DB.assumptions.gpuMonthly) + '/mo. Work the burn checklist before buying hardware — self-hosting changes what tokens cost, it does not reduce how many you use.']);
-    const conc = live.map(d=>d.mrr).sort((a,b)=>b-a)[0] || 0;
+    const conc = retainer.map(d=>d.mrr).sort((a,b)=>b-a)[0] || 0;
     if(mrr>0 && conc/mrr > 0.25)
         flags.push(['warn','Revenue concentration','One client is ' + pct(conc/mrr) + ' of recurring revenue.']);
     if(!flags.length) flags.push(['good','All clear','Every live client is above the ' + DB.assumptions.targetMargin + '% margin target and nothing is stuck.']);
@@ -1860,6 +2000,10 @@ function deleteOpp(){
 
 /* --- connection badge + optional live load --- */
 function renderConn(){
+    const dEl = document.getElementById('dataBadge');
+    if(dEl) dEl.innerHTML = IS_LIVE
+        ? '<span class="conn live"><span class="dot"></span>Live book</span>'
+        : '<span class="conn offline"><span class="dot"></span>Demo data</span>';
     const el = document.getElementById('connBadge');
     if(!el) return;
     const live = sbState.status === 'live';
@@ -1915,8 +2059,8 @@ function initialsOf(n){ return (n||'').split(/\s+/).map(x=>x[0]||'').join('').sl
 /* ---------- pipeline ---------- */
 function renderPipeline(){
     const open = openDeals();
-    const weighted = open.reduce((s,d)=> s + dealACV(d)*prob(d.stage), 0);
-    const newMrr   = open.reduce((s,d)=> s + d.mrr*prob(d.stage), 0);
+    const weighted = open.reduce((s,d)=> s + dealACV(d)*dealProb(d), 0);
+    const newMrr   = open.reduce((s,d)=> s + d.mrr*dealProb(d), 0);
     const audits   = DB.deals.filter(d=>d.stage==='discovery').reduce((s,d)=>s+(d.discovery||0),0);
     document.getElementById('pipeKpis').innerHTML = [
         kpiTile('Open deals', open.length, 'Across ' + STAGES.filter(s=>s.id!=='live').length + ' stages',''),
@@ -1949,6 +2093,31 @@ function renderPipeline(){
             '<td class="num"><button class="btn sm" onclick="openDeal(\'' + d.id + '\')">Edit</button></td></tr>').join('') +
         '</tbody>' : '<tbody><tr><td class="note">Nothing closed yet.</td></tr></tbody>';
 
+    // --- reconciliation: signed phase revenue vs projected -----------------
+    const signed = DB.deals.filter(d => d.won);
+    const projected = DB.deals.filter(d => !d.won && (d.projected||0) > 0);
+    const sTot = signed.reduce((s,d)=>s+phaseTotal(d),0);
+    const pTot = projected.reduce((s,d)=>s+(d.projected||0),0);
+    document.getElementById('reconTable').innerHTML =
+        '<thead><tr><th>Client</th><th>Status</th><th>Stage</th><th class="num">Phase 1</th><th class="num">Phase 2</th><th class="num">Phase 3</th><th class="num">Signed</th><th class="num">Projected</th></tr></thead><tbody>' +
+        signed.map(d =>
+            '<tr><td><strong>' + esc(d.name) + '</strong></td><td><span class="chip good">WON</span></td>' +
+            '<td>' + esc(stage(d.stage).name) + '</td>' +
+            '<td class="num">' + (d.p1 ? cad(d.p1) : '—') + '</td>' +
+            '<td class="num">' + (d.p2 ? cad(d.p2) : '—') + '</td>' +
+            '<td class="num">' + (d.p3 ? cad(d.p3) : '—') + '</td>' +
+            '<td class="num"><strong>' + cad(phaseTotal(d)) + '</strong></td><td class="num">—</td></tr>').join('') +
+        projected.map(d =>
+            '<tr><td><strong>' + esc(d.name) + '</strong></td><td><span class="chip warn">Projected</span></td>' +
+            '<td>' + esc(stage(d.stage).name) + (d.close ? ' · ' + esc(d.close) : '') + '</td>' +
+            '<td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td>' +
+            '<td class="num"><strong>' + cad(d.projected) + '</strong></td></tr>').join('') +
+        '<tr class="total"><td>Total</td><td>' + signed.length + ' signed · ' + projected.length + ' projected</td><td></td>' +
+        '<td class="num">' + cad(signed.reduce((s,d)=>s+(d.p1||0),0)) + '</td>' +
+        '<td class="num">' + cad(signed.reduce((s,d)=>s+(d.p2||0),0)) + '</td>' +
+        '<td class="num">' + cad(signed.reduce((s,d)=>s+(d.p3||0),0)) + '</td>' +
+        '<td class="num">' + cad(sTot) + '</td><td class="num">' + cad(pTot) + '</td></tr></tbody>';
+
     document.getElementById('stageDefTable').innerHTML =
         '<thead><tr><th>Stage</th><th class="num">Probability</th><th>What it means</th></tr></thead><tbody>' +
         STAGES.map(s => '<tr><td><strong>' + esc(s.name) + '</strong></td><td class="num">' + Math.round(prob(s.id)*100) + '%</td><td>' + esc(s.note) + '</td></tr>').join('') +
@@ -1957,12 +2126,21 @@ function renderPipeline(){
 function dealCard(d){
     const e = dealEcon(d);
     const i = STAGES.findIndex(s=>s.id===d.stage);
+    const ph = phaseTotal(d);
+    // Project-shaped deals show the phase split; retainer-shaped show MRR.
+    const money = ph || d.projected
+        ? (d.p1 ? '<div class="d-money"><span>Phase 1 — Audit</span><b>' + cad(d.p1) + '</b></div>' : '') +
+          (d.p2 ? '<div class="d-money"><span>Phase 2 — Agents</span><b>' + cad(d.p2) + '</b></div>' : '') +
+          (d.p3 ? '<div class="d-money"><span>Phase 3 — Hardening</span><b>' + cad(d.p3) + '</b></div>' : '') +
+          (d.projected ? '<div class="d-money"><span>Projected</span><b>' + cad(d.projected) + '</b></div>' : '') +
+          (ph ? '<div class="d-money"><span>Billed to date</span><b>' + cad(ph) + '</b></div>' : '')
+        : '<div class="d-money"><span>MRR</span><b>' + cad(d.mrr) + '</b></div>' +
+          '<div class="d-money"><span>One-time</span><b>' + cad((d.discovery||0)+(d.onboard||0)) + '</b></div>' +
+          '<div class="d-money"><span>Gross margin</span><b style="color:' + (e.healthy ? '#7fe3bd' : '#ff9b9b') + '">' + pct(e.marginPct) + '</b></div>';
     return '<div class="deal">' +
-        '<div class="d-name">' + esc(d.name) + '</div>' +
-        '<div class="d-meta">' + esc(d.vertical) + ' · ' + esc(pkg(d.package).name) + ' · ' + e.agents + ' agents · ' + esc(e.infraLabel) + '</div>' +
-        '<div class="d-money"><span>MRR</span><b>' + cad(d.mrr) + '</b></div>' +
-        '<div class="d-money"><span>One-time</span><b>' + cad((d.discovery||0)+(d.onboard||0)) + '</b></div>' +
-        '<div class="d-money"><span>Gross margin</span><b style="color:' + (e.healthy ? '#7fe3bd' : '#ff9b9b') + '">' + pct(e.marginPct) + '</b></div>' +
+        '<div class="d-name">' + esc(d.name) + (d.won ? ' <span class="chip good" style="font-size:0.6rem;">WON</span>' : '') + '</div>' +
+        '<div class="d-meta">' + esc(d.vertical) + (ph || d.projected ? '' : ' · ' + esc(pkg(d.package).name) + ' · ' + e.agents + ' agents') + ' · ' + esc(e.infraLabel) + '</div>' +
+        money +
         (d.next ? '<div class="d-next"><b>Next:</b> ' + esc(d.next) + (d.close ? ' · ' + esc(d.close) : '') + '</div>' : '') +
         '<div class="deal-actions">' +
             (i>0 ? '<button title="Move back" onclick="move(\'' + d.id + '\',-1)">←</button>' : '') +
@@ -2005,10 +2183,12 @@ function openDeal(id){
         infra:'shared', intensity:1, close:'', next:'' };
     ['dName:name','dContact:contact','dStage:stage','dVertical:vertical','dOwner:owner','dPackage:package',
      'dSeniors:seniors','dJuniors:juniors','dMrr:mrr','dDiscovery:discovery','dOnboard:onboard',
+     'dP1:p1','dP2:p2','dP3:p3','dProjected:projected',
      'dInfra:infra','dIntensity:intensity','dClose:close','dNext:next'].forEach(pair=>{
         const [el,key] = pair.split(':');
-        document.getElementById(el).value = d[key] == null ? '' : d[key];
+        document.getElementById(el).value = d[key] == null ? (['p1','p2','p3','projected'].includes(key) ? 0 : '') : d[key];
     });
+    document.getElementById('dWon').value = d.won ? '1' : '';
     document.getElementById('dealModal').classList.add('show');
 }
 function closeDeal(){ document.getElementById('dealModal').classList.remove('show'); editingDeal = null; }
@@ -2026,6 +2206,8 @@ document.getElementById('dealForm').addEventListener('submit', e => {
         vertical:val('dVertical'), owner:val('dOwner').trim(), package:val('dPackage'),
         seniors:num('dSeniors'), juniors:num('dJuniors'), mrr:num('dMrr'),
         discovery:num('dDiscovery'), onboard:num('dOnboard'),
+        p1:num('dP1'), p2:num('dP2'), p3:num('dP3'), projected:num('dProjected'),
+        won: val('dWon') === '1',
         infra:val('dInfra'), intensity:parseFloat(val('dIntensity')),
         close:val('dClose'), next:val('dNext').trim()
     };
