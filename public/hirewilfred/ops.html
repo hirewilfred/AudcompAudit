@@ -1,0 +1,2690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- COPY. Source of truth: hirewilfred/hirewilfredwww ops.html. Regenerate with scripts/sync-hirewilfred-dashboards.mjs — do not hand-edit. -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ops Console — Pipeline, Quoting &amp; Unit Economics | Hire Wilfred</title>
+    <meta name="description" content="Internal Wilfred ops console — track the sales pipeline, quote scenarios, and model infrastructure, token burn and management-fee economics per client.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="/hirewilfred/hirewilfred_icon.svg">
+    <link rel="icon" type="image/svg+xml" sizes="32x32" href="/hirewilfred/favicon.svg">
+    <link rel="shortcut icon" href="/hirewilfred/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/hirewilfred/favicon.svg">
+    <link rel="stylesheet" href="style.css?v=202605171130">
+<style>
+:root{
+    /* ---- app chrome (matches admin.html) ---- */
+    --bg:#0D0D0D;
+    --surface:#161616;
+    --surface-2:#1E1E1E;
+    --surface-3:#242424;
+    --border:rgba(255,255,255,0.09);
+    --border-2:rgba(255,255,255,0.16);
+    --ink:#FFFFFF;
+    --ink-2:rgba(255,255,255,0.70);
+    --ink-3:rgba(255,255,255,0.45);
+    --accent:#58B7FF;
+    --accent-soft:rgba(88,183,255,0.12);
+    --copper:#F1C08A;
+    --radius:16px;
+
+    /* ---- data-viz roles (validated for the #161616 dark surface) ---- */
+    --series-tokens:#3987e5;   /* cat slot 1 — blue */
+    --series-infra:#d95926;    /* cat slot 2 — orange */
+    --series-margin:#199e70;   /* cat slot 3 — aqua */
+    --series-mgmt:#c98500;     /* cat slot 4 — yellow */
+
+    --ord-1:#b7d3f6;           /* ordinal blue ramp, light -> dark */
+    --ord-2:#86b6ef;
+    --ord-3:#3987e5;
+    --ord-4:#256abf;
+    --ord-5:#184f95;
+
+    --good:#0ca30c;
+    --warning:#fab219;
+    --serious:#ec835a;
+    --critical:#d03b3b;
+
+    --grid:#2c2c2a;
+    --baseline:#383835;
+    --muted:#898781;
+}
+*{box-sizing:border-box;margin:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;font-size:15px;}
+a{color:inherit;text-decoration:none;}
+button,input,select,textarea{font-family:inherit;}
+button{cursor:pointer;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:#2e2e2e;border-radius:6px;}
+::-webkit-scrollbar-thumb:hover{background:#3d3d3d;}
+
+/* ---------- shell (matches the public site chrome) ---------- */
+body{padding-top:78px;}
+.preview-band{position:fixed;top:78px;inset-inline:0;z-index:70;background:linear-gradient(90deg,rgba(250,178,25,0.18),rgba(88,183,255,0.13));border-bottom:1px solid var(--border);text-align:center;font-size:0.76rem;font-weight:600;padding:0.45rem 1rem;color:var(--ink-2);}
+.preview-band strong{color:var(--warning);}
+.preview-band a{color:var(--accent);text-decoration:underline;}
+
+.ops-head{border-bottom:1px solid var(--border);background:
+    radial-gradient(circle at 12% 0%, rgba(88,183,255,0.10), transparent 42%),
+    linear-gradient(180deg, rgba(255,255,255,0.035), transparent);
+    padding-top:34px;}
+.ops-head-shell{max-width:1440px;margin:0 auto;padding:1.6rem 2rem 0;}
+.ops-head-top{display:flex;align-items:flex-end;gap:1.2rem;flex-wrap:wrap;}
+.ops-head-top h1{font-family:'Sora','Inter',sans-serif;font-size:2rem;font-weight:800;letter-spacing:-0.045em;margin:0.35rem 0 0.2rem;}
+.ops-head-top .sub{font-size:0.9rem;color:var(--ink-3);}
+.ops-head-top .spacer{flex:1;}
+.ops-badge{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.66rem;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border:1px solid rgba(88,183,255,0.3);border-radius:999px;padding:0.22rem 0.7rem;}
+.tabs{display:flex;gap:0.15rem;margin-top:1.3rem;overflow-x:auto;}
+.tab{position:relative;background:none;border:0;color:var(--ink-3);font-size:0.87rem;font-weight:700;padding:0.65rem 0.95rem 0.8rem;white-space:nowrap;border-bottom:2px solid transparent;display:inline-flex;align-items:center;gap:0.45rem;}
+.tab:hover{color:var(--ink);}
+.tab.is-active{color:var(--ink);border-bottom-color:var(--accent);}
+.tab .badge{background:var(--surface-3);color:var(--ink-2);font-size:0.66rem;font-weight:800;border-radius:999px;padding:0.06rem 0.42rem;}
+.tab.is-active .badge{background:var(--accent);color:#0D0D0D;}
+
+.ops-main{max-width:1440px;margin:0 auto;min-width:0;}
+.view{display:none;padding:1.6rem 2rem 5rem;}
+.view.is-active{display:block;}
+.site-footer{margin-top:0;}
+
+/* ---------- primitives ---------- */
+/* style.css also defines .btn (uppercase pill); neutralise what it would leak in. */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:0.4rem;text-transform:none;letter-spacing:normal;
+    background:var(--surface-2);border:1px solid var(--border);color:var(--ink);font-size:0.82rem;font-weight:700;border-radius:9px;padding:0.5rem 0.85rem;white-space:nowrap;}
+.btn:hover{background:var(--surface-3);border-color:var(--border-2);}
+.btn.primary{background:linear-gradient(135deg,#9DE0FF,var(--accent));color:#0D0D0D;border:0;}
+.btn.primary:hover{filter:brightness(1.07);}
+.btn.ghost{background:none;}
+.btn.danger{color:#ff9b9b;border-color:rgba(208,59,59,0.4);}
+.btn.sm{font-size:0.74rem;padding:0.32rem 0.6rem;border-radius:7px;}
+
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.3rem;}
+.panel > h2{font-size:0.98rem;font-weight:800;letter-spacing:-0.01em;margin-bottom:0.25rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;}
+.panel > h2 .muted{font-weight:600;color:var(--ink-3);font-size:0.8rem;letter-spacing:0;}
+.panel > .panel-note{font-size:0.79rem;color:var(--ink-3);line-height:1.6;margin-bottom:1rem;}
+.grid{display:grid;gap:1rem;}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr));}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr));}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr));}
+.g-side{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);}
+.stack{display:flex;flex-direction:column;gap:1rem;}
+.row{display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;}
+
+.field{margin-bottom:0.85rem;}
+.field label,.lbl{display:block;font-size:0.7rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:0.32rem;}
+.field input,.field select,.field textarea,.inp{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:0.55rem 0.7rem;color:var(--ink);font-size:0.88rem;}
+.field input:focus,.field select:focus,.field textarea:focus,.inp:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent;}
+.field .hint{font-size:0.72rem;color:var(--ink-3);margin-top:0.28rem;line-height:1.5;}
+.inline-fields{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;}
+.inline-fields.three{grid-template-columns:1fr 1fr 1fr;}
+
+.chip{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.68rem;font-weight:800;letter-spacing:0.04em;border-radius:999px;padding:0.14rem 0.55rem;border:1px solid var(--border-2);color:var(--ink-2);white-space:nowrap;}
+.chip.j{background:rgba(25,158,112,0.16);border-color:rgba(25,158,112,0.5);color:#7fe3bd;}
+.chip.s{background:rgba(57,135,229,0.16);border-color:rgba(57,135,229,0.5);color:#a5cbf7;}
+.chip.pack{background:rgba(241,192,138,0.14);border-color:rgba(241,192,138,0.45);color:var(--copper);}
+.chip.good{background:rgba(12,163,12,0.16);border-color:rgba(12,163,12,0.55);color:#7be07b;}
+.chip.warn{background:rgba(250,178,25,0.15);border-color:rgba(250,178,25,0.5);color:#ffd478;}
+.chip.bad{background:rgba(208,59,59,0.16);border-color:rgba(208,59,59,0.55);color:#ff9b9b;}
+
+table{width:100%;border-collapse:collapse;font-size:0.84rem;}
+th{text-align:left;font-size:0.68rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);padding:0.5rem 0.6rem;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:0.6rem;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--ink-2);vertical-align:middle;}
+td strong{color:var(--ink);font-weight:700;}
+tr:last-child td{border-bottom:0;}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
+tr.total td{border-top:1px solid var(--border-2);font-weight:800;color:var(--ink);}
+.table-wrap{overflow-x:auto;}
+.table-wrap.compact th{padding:0.4rem 0.3rem;font-size:0.62rem;letter-spacing:0.05em;}
+.table-wrap.compact td{padding:0.45rem 0.3rem;font-size:0.8rem;}
+.table-wrap.compact .inp{padding:0.26rem 0.35rem;font-size:0.8rem;}
+.cell-stack{display:flex;flex-direction:column;gap:0.28rem;}
+
+/* ---------- KPI tiles ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0.9rem;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem 1.1rem;}
+.kpi .k-label{font-size:0.7rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--ink-3);}
+.kpi .k-value{font-size:1.85rem;font-weight:800;letter-spacing:-0.035em;margin:0.35rem 0 0.15rem;line-height:1.05;}
+.kpi .k-sub{font-size:0.74rem;color:var(--ink-3);line-height:1.45;}
+.kpi.accent .k-value{color:var(--accent);}
+.kpi.margin .k-value{color:#7fe3bd;}
+.kpi.copper .k-value{color:var(--copper);}
+
+/* ---------- charts ---------- */
+.chart-title{font-size:0.68rem;font-weight:800;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink-3);margin-bottom:0.75rem;}
+.funnel-row{display:grid;grid-template-columns:150px 1fr 118px;align-items:center;gap:0.7rem;margin-bottom:0.5rem;}
+.funnel-label{font-size:0.8rem;font-weight:600;color:var(--ink-2);}
+.funnel-track{background:rgba(255,255,255,0.045);border-radius:5px;height:22px;position:relative;overflow:hidden;}
+.funnel-bar{height:100%;border-radius:0 5px 5px 0;min-width:3px;transition:width .35s cubic-bezier(.4,0,.2,1);}
+.funnel-val{font-size:0.8rem;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink);}
+.funnel-val small{display:block;font-size:0.68rem;font-weight:600;color:var(--ink-3);}
+
+.stackbar{display:flex;height:30px;border-radius:6px;overflow:hidden;background:rgba(255,255,255,0.045);gap:2px;}
+.stackbar > span{height:100%;min-width:2px;transition:width .35s cubic-bezier(.4,0,.2,1);}
+.legend{display:flex;flex-wrap:wrap;gap:0.4rem 1.1rem;margin-top:0.8rem;}
+.legend-item{display:flex;align-items:center;gap:0.42rem;font-size:0.76rem;color:var(--ink-2);}
+.legend-swatch{width:11px;height:11px;border-radius:3px;flex:none;}
+.legend-item b{color:var(--ink);font-variant-numeric:tabular-nums;}
+
+.spark{width:100%;height:150px;display:block;}
+.tt{position:fixed;z-index:200;pointer-events:none;background:#000;border:1px solid var(--border-2);border-radius:9px;padding:0.5rem 0.7rem;font-size:0.76rem;color:var(--ink);box-shadow:0 10px 30px rgba(0,0,0,0.6);opacity:0;transition:opacity .12s;max-width:260px;line-height:1.5;}
+.tt.show{opacity:1;}
+.tt .tt-h{font-weight:800;margin-bottom:0.2rem;}
+.tt .tt-r{display:flex;justify-content:space-between;gap:1rem;color:var(--ink-2);}
+.tt .tt-r b{color:var(--ink);font-variant-numeric:tabular-nums;}
+
+/* ---------- pipeline board ---------- */
+.board{display:grid;grid-template-columns:repeat(5,minmax(200px,1fr));gap:0.75rem;overflow-x:auto;padding-bottom:0.6rem;}
+.col{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:0.75rem;min-width:200px;display:flex;flex-direction:column;}
+.col-head{display:flex;align-items:baseline;gap:0.4rem;margin-bottom:0.15rem;}
+.col-dot{width:9px;height:9px;border-radius:3px;flex:none;align-self:center;}
+.col-head h3{font-size:0.83rem;font-weight:800;letter-spacing:-0.01em;}
+.col-head .count{margin-left:auto;font-size:0.72rem;font-weight:800;color:var(--ink-3);}
+.col-sum{font-size:0.72rem;color:var(--ink-3);margin-bottom:0.8rem;font-variant-numeric:tabular-nums;}
+.col-sum b{color:var(--ink-2);}
+.deal{background:var(--surface-2);border:1px solid var(--border);border-radius:11px;padding:0.7rem 0.75rem;margin-bottom:0.55rem;}
+.deal:hover{border-color:var(--border-2);}
+.deal .d-name{font-size:0.86rem;font-weight:700;letter-spacing:-0.01em;margin-bottom:0.15rem;}
+.deal .d-meta{font-size:0.71rem;color:var(--ink-3);line-height:1.5;margin-bottom:0.5rem;}
+.deal .d-money{display:flex;justify-content:space-between;font-size:0.76rem;font-variant-numeric:tabular-nums;color:var(--ink-2);margin-bottom:0.15rem;}
+.deal .d-money b{color:var(--ink);}
+.deal .d-next{font-size:0.71rem;color:var(--ink-3);border-top:1px solid var(--border);margin-top:0.55rem;padding-top:0.45rem;line-height:1.5;}
+.deal .d-next b{color:var(--copper);font-weight:700;}
+.deal-actions{display:flex;gap:0.3rem;margin-top:0.55rem;}
+.deal-actions button{flex:none;background:var(--surface-3);border:1px solid var(--border);color:var(--ink-2);font-size:0.7rem;font-weight:700;border-radius:6px;padding:0.22rem 0.45rem;}
+.deal-actions button:hover{color:var(--ink);border-color:var(--border-2);}
+.deal-actions .grow{flex:1;}
+.col-empty{font-size:0.75rem;color:var(--ink-3);text-align:center;padding:1.4rem 0.5rem;border:1px dashed var(--border);border-radius:10px;}
+
+/* ---------- modal ---------- */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.72);backdrop-filter:blur(3px);z-index:300;display:none;align-items:flex-start;justify-content:center;padding:3rem 1rem;overflow-y:auto;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border-2);border-radius:18px;padding:1.6rem;width:100%;max-width:640px;}
+.modal h2{font-size:1.1rem;font-weight:800;margin-bottom:1.1rem;}
+
+/* ---------- misc ---------- */
+.note{font-size:0.79rem;color:var(--ink-3);line-height:1.65;}
+.note strong{color:var(--ink-2);}
+.callout{border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 10px 10px 0;padding:0.8rem 1rem;font-size:0.81rem;color:var(--ink-2);line-height:1.65;}
+.callout.warn{border-left-color:var(--warning);background:rgba(250,178,25,0.09);}
+.callout.risk{border-left-color:var(--critical);background:rgba(208,59,59,0.09);}
+.callout b{color:var(--ink);}
+.plane{border:1px solid var(--border);border-radius:12px;padding:1rem;background:var(--surface-2);}
+.plane h4{font-size:0.8rem;font-weight:800;margin-bottom:0.5rem;display:flex;align-items:center;gap:0.45rem;}
+.plane ul{margin:0;padding-left:1.1rem;font-size:0.79rem;color:var(--ink-2);line-height:1.75;}
+.plane.control{border-color:rgba(57,135,229,0.45);}
+.plane.tenant{border-color:rgba(217,89,38,0.45);}
+pre{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:0.9rem;overflow-x:auto;font-size:0.74rem;line-height:1.6;color:#cfe6ff;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre;}
+.checklist{list-style:none;padding:0;margin:0;}
+.checklist li{display:flex;gap:0.65rem;align-items:flex-start;padding:0.6rem 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.83rem;color:var(--ink-2);line-height:1.6;}
+.checklist li:last-child{border-bottom:0;}
+.checklist input{margin-top:0.25rem;accent-color:var(--accent);width:15px;height:15px;flex:none;}
+.checklist .ck-title{color:var(--ink);font-weight:700;display:block;}
+.checklist li.done .ck-title{text-decoration:line-through;color:var(--ink-3);}
+.toast{position:fixed;bottom:1.6rem;left:50%;pointer-events:none;transform:translateX(-50%) translateY(140%);background:#fff;color:#0D0D0D;font-size:0.84rem;font-weight:700;padding:0.7rem 1.2rem;border-radius:999px;z-index:400;transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:0 12px 40px rgba(0,0,0,0.5);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ---------- Wilfred: opportunity desk ---------- */
+.conn{display:flex;align-items:center;gap:0.55rem;font-size:0.76rem;font-weight:700;border-radius:999px;padding:0.28rem 0.75rem;border:1px solid var(--border-2);color:var(--ink-2);}
+.conn .dot{width:8px;height:8px;border-radius:50%;flex:none;}
+.conn.live{border-color:rgba(12,163,12,0.5);background:rgba(12,163,12,0.12);color:#7be07b;}
+.conn.live .dot{background:var(--good);}
+.conn.offline{border-color:rgba(250,178,25,0.45);background:rgba(250,178,25,0.10);color:#ffd478;}
+.conn.offline .dot{background:var(--warning);}
+
+.team-tabs{display:flex;gap:0.4rem;flex-wrap:wrap;}
+.team-pill{background:var(--surface-2);border:1px solid var(--border);color:var(--ink-2);font-size:0.8rem;font-weight:700;border-radius:999px;padding:0.4rem 0.9rem;display:inline-flex;align-items:center;gap:0.45rem;}
+.team-pill:hover{border-color:var(--border-2);color:var(--ink);}
+.team-pill.is-active{background:var(--accent-soft);border-color:rgba(88,183,255,0.5);color:var(--accent);}
+.team-pill .tp-dot{width:9px;height:9px;border-radius:3px;flex:none;}
+.team-pill .tp-n{font-variant-numeric:tabular-nums;opacity:0.75;}
+
+select.status-sel{background:var(--bg);border:1px solid var(--border-2);border-radius:999px;color:var(--ink);font-size:0.76rem;font-weight:700;padding:0.3rem 0.55rem;max-width:170px;}
+select.status-sel:focus{outline:2px solid var(--accent);outline-offset:-1px;}
+.st-swatch{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:0.4rem;vertical-align:middle;}
+.rep{display:flex;align-items:center;gap:0.5rem;}
+.rep-av{width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:0.66rem;font-weight:800;color:#0D0D0D;}
+
+.auto-rule{display:grid;grid-template-columns:auto 1fr auto;gap:0.75rem;align-items:flex-start;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.auto-rule:last-child{border-bottom:0;}
+.auto-rule input[type=checkbox]{margin-top:0.3rem;accent-color:var(--accent);width:15px;height:15px;}
+.auto-rule .ar-when{font-size:0.75rem;color:var(--ink-3);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;}
+.auto-rule .ar-do{font-size:0.85rem;color:var(--ink);font-weight:700;display:block;margin:0.15rem 0 0.2rem;}
+.auto-rule .ar-detail{font-size:0.78rem;color:var(--ink-3);line-height:1.6;}
+.feed{max-height:420px;overflow-y:auto;}
+.feed-item{display:flex;gap:0.7rem;padding:0.6rem 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.8rem;color:var(--ink-2);line-height:1.6;}
+.feed-item:last-child{border-bottom:0;}
+.feed-time{font-size:0.7rem;color:var(--ink-3);white-space:nowrap;font-variant-numeric:tabular-nums;min-width:56px;}
+.feed-item b{color:var(--ink);}
+
+@media(max-width:1100px){
+    .g2,.g3,.g4,.g-side{grid-template-columns:1fr;}
+    .ops-head-shell,.view{padding-left:1.1rem;padding-right:1.1rem;}
+    .ops-head-top h1{font-size:1.6rem;}
+}
+</style>
+</head>
+<body>
+
+<nav class="site-nav" id="siteNav">
+    <div class="nav-shell">
+        <a href="https://hirewilfred.ai/index.html" class="brand-lockup"><img class="brand-logo" src="hirewilfred_logo_reverse.svg" alt="Hire Wilfred" style="height:64px;width:auto;"></a>
+        <div class="nav-right">
+            <a href="https://hirewilfred.ai/index.html#about" class="nav-link">How Wilfred works</a>
+            <a href="https://hirewilfred.ai/team.html" class="nav-link">The Team</a>
+            <a href="https://hirewilfred.ai/packages.html" class="nav-link">Packages</a>
+            <a href="dashboard.html" class="nav-link">Client Portal</a>
+            <a href="admin.html" class="nav-link">Admin</a>
+            <a href="ops.html" class="nav-cta">Ops Console</a>
+        </div>
+    </div>
+</nav>
+
+<div class="preview-band">
+    <strong>INTERNAL — Ops Console.</strong> Working numbers only. Client-facing quotes still go out through <a href="admin.html">the Admin Console</a>. <span id="savedAt" style="color:var(--ink-3);"></span>
+</div>
+
+<header class="ops-head">
+    <div class="ops-head-shell">
+        <div class="ops-head-top">
+            <div>
+                <span class="ops-badge">Internal tooling</span>
+                <h1 id="viewTitle">Overview</h1>
+                <div class="sub" id="viewSub">Pipeline, forecast and margin at a glance</div>
+            </div>
+            <div class="spacer"></div>
+            <div class="row" style="gap:0.5rem;">
+                <span id="connBadge"></span>
+                <button class="btn" onclick="exportData()">Export JSON</button>
+                <button class="btn primary" onclick="openDeal()">+ New deal</button>
+            </div>
+        </div>
+        <div class="tabs" role="tablist">
+            <button class="tab is-active" data-view="overview" role="tab">Overview</button>
+            <button class="tab" data-view="wilfred" role="tab">Wilfred <span class="badge" id="navOpps">0</span></button>
+            <button class="tab" data-view="pipeline" role="tab">Pipeline <span class="badge" id="navDeals">0</span></button>
+            <button class="tab" data-view="quoter" role="tab">Scenario Quoter</button>
+            <button class="tab" data-view="economics" role="tab">Cost Model</button>
+            <button class="tab" data-view="clients" role="tab">Book of Business</button>
+            <button class="tab" data-view="provisioning" role="tab">Onboarding</button>
+            <button class="tab" data-view="roadmap" role="tab">Infra Roadmap</button>
+            <button class="tab" data-view="admin" role="tab">Administration</button>
+        </div>
+    </div>
+</header>
+
+<main class="ops-main">
+
+        <!-- ---------------- OVERVIEW ---------------- -->
+        <section class="view is-active" id="view-overview">
+            <div class="kpis" id="kpiRow"></div>
+
+            <div class="grid g-side" style="margin-top:1rem;">
+                <div class="panel">
+                    <h2>Pipeline by stage <span class="muted">· open deals only</span></h2>
+                    <p class="panel-note">Bar length is <strong>weighted annual contract value</strong> — first-year revenue (MRR&nbsp;×&nbsp;12 + discovery + onboarding) multiplied by that stage's close probability.</p>
+                    <div id="funnelChart"></div>
+                    <div class="table-wrap" style="margin-top:1.1rem;">
+                        <table id="funnelTable"></table>
+                    </div>
+                </div>
+
+                <div class="stack">
+                    <div class="panel">
+                        <h2>Where the money goes <span class="muted">· signed book, monthly</span></h2>
+                        <p class="panel-note">Recurring revenue from live clients, split into the three cost drivers and what's left over.</p>
+                        <div id="bookMargin"></div>
+                    </div>
+                    <div class="panel">
+                        <h2>Token burn <span class="muted">· signed book, trailing 12 mo</span></h2>
+                        <p class="panel-note">Modelled monthly token cost across live clients, against the point where token spend alone would justify a dedicated GPU box.</p>
+                        <div id="burnChart"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top:1rem;">
+                <h2>Needs attention</h2>
+                <div id="attention"></div>
+            </div>
+        </section>
+
+        <!-- ---------------- WILFRED ---------------- -->
+        <section class="view" id="view-wilfred">
+            <div id="wConnNotice"></div>
+
+            <div class="kpis" id="wKpis"></div>
+
+            <div class="panel" style="margin-top:1rem;">
+                <div class="row" style="justify-content:space-between;align-items:flex-start;">
+                    <div>
+                        <h2>Opportunity desk <span class="muted">· every opportunity, tracked by status</span></h2>
+                        <p class="panel-note" style="margin-bottom:0;">Change a status and Wilfred fires the automations wired to it. Statuses are the trigger surface — keep them accurate and the automation does the chasing. A lead becomes a prospective AI client at <strong>Booked</strong>: it lands in the Pipeline at Initial meeting, and gets sized and priced there. Leads themselves never carry a value.</p>
+                    </div>
+                    <button class="btn primary" onclick="openOpp()">+ New opportunity</button>
+                </div>
+
+                <div class="row" style="margin:1.1rem 0 0.9rem;justify-content:space-between;">
+                    <div class="team-tabs" id="wTeamTabs"></div>
+                    <div class="row" style="gap:0.5rem;">
+                        <select class="inp" id="wRep" style="width:auto;min-width:150px;" onchange="renderWilfred()"></select>
+                        <select class="inp" id="wStatusFilter" style="width:auto;min-width:150px;" onchange="renderWilfred()"></select>
+                        <input class="inp" id="wSearch" placeholder="Search…" style="width:150px;" oninput="renderWilfred()">
+                    </div>
+                </div>
+
+                <div class="table-wrap"><table id="wTable"></table></div>
+            </div>
+
+            <div class="grid g-side" style="margin-top:1rem;">
+                <div class="panel">
+                    <h2>Leads by status</h2>
+                    <p class="panel-note">How many leads sit in each status, for the current filter. The shape tells you where work is piling up — a fat Contacted bar with a thin Replied bar is a messaging problem, not a volume one.</p>
+                    <div id="wStatusChart"></div>
+                </div>
+                <div class="stack">
+                    <div class="panel">
+                        <h2>Meetings booked by campaign</h2>
+                        <p class="panel-note">Campaigns are judged on meetings, not pipeline value — a lead has no value until it has been through a first meeting.</p>
+                        <div id="wTeamChart"></div>
+                    </div>
+                    <div class="panel">
+                        <h2>Leaderboard <span class="muted">· open value by rep</span></h2>
+                        <div class="table-wrap"><table id="wRepTable"></table></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid g-side" style="margin-top:1rem;">
+                <div class="panel">
+                    <h2>Status automations</h2>
+                    <p class="panel-note">What Wilfred does when an opportunity lands in each status. Untick to disable a rule — it stops firing immediately, existing runs are untouched.</p>
+                    <div id="wRules"></div>
+                </div>
+                <div class="panel">
+                    <h2>Automation log <span class="muted">· newest first</span></h2>
+                    <p class="panel-note">Every rule Wilfred has fired this session. When the database is connected this is written to <code>automation_runs</code> so the record survives the browser.</p>
+                    <div class="feed" id="wFeed"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ---------------- PIPELINE ---------------- -->
+        <section class="view" id="view-pipeline">
+            <div class="row" style="margin-bottom:1rem;">
+                <div class="kpis" style="flex:1;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));" id="pipeKpis"></div>
+            </div>
+
+            <div class="board" id="board"></div>
+
+            <div class="panel" style="margin-top:1rem;">
+                <h2>Closed <span class="muted">· won &amp; lost</span></h2>
+                <div class="table-wrap"><table id="closedTable"></table></div>
+            </div>
+
+            <div class="panel" style="margin-top:1rem;">
+                <h2>Stage definitions &amp; default probabilities</h2>
+                <p class="panel-note">Probabilities drive the weighted forecast. Edit them in <button class="btn sm ghost" onclick="go('admin')">Administration</button> if your close rates say different.</p>
+                <div class="table-wrap"><table id="stageDefTable"></table></div>
+            </div>
+        </section>
+
+        <!-- ---------------- QUOTER ---------------- -->
+        <section class="view" id="view-quoter">
+            <div class="grid g-side">
+                <div class="panel">
+                    <h2>Build a scenario</h2>
+                    <p class="panel-note">Price a deal and see the margin before you send it. Every assumption behind these numbers lives in <button class="btn sm ghost" onclick="go('economics')">Cost Model</button>.</p>
+
+                    <div class="field">
+                        <label for="sName">Prospect / client</label>
+                        <input id="sName" placeholder="e.g. Dundas Legal LLP">
+                    </div>
+
+                    <div class="inline-fields">
+                        <div class="field">
+                            <label for="sPackage">Package</label>
+                            <select id="sPackage"></select>
+                        </div>
+                        <div class="field">
+                            <label for="sVertical">Vertical</label>
+                            <select id="sVertical">
+                                <option>Law</option><option>Accounting</option><option>Insurance</option>
+                                <option>Real estate</option><option>General SME</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="inline-fields three">
+                        <div class="field">
+                            <label for="sSeniors">Senior agents</label>
+                            <input id="sSeniors" type="number" min="0" step="1" value="6">
+                        </div>
+                        <div class="field">
+                            <label for="sJuniors">Junior agents</label>
+                            <input id="sJuniors" type="number" min="0" step="1" value="0">
+                        </div>
+                        <div class="field">
+                            <label for="sIntensity">Usage</label>
+                            <select id="sIntensity">
+                                <option value="0.6">Light (0.6×)</option>
+                                <option value="1" selected>Normal (1.0×)</option>
+                                <option value="1.7">Heavy (1.7×)</option>
+                                <option value="2.5">Very heavy (2.5×)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="inline-fields">
+                        <div class="field">
+                            <label for="sInfra">Infrastructure tier</label>
+                            <select id="sInfra"></select>
+                        </div>
+                        <div class="field">
+                            <label for="sMrr">Monthly price (CAD)</label>
+                            <input id="sMrr" type="number" min="0" step="1">
+                            <div class="hint" id="sMrrHint">Auto-filled from the package. Override for custom deals.</div>
+                        </div>
+                    </div>
+
+                    <div class="inline-fields">
+                        <div class="field">
+                            <label for="sDiscovery">Discovery &amp; audit fee (one-time)</label>
+                            <input id="sDiscovery" type="number" min="0" step="50" value="3000">
+                        </div>
+                        <div class="field">
+                            <label for="sOnboard">Build / onboarding fee (one-time)</label>
+                            <input id="sOnboard" type="number" min="0" step="50" value="1500">
+                        </div>
+                    </div>
+
+                    <div class="inline-fields three">
+                        <div class="field">
+                            <label for="sMgmtMode">Management fee</label>
+                            <select id="sMgmtMode">
+                                <option value="included">Included in price</option>
+                                <option value="flat">Billed — flat $/mo</option>
+                                <option value="pct">Billed — % of MRR</option>
+                                <option value="agent">Billed — $ per agent</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="sMgmtVal">Fee value</label>
+                            <input id="sMgmtVal" type="number" min="0" step="1" value="0">
+                            <div class="hint">Dollars, percent, or $/agent — matches the mode.</div>
+                        </div>
+                        <div class="field">
+                            <label for="sChanges">Change requests / mo</label>
+                            <input id="sChanges" type="number" min="0" step="1" value="180">
+                            <div class="hint">From the package allowance.</div>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-top:0.4rem;">
+                        <button class="btn primary" onclick="saveScenario()">Save to compare</button>
+                        <button class="btn" onclick="scenarioToDeal()">Create deal from this</button>
+                        <button class="btn ghost" onclick="copyScenario()">Copy summary</button>
+                    </div>
+                </div>
+
+                <div class="stack">
+                    <div class="panel">
+                        <h2>Result <span class="muted" id="sResultTag"></span></h2>
+                        <div class="kpis" style="grid-template-columns:repeat(2,1fr);" id="sKpis"></div>
+                        <div style="margin-top:1.2rem;">
+                            <div class="chart-title">Monthly revenue, split</div>
+                            <div id="sStack"></div>
+                        </div>
+                        <div class="table-wrap" style="margin-top:1.2rem;">
+                            <table id="sTable"></table>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <h2>Sensitivity <span class="muted">· gross margin if usage moves</span></h2>
+                        <p class="panel-note">Token burn is the only cost that scales with how hard the client leans on the agents. This is the same deal at four usage levels.</p>
+                        <div id="sSensitivity"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top:1rem;">
+                <h2>Saved scenarios <span class="muted">· side by side</span></h2>
+                <div class="table-wrap"><table id="scenTable"></table></div>
+            </div>
+        </section>
+
+        <!-- ---------------- ECONOMICS ---------------- -->
+        <section class="view" id="view-economics">
+            <div class="callout" style="margin-bottom:1rem;">
+                Every dollar figure in this console is derived from the assumptions on this page. Change one here and the pipeline forecast, quotes and client margins all move with it. Costs are entered in <b>USD</b> where vendors bill in USD and converted at the FX rate below; everything shown to you is <b>CAD</b>.
+            </div>
+
+            <div class="grid g3">
+                <div class="panel">
+                    <h2>Model pricing <span class="muted">· USD / million tokens</span></h2>
+                    <p class="panel-note">List rates. Cached input is billed at roughly a tenth of the input rate — that discount is applied via the cache-hit assumption below.</p>
+                    <div class="table-wrap compact"><table id="modelTable"></table></div>
+                    <div class="inline-fields" style="margin-top:1rem;">
+                        <div class="field">
+                            <label for="aCacheHit">Prompt-cache hit rate</label>
+                            <input id="aCacheHit" type="number" min="0" max="95" step="1">
+                            <div class="hint">% of input tokens served from cache.</div>
+                        </div>
+                        <div class="field">
+                            <label for="aFx">USD → CAD</label>
+                            <input id="aFx" type="number" min="1" step="0.01">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>Token volumes <span class="muted">· per agent, per month</span></h2>
+                    <p class="panel-note">Millions of tokens at normal (1.0×) usage. Wilfred is the orchestrator — one per client, touches every message.</p>
+                    <div class="table-wrap compact"><table id="volTable"></table></div>
+                    <div class="callout warn" style="margin-top:1rem;font-size:0.78rem;">
+                        <b>Biggest burn lever:</b> browser automation via screenshots costs roughly 10× DOM/text extraction for the same task. If these volumes drift up, check the vision path before you blame the model.
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>Infrastructure <span class="muted">· CAD / month</span></h2>
+                    <p class="panel-note">What one client actually costs to host. Shared tier divides a host across tenants; dedicated is a whole Vultr Toronto instance.</p>
+                    <div class="table-wrap compact"><table id="infraTable"></table></div>
+                    <div class="field" style="margin-top:1rem;">
+                        <label for="aPlatform">Platform overhead per client (CAD/mo)</label>
+                        <input id="aPlatform" type="number" min="0" step="1">
+                        <div class="hint">Control plane, monitoring, backups, secrets, log retention — allocated per client.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid g2" style="margin-top:1rem;">
+                <div class="panel">
+                    <h2>Management cost <span class="muted">· the human side</span></h2>
+                    <p class="panel-note">Fully-loaded cost of the named success manager, monitoring and the monthly change allowance. This is a <strong>cost</strong>; whether you bill it back is set per deal in the quoter.</p>
+                    <div class="inline-fields">
+                        <div class="field">
+                            <label for="aRate">Loaded hourly rate (CAD)</label>
+                            <input id="aRate" type="number" min="0" step="1">
+                        </div>
+                        <div class="field">
+                            <label for="aBaseHrs">Base hours / client / mo</label>
+                            <input id="aBaseHrs" type="number" min="0" step="0.25">
+                            <div class="hint">Monitoring, weekly evals, the monthly recap.</div>
+                        </div>
+                    </div>
+                    <div class="inline-fields">
+                        <div class="field">
+                            <label for="aAgentHrs">Extra hours per agent / mo</label>
+                            <input id="aAgentHrs" type="number" min="0" step="0.05">
+                        </div>
+                        <div class="field">
+                            <label for="aChangeMin">Minutes per change request</label>
+                            <input id="aChangeMin" type="number" min="0" step="1">
+                            <div class="hint">Applied to the package allowance, at the take-up rate below.</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="aChangeUse">Change-allowance take-up</label>
+                        <input id="aChangeUse" type="number" min="0" max="100" step="1">
+                        <div class="hint">% of the monthly allowance clients actually use. Costing at 100% overstates it badly — most clients use a fraction.</div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>Targets &amp; guardrails</h2>
+                    <div class="inline-fields">
+                        <div class="field">
+                            <label for="aTargetMargin">Target gross margin (%)</label>
+                            <input id="aTargetMargin" type="number" min="0" max="100" step="1">
+                            <div class="hint">Quotes below this get flagged.</div>
+                        </div>
+                        <div class="field">
+                            <label for="aDiscovery">Standard discovery &amp; audit fee (CAD)</label>
+                            <input id="aDiscovery" type="number" min="0" step="50">
+                        </div>
+                    </div>
+                    <div class="inline-fields">
+                        <div class="field">
+                            <label for="aGpu">Dedicated GPU box (CAD/mo)</label>
+                            <input id="aGpu" type="number" min="0" step="10">
+                            <div class="hint">One L40S running 24/7. The self-host break-even line.</div>
+                        </div>
+                        <div class="field">
+                            <label for="aOverage">Token allowance headroom (%)</label>
+                            <input id="aOverage" type="number" min="0" step="5">
+                            <div class="hint">Allowance is set this far above modelled burn.</div>
+                        </div>
+                    </div>
+                    <div class="callout risk" style="margin-top:0.4rem;font-size:0.79rem;">
+                        <b>Self-hosting does not reduce token burn.</b> It converts a variable per-token cost into a fixed GPU bill — and open-weight models typically consume <i>more</i> tokens, because weaker tool-calling means retries and each retry re-sends the whole context. Fix caching, context ceilings and the vision path first; see <button class="btn sm ghost" onclick="go('roadmap')" style="padding:0 0.2rem;">Infra Roadmap</button>.
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top:1rem;">
+                <h2>Unit economics by package <span class="muted">· at current assumptions, normal usage, shared tier</span></h2>
+                <p class="panel-note">The reference card. If a package line goes red here, it is losing money at list price — not just on one deal.</p>
+                <div class="table-wrap"><table id="unitTable"></table></div>
+            </div>
+        </section>
+
+        <!-- ---------------- CLIENTS ---------------- -->
+        <section class="view" id="view-clients">
+            <div class="kpis" id="clientKpis"></div>
+            <div class="panel" style="margin-top:1rem;">
+                <h2>Live clients <span class="muted">· modelled margin &amp; token burn vs allowance</span></h2>
+                <p class="panel-note">Burn is modelled from the agent roster and usage level, not metered — wire the usage-logging table in before you bill anyone on it.</p>
+                <div class="table-wrap"><table id="clientTable"></table></div>
+            </div>
+            <div class="grid g2" style="margin-top:1rem;">
+                <div class="panel">
+                    <h2>Margin by client</h2>
+                    <div id="clientMarginChart"></div>
+                </div>
+                <div class="panel">
+                    <h2>Revenue concentration</h2>
+                    <p class="panel-note">Share of recurring revenue by client. Anything over 25% from one logo is a real risk, not a rounding note.</p>
+                    <div id="concChart"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ---------------- PROVISIONING ---------------- -->
+        <section class="view" id="view-provisioning">
+            <div class="grid g2">
+                <div class="plane control">
+                    <h4><span class="legend-swatch" style="background:var(--series-tokens);"></span> Control plane — clients never touch this</h4>
+                    <ul>
+                        <li>Onboarding portal + provisioning service</li>
+                        <li>Control-plane Postgres (client records, config)</li>
+                        <li>Vultr API key, scoped, in a secrets manager</li>
+                        <li>Terraform state — remote backend, locking on from day one</li>
+                        <li>Usage/metering and billing tables</li>
+                        <li>Alert webhooks and cap thresholds</li>
+                    </ul>
+                </div>
+                <div class="plane tenant">
+                    <h4><span class="legend-swatch" style="background:var(--series-infra);"></span> Tenant plane — client data only</h4>
+                    <ul>
+                        <li>Per-client agent containers</li>
+                        <li>Per-client Postgres schema or instance</li>
+                        <li>Client admin logins and user invites</li>
+                        <li>Subdomain: <code>clientname.hirewilfred.ca</code></li>
+                        <li>No credentials that reach any other tenant</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="callout risk" style="margin-top:1rem;">
+                <b>Keep these two planes separate.</b> Blurring them is the mistake that turns one compromised container into a platform-wide breach. A leaked Vultr key deletes every client server you have; corrupted Terraform state means you can no longer manage what you provisioned; and half-provisioned clients from a failed run are the number-one source of onboarding chaos — every step must be safely re-runnable.
+            </div>
+
+            <div class="grid g-side" style="margin-top:1rem;">
+                <div class="panel">
+                    <h2>Build order</h2>
+                    <p class="panel-note">Roughly 2–3 weeks for a working internal portal covering the shared tier, plus another week for the Terraform dedicated-tier path. It pays back at client #3.</p>
+                    <ul class="checklist" id="buildList"></ul>
+                    <div class="callout warn" style="margin-top:1rem;">
+                        <b>Don't build client self-serve signup yet.</b> You don't know your onboarding variance at zero clients. Build the internal tool, use it 5–10 times, then automate the front door.
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>Cookie cutter <span class="muted">· generate from a client record</span></h2>
+                    <p class="panel-note">The agent config schema is the actual cookie cutter — everything else is plumbing around it. Pick a live client or a saved scenario and generate the seed config and compose file.</p>
+                    <div class="inline-fields">
+                        <div class="field">
+                            <label for="pvClient">Source record</label>
+                            <select id="pvClient"></select>
+                        </div>
+                        <div class="field">
+                            <label for="pvTier">Deployment tier</label>
+                            <select id="pvTier">
+                                <option value="shared">Shared — compose stack + schema</option>
+                                <option value="dedicated">Dedicated — Terraform + Vultr Toronto</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-bottom:0.9rem;">
+                        <button class="btn primary" onclick="genConfig()">Generate</button>
+                        <button class="btn" onclick="copyEl('pvOut')">Copy config</button>
+                        <button class="btn" onclick="copyEl('pvCompose')">Copy compose</button>
+                    </div>
+                    <div class="chart-title">agents.json — seed config</div>
+                    <pre id="pvOut">Pick a record and hit Generate.</pre>
+                    <div class="chart-title" style="margin-top:1rem;">docker-compose.yml — parameterised by client_id</div>
+                    <pre id="pvCompose">—</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- ---------------- ROADMAP ---------------- -->
+        <section class="view" id="view-roadmap">
+            <div class="panel">
+                <h2>Cut token burn first — these are free and work regardless of where inference runs</h2>
+                <p class="panel-note">In rough order of leverage. Do these, measure, <em>then</em> revisit self-hosting.</p>
+                <ul class="checklist" id="burnList"></ul>
+            </div>
+
+            <div class="grid g2" style="margin-top:1rem;">
+                <div class="panel">
+                    <h2>Self-hosting — the trigger, not the temptation</h2>
+                    <p class="panel-note">Don't build it now. Pull the trigger only when all three of these are true at once:</p>
+                    <ul class="checklist" id="hostList"></ul>
+                    <div class="table-wrap" style="margin-top:0.8rem;">
+                        <table id="gpuTable"></table>
+                    </div>
+                    <p class="note" style="margin-top:0.9rem;">Start with a fractional L40S serving only Wilfred's routing traffic — the smallest possible bet, real data, no client-visible risk. Use vLLM rather than Ollama; continuous batching is what makes multi-tenant concurrency viable. VPC peering only, no public IP on the GPU box, per-tenant API keys with rate limits. Size for peak concurrency, not average.</p>
+                </div>
+
+                <div class="panel">
+                    <h2>Hybrid routing — what runs where</h2>
+                    <p class="panel-note">The move is routing, not replacement. High-volume, low-stakes work goes cheap; anything a client sees stays on the quality model. If the local model underperforms you flip a config value per agent, not rebuild.</p>
+                    <div class="table-wrap"><table id="routeTable"></table></div>
+                    <div class="callout risk" style="margin-top:1rem;">
+                        <b>What this breaks — say it out loud in the security questionnaire.</b> A shared inference box reintroduces a component every tenant's prompts flow through, which partly undercuts the no-lateral-movement story of per-client isolation. Mitigate with stateless inference, no prompt logging and per-tenant keys. It is also a single point of failure — GPU down means every client down — so plan fallback-to-Claude-API on inference failure. Sovereignty gets stronger, though: nothing leaves your infrastructure at all, which is the strongest version of the pitch for Ontario law and insurance.
+                    </div>
+                    <p class="note" style="margin-top:0.9rem;"><strong>On open-weight models:</strong> running them through someone else's API sends client data off your infrastructure and contradicts the PIPEDA/sovereignty positioning the whole pitch rests on. If you go open-weight, self-hosting stops being a cost optimisation and becomes a requirement. Check the licence before you benchmark — Apache 2.0 and MIT are resale-safe, custom licences are not a footnote when you're reselling. And benchmark on your own agent traces, not leaderboards: start with Wilfred's routing traffic only, keep client-facing legal and insurance reasoning on the quality model until your own eval says otherwise.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ---------------- ADMIN ---------------- -->
+        <section class="view" id="view-admin">
+            <div class="grid g2">
+                <div class="panel">
+                    <h2>Packages</h2>
+                    <p class="panel-note">Seat counts, list price and the monthly change allowance. These feed the quoter and the unit-economics card.</p>
+                    <div class="table-wrap"><table id="pkgTable"></table></div>
+                </div>
+                <div class="panel">
+                    <h2>Pipeline stages</h2>
+                    <p class="panel-note">Close probability per stage, used for the weighted forecast.</p>
+                    <div class="table-wrap"><table id="stageAdminTable"></table></div>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top:1rem;">
+                <h2>Agent catalog</h2>
+                <p class="panel-note">Tier decides which token-volume profile an agent is costed against. Price is the à-la-carte list rate.</p>
+                <div class="table-wrap"><table id="catTable"></table></div>
+                <div class="row" style="margin-top:1rem;">
+                    <input class="inp" id="newAgentName" placeholder="Name" style="max-width:150px;">
+                    <input class="inp" id="newAgentRole" placeholder="Role" style="max-width:230px;">
+                    <select class="inp" id="newAgentTier" style="max-width:150px;">
+                        <option value="senior">Senior / specialist</option>
+                        <option value="junior">Junior</option>
+                    </select>
+                    <input class="inp" id="newAgentPrice" type="number" placeholder="Price/mo" style="max-width:130px;">
+                    <button class="btn primary" onclick="addAgent()">Add agent</button>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top:1rem;">
+                <h2>Data</h2>
+                <p class="panel-note">Everything in this console lives in this browser's local storage — nothing is sent anywhere. Export before you switch machines; this is where the real backend goes when the control-plane Postgres exists.</p>
+                <div class="row">
+                    <button class="btn" onclick="exportData()">Export JSON</button>
+                    <button class="btn" onclick="document.getElementById('importFile').click()">Import JSON</button>
+                    <input type="file" id="importFile" accept="application/json" style="display:none;" onchange="importData(event)">
+                    <button class="btn" onclick="reseed()">Reload demo data</button>
+                    <button class="btn danger" onclick="wipe()">Wipe everything</button>
+                </div>
+            </div>
+        </section>
+</main>
+
+<footer class="site-footer">
+    <div class="site-footer-shell">
+        <div class="site-footer-top">
+            <div class="site-footer-brand">
+                <a href="https://hirewilfred.ai/index.html" class="brand-lockup">
+                    <img class="brand-logo" src="/hirewilfred/hirewilfred_logo.svg" alt="Hire Wilfred" style="height: 64px; width: auto;">
+                </a>
+                <p>Canada's AI workforce conductor. Wilfred hires, manages, and replaces a full team of pre-trained AI specialists — so you don't have to. Hosted on Canadian soil, billed in CAD, backed by a Canadian success team.</p>
+            </div>
+            <div class="site-footer-links">
+                <div class="site-footer-col">
+                    <span class="col-head">Internal</span>
+                    <a href="/ops.html">Ops Console</a>
+                    <a href="/admin.html">Admin Console</a>
+                    <a href="/dashboard.html">Client Portal</a>
+                </div>
+                <div class="site-footer-col">
+                    <span class="col-head">Employers</span>
+                    <a href="https://hirewilfred.ai/index.html#about">How Wilfred works</a>
+                    <a href="https://hirewilfred.ai/integrations.html">Integrations</a>
+                    <a href="https://hirewilfred.ai/case-studies.html">Case Studies</a>
+                    <a href="https://hirewilfred.ai/packages.html">Packages</a>
+                    <a href="https://hirewilfred.ai/index.html#hire">Hire Wilfred</a>
+                </div>
+                <div class="site-footer-col">
+                    <span class="col-head">Legal</span>
+                    <a href="#">PIPEDA / Law 25</a>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Master Services Agreement</a>
+                </div>
+            </div>
+        </div>
+        <div class="site-footer-bottom">
+            <p>&copy; 2026 Wilfred AI Staffing Inc. Headquartered in Hamilton, Ontario. Serving SMEs across Canada.</p>
+            <div class="site-footer-bottom-links">
+                <a href="#">PIPEDA</a>
+                <a href="#">Privacy</a>
+                <a href="#">Terms</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<div class="modal-bg" id="dealModal">
+    <div class="modal">
+        <h2 id="dealModalTitle">New deal</h2>
+        <form id="dealForm">
+            <div class="inline-fields">
+                <div class="field"><label for="dName">Company</label><input id="dName" required placeholder="e.g. Halton Insurance Brokers"></div>
+                <div class="field"><label for="dContact">Contact</label><input id="dContact" placeholder="Name / email"></div>
+            </div>
+            <div class="inline-fields three">
+                <div class="field"><label for="dStage">Stage</label><select id="dStage"></select></div>
+                <div class="field"><label for="dVertical">Vertical</label>
+                    <select id="dVertical"><option>Law</option><option>Accounting</option><option>Insurance</option><option>Real estate</option><option>General SME</option></select>
+                </div>
+                <div class="field"><label for="dOwner">Owner</label><input id="dOwner" placeholder="Rep"></div>
+            </div>
+            <div class="inline-fields three">
+                <div class="field"><label for="dPackage">Package</label><select id="dPackage"></select></div>
+                <div class="field"><label for="dSeniors">Seniors</label><input id="dSeniors" type="number" min="0" value="6"></div>
+                <div class="field"><label for="dJuniors">Juniors</label><input id="dJuniors" type="number" min="0" value="0"></div>
+            </div>
+            <div class="inline-fields three">
+                <div class="field"><label for="dMrr">MRR (CAD)</label><input id="dMrr" type="number" min="0" value="4997"></div>
+                <div class="field"><label for="dDiscovery">Discovery fee</label><input id="dDiscovery" type="number" min="0" value="3000"></div>
+                <div class="field"><label for="dOnboard">Build fee</label><input id="dOnboard" type="number" min="0" value="1500"></div>
+            </div>
+            <div class="inline-fields three">
+                <div class="field"><label for="dInfra">Infra tier</label><select id="dInfra"></select></div>
+                <div class="field"><label for="dIntensity">Usage</label>
+                    <select id="dIntensity"><option value="0.6">Light</option><option value="1" selected>Normal</option><option value="1.7">Heavy</option><option value="2.5">Very heavy</option></select>
+                </div>
+                <div class="field"><label for="dClose">Expected close</label><input id="dClose" type="date"></div>
+            </div>
+            <div class="field"><label for="dNext">Next step</label><input id="dNext" placeholder="e.g. Send audit SOW, follow up Tuesday"></div>
+            <div class="row" style="margin-top:0.4rem;">
+                <button type="submit" class="btn primary">Save deal</button>
+                <button type="button" class="btn" onclick="closeDeal()">Cancel</button>
+                <span style="flex:1;"></span>
+                <button type="button" class="btn danger" id="dDelete" onclick="deleteDeal()">Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-bg" id="oppModal">
+    <div class="modal">
+        <h2 id="oppModalTitle">New opportunity</h2>
+        <form id="oppForm">
+            <div class="inline-fields">
+                <div class="field"><label for="oName">Opportunity</label><input id="oName" required placeholder="e.g. Full roster rollout"></div>
+                <div class="field"><label for="oCompany">Company</label><input id="oCompany" required placeholder="e.g. Northshore Wealth"></div>
+            </div>
+            <div class="inline-fields three">
+                <div class="field"><label for="oTeam">Sales team</label><select id="oTeam"></select></div>
+                <div class="field"><label for="oRep">Owner</label><select id="oRep"></select></div>
+                <div class="field"><label for="oStatus">Status</label><select id="oStatus"></select></div>
+            </div>
+            <div class="inline-fields three">
+                <div class="field"><label for="oValue">Value (CAD)</label><input id="oValue" type="number" min="0" step="1" value="4997"></div>
+                <div class="field"><label for="oRecurring">Type</label>
+                    <select id="oRecurring"><option value="mrr">Recurring (MRR)</option><option value="once">One-time</option></select>
+                </div>
+                <div class="field"><label for="oClose">Expected close</label><input id="oClose" type="date"></div>
+            </div>
+            <div class="field"><label for="oNext">Next action</label><input id="oNext" placeholder="e.g. Send audit SOW"></div>
+            <div class="row" style="margin-top:0.4rem;">
+                <button type="submit" class="btn primary">Save opportunity</button>
+                <button type="button" class="btn" onclick="closeOpp()">Cancel</button>
+                <span style="flex:1;"></span>
+                <button type="button" class="btn danger" id="oDelete" onclick="deleteOpp()">Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="tt" id="tt"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================================
+   0. SUPABASE CONNECTION
+   -------------------------------------------------------------------------
+   Paste the project's anon (publishable) key below to go live. Until then
+   the Wilfred desk runs on local demo data and says so in the banner.
+
+   SECURITY — read before you paste. This page is served from the public
+   site, so the anon key ships to anyone who loads it. That is fine ONLY if
+   row-level security denies anonymous reads. The migration in
+   supabase/migrations/ requires an authenticated staff session on every
+   table, so an anon key alone reads nothing. Do not relax those policies to
+   "allow anon read" to make the page work — that publishes your pipeline.
+   Never put the service_role key in this file.
+   ========================================================================= */
+const SUPABASE = {
+    url: 'https://hqmahvhyljkllbcpqaeg.supabase.co',
+    anonKey: '',              // <-- paste the anon / publishable key here
+    schema: 'public'
+};
+const sbReady = () => !!(SUPABASE.url && SUPABASE.anonKey);
+let sbSession = null;         // set once a staff member signs in
+let sbState = { status:'offline', detail:'No anon key configured — running on local demo data.' };
+
+async function sbFetch(path, opts){
+    opts = opts || {};
+    const headers = Object.assign({
+        'apikey': SUPABASE.anonKey,
+        'Authorization': 'Bearer ' + (sbSession ? sbSession.access_token : SUPABASE.anonKey),
+        'Content-Type': 'application/json',
+        'Accept-Profile': SUPABASE.schema,
+        'Content-Profile': SUPABASE.schema
+    }, opts.headers || {});
+    const res = await fetch(SUPABASE.url + '/rest/v1/' + path, Object.assign({}, opts, { headers }));
+    if(!res.ok) throw new Error('Supabase ' + res.status + ': ' + (await res.text()).slice(0,180));
+    return res.status === 204 ? null : res.json();
+}
+
+/* =========================================================================
+   1. DEFAULT DATA
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   Wilfred desk — modelled on the live AudcompAudit schema.
+
+   Statuses are the exact set outreach_leads.status uses in that system
+   (see supabase/migrations/20260313_outreach_schema.sql in the AudcompAudit
+   repo): researched → contacted → replied → interested → booked → closed,
+   with disqualified as the dead end. Do not invent new ones here — the
+   column is free TEXT, so a typo silently creates an orphan status that no
+   automation matches.
+
+   The grouping dimension is the CAMPAIGN (outreach_campaigns), not a team:
+   that schema has no team concept. Campaigns carry an expert_id, and leads
+   are round-robined to experts, so "who owns it" is the expert.
+   ------------------------------------------------------------------------- */
+const CAMPAIGN_COLOURS = ['var(--series-tokens)','var(--series-infra)','var(--series-margin)','var(--series-mgmt)','var(--ord-2)','var(--ord-5)'];
+
+const STATUSES = [
+    { id:'researched',   name:'Researched',   colour:'var(--ord-1)',      prob:5,   open:true,  stamp:'researched_at' },
+    { id:'contacted',    name:'Contacted',    colour:'var(--ord-2)',      prob:15,  open:true,  stamp:'contacted_at'  },
+    { id:'replied',      name:'Replied',      colour:'var(--ord-3)',      prob:30,  open:true,  stamp:'replied_at'    },
+    { id:'interested',   name:'Interested',   colour:'var(--ord-4)',      prob:50,  open:true,  stamp:'interested_at' },
+    { id:'booked',       name:'Booked',       colour:'var(--ord-5)',      prob:70,  open:true,  stamp:'booked_at'     },
+    { id:'closed',       name:'Closed',       colour:'var(--good)',       prob:100, open:false, stamp:'closed_at'     },
+    { id:'disqualified', name:'Disqualified', colour:'var(--critical)',   prob:0,   open:false, stamp:null            }
+];
+const statusById = id => STATUSES.find(s=>s.id===id) || STATUSES[0];
+
+/* Automation rules: fired when a lead ENTERS the given status. Each maps to
+   an agent, and each run is written to outreach_agent_events when live. */
+const RULES = [
+    { id:'r_researched',   on:'researched',   agent:'Scout', title:'Enrich and assign',
+      detail:'Scout completes the firmographics and decision-maker contact, then round-robins the lead to an expert. Nothing is sent until the owner approves — approval_status stays pending_review.' },
+    { id:'r_contacted',    on:'contacted',    agent:'Sam',   title:'Run the send cadence',
+      detail:'Sam pushes the sequence through Instantly, respecting the campaign daily_send_cap. Each touch increments follow_up_count and stamps last_touch_at.' },
+    { id:'r_replied',      on:'replied',      agent:'Sam',   title:'Stop the cadence, classify the reply',
+      detail:'Any reply halts the sequence immediately so nobody gets chased after answering. Sam classifies intent and pings the owning expert.' },
+    { id:'r_interested',   on:'interested',   agent:'Olivia',title:'Offer the booking link',
+      detail:'Olivia sends the owning expert’s bookings_url and proposes times. Sets next_action_at so the lead cannot go quiet unnoticed.' },
+    { id:'r_booked',       on:'booked',       agent:'Olivia',title:'Prep the meeting, open the client pipeline',
+      detail:'Olivia builds the pre-call brief 24 hours ahead and confirms the calendar hold. This is the handoff point: the lead becomes a prospective AI client and enters the Pipeline at Initial meeting. Value is set there, after the meeting — never back on the lead.' },
+    { id:'r_closed',       on:'closed',       agent:'Quinn', title:'Confirm the win and invoice',
+      detail:'The deal is already in the Pipeline from the meeting handoff, so this advances it to Agent building rather than creating a duplicate, then raises the first invoice.' },
+    { id:'r_disqualified', on:'disqualified', agent:'Claire',title:'Capture the reason and suppress',
+      detail:'Prompts for a loss reason, suppresses the contact from all live cadences so they are never re-contacted by accident, and adds them to long-cycle nurture.' }
+];
+
+/* Local demo data. Campaign names default to the three you gave; when the
+   database is connected these are replaced by the real outreach_campaigns. */
+function seedCampaigns(){
+    return [
+        { id:'camp_media',   name:'Media',   colour:CAMPAIGN_COLOURS[0], channel:'multi' },
+        { id:'camp_animals', name:'Animals', colour:CAMPAIGN_COLOURS[1], channel:'email' },
+        { id:'camp_experts', name:'Experts', colour:CAMPAIGN_COLOURS[2], channel:'linkedin' }
+    ];
+}
+function seedReps(){
+    return [
+        { id:'rep1', name:'Alexis Moreau',  initials:'AM', isBdm:true  },
+        { id:'rep2', name:'Devon Clarke',   initials:'DC', isBdm:true  },
+        { id:'rep3', name:'Priya Raman',    initials:'PR', isBdm:true  },
+        { id:'rep4', name:'Sean Whitfield', initials:'SW', isBdm:false },
+        { id:'rep5', name:'Noor Haddad',    initials:'NH', isBdm:true  },
+        { id:'rep6', name:'Marcus Bell',    initials:'MB', isBdm:false }
+    ];
+}
+function seedOpps(){
+    const o = (name, company, campaign, rep, status, value, recurring, next, close) =>
+        ({ id:uid(), name, company, campaign, rep, status, value, recurring, next, close, updated:Date.now(), created:Date.now() });
+    return [
+        o('Full roster rollout','Meridian Broadcast Group','camp_media','rep1','interested',8997,'mrr','Sent times for next week','2026-08-14'),
+        o('Content desk pilot','Cadence Media Co','camp_media','rep2','contacted',4997,'mrr','Touch 2 of 3 goes Thursday','2026-08-22'),
+        o('Reception + intake','Lakeshore Studios','camp_media','rep1','booked',3497,'mrr','Call booked for the 5th','2026-09-05'),
+        o('Social + community','Harbourlight Films','camp_media','rep2','researched',1997,'mrr','Awaiting owner approval to send','2026-09-19'),
+        o('Vet clinic front desk','Riverbend Animal Hospital','camp_animals','rep3','closed',4997,'mrr','Won — provision this week','2026-07-18'),
+        o('Multi-site receptionist','Pawsitive Care Group','camp_animals','rep4','interested',8997,'mrr','Practice manager wants a demo','2026-08-29'),
+        o('Booking + reminders','Northfield Veterinary','camp_animals','rep3','replied',3497,'mrr','Asked about pricing — classify','2026-09-02'),
+        o('Intake automation','Willow Creek Boarding','camp_animals','rep4','contacted',1997,'mrr','Second touch scheduled','2026-10-01'),
+        o('Grooming chain rollout','Bark Avenue','camp_animals','rep3','researched',4997,'mrr','Enriched, not yet assigned','2026-11-15'),
+        o('Paralegal + compliance','Corbett & Vance LLP','camp_experts','rep5','booked',4997,'mrr','Discovery call Thursday','2026-09-01'),
+        o('Bookkeeping desk','Ridgeway CPA Group','camp_experts','rep6','closed',3994,'mrr','Live — expansion conversation open','2026-05-19'),
+        o('Advisory back office','Northshore Wealth','camp_experts','rep6','interested',4997,'mrr','Chasing the signature','2026-09-15'),
+        o('Claims support','Halton Insurance Brokers','camp_experts','rep5','replied',8997,'mrr','Security questionnaire returned','2026-08-08'),
+        o('Discovery & audit','Grand River Logistics','camp_experts','rep6','researched',3000,'once','Qualify — may not have the volume','2026-10-30'),
+        o('Paralegal trial','Fenwick Legal','camp_experts','rep5','disqualified',4997,'mrr','Hired in-house instead','2026-06-30')
+    ];
+}
+
+const STAGES = [
+    { id:'meeting',   name:'Initial meeting',  prob:15, colour:'var(--ord-1)', note:'First conversation held. Problem understood, no numbers yet.' },
+    { id:'quoted',    name:'Quoted',           prob:35, colour:'var(--ord-2)', note:'Scenario priced and sent. Waiting on a yes to the audit.' },
+    { id:'discovery', name:'Discovery & audit',prob:65, colour:'var(--ord-3)', note:'Paid audit under way — workflows mapped, agent roster proposed. Typically $3,000.' },
+    { id:'building',  name:'Agent building',   prob:85, colour:'var(--ord-4)', note:'Agents being configured and wired to their tools. Revenue is contracted, not yet recurring.' },
+    { id:'live',      name:'Live',             prob:100,colour:'var(--ord-5)', note:'Deployed and billing. Moves to the book of business.' }
+];
+
+function defaults(){ return {
+    assumptions:{
+        fx:1.37, cacheHit:70, cacheReadMult:0.1,
+        platformPerClient:38,
+        rate:78, baseHrs:3, agentHrs:0.4, changeMin:12, changeUse:15,
+        targetMargin:65, discoveryFee:3000, gpuMonthly:1000, overageHeadroom:25
+    },
+    models:{
+        'opus-5':   { label:'Claude Opus 5',   in:5,  out:25 },
+        'sonnet-5': { label:'Claude Sonnet 5', in:3,  out:15 },
+        'haiku-45': { label:'Claude Haiku 4.5',in:1,  out:5  }
+    },
+    volumes:{
+        wilfred:{ label:'Wilfred (orchestrator)', model:'haiku-45', inTok:60, outTok:4,   perClient:true },
+        senior: { label:'Senior / specialist',    model:'sonnet-5', inTok:35, outTok:4,   perClient:false },
+        junior: { label:'Junior',                 model:'haiku-45', inTok:12, outTok:1.2, perClient:false }
+    },
+    infra:{
+        shared:    { label:'Shared tier',            monthly:42,  note:'Slice of a shared Vultr Toronto host + per-client Postgres schema, backups, subdomain.' },
+        dedicated: { label:'Dedicated instance',     monthly:186, note:'Own Vultr Toronto instance via Terraform. Cloud-init installs Docker, pulls agent images.' },
+        sovereign: { label:'Dedicated + private VPC',monthly:305, note:'Dedicated instance, private VPC, no shared components. The sovereign-tier answer.' }
+    },
+    packages:[
+        { id:'starter',    name:'The Starter',     seniors:1,  juniors:0, price:1997, changes:25  },
+        { id:'duo',        name:'The Duo',         seniors:2,  juniors:0, price:3497, changes:60  },
+        { id:'department', name:'The Department',  seniors:6,  juniors:0, price:4997, changes:180 },
+        { id:'roster',     name:'The Full Roster', seniors:8,  juniors:2, price:8997, changes:300 },
+        { id:'custom',     name:'Custom',          seniors:6,  juniors:0, price:4997, changes:999 }
+    ],
+    stageProbs:Object.fromEntries(STAGES.map(s=>[s.id,s.prob])),
+    catalog:[
+        { name:'Quinn',  role:'QuickBooks Bookkeeper',         tier:'senior', price:1997 },
+        { name:'Sam',    role:'Sales Development Rep',         tier:'senior', price:1997 },
+        { name:'Claire', role:'Content Marketing Specialist',  tier:'senior', price:1497 },
+        { name:'Olivia', role:'Executive Assistant',           tier:'senior', price:1497 },
+        { name:'David',  role:'Paralegal / Compliance',        tier:'senior', price:1997 },
+        { name:'Maya',   role:'Virtual Receptionist',          tier:'senior', price:1297 },
+        { name:'Theo',   role:'Community & Support Manager',   tier:'senior', price:1497 },
+        { name:'Sage',   role:'Junior Community Manager',      tier:'junior', price:497  },
+        { name:'Scout',  role:'Junior Research Assistant',     tier:'junior', price:497  },
+        { name:'Jace',   role:'Junior Social Media Assistant', tier:'junior', price:497  },
+        { name:'Piper',  role:'Junior Data Entry Clerk',       tier:'junior', price:497  },
+        { name:'Finn',   role:'Junior Content Writer',         tier:'junior', price:497  },
+        { name:'Rory',   role:'Junior Inbox Manager',          tier:'junior', price:497  }
+    ],
+    deals:seedDeals(),
+    scenarios:[],
+    checks:{},
+    reps:seedReps(),
+    campaigns:seedCampaigns(),
+    opps:seedOpps(),
+    ruleState:Object.fromEntries(RULES.map(r=>[r.id,true])),
+    feed:[],
+    wFilter:{ campaign:'all', rep:'all', status:'open', q:'' }
+};}
+
+function seedDeals(){
+    const d = (o)=>Object.assign({
+        id:uid(), contact:'', owner:'Vince', vertical:'General SME', package:'department',
+        seniors:6, juniors:0, mrr:4997, discovery:3000, onboard:1500,
+        infra:'shared', intensity:1, close:'', next:'', created:Date.now()
+    },o);
+    return [
+        d({ name:'Dundas Legal LLP',        stage:'live',      vertical:'Law',         package:'department', seniors:6, juniors:0, mrr:4997, infra:'dedicated', intensity:1.7, owner:'Vince', next:'QBR booked for the 14th', close:'2026-04-02' }),
+        d({ name:'Ridgeway CPA Group',      stage:'live',      vertical:'Accounting',  package:'duo',        seniors:2, juniors:1, mrr:3994, infra:'shared',    intensity:1,   owner:'Vince', next:'Add Piper for T4 season', close:'2026-05-19' }),
+        d({ name:'Halton Insurance Brokers',stage:'building',  vertical:'Insurance',   package:'roster',     seniors:8, juniors:2, mrr:8997, infra:'sovereign', intensity:1.7, owner:'Vince', next:'Wire Maya to the phone tree, target go-live Aug 8', close:'2026-08-08' }),
+        d({ name:'Kestrel Realty',          stage:'discovery', vertical:'Real estate', package:'department', seniors:6, juniors:0, mrr:4997, infra:'shared',    intensity:1,   owner:'Vince', next:'Audit workshop Thursday — map the listing intake flow', close:'2026-09-01' }),
+        d({ name:'Northshore Wealth',       stage:'quoted',    vertical:'Accounting',  package:'department', seniors:6, juniors:0, mrr:4997, infra:'shared',    intensity:1,   owner:'Vince', next:'Chase the audit SOW signature', close:'2026-09-15' }),
+        d({ name:'Bayfront Dental',         stage:'quoted',    vertical:'General SME', package:'duo',        seniors:2, juniors:0, mrr:3497, infra:'shared',    intensity:0.6, owner:'Vince', next:'Send the Maya-only variant — budget pushback', close:'2026-08-29' }),
+        d({ name:'Corbett & Vance LLP',     stage:'meeting',   vertical:'Law',         package:'department', seniors:6, juniors:0, mrr:4997, infra:'dedicated', intensity:1,   owner:'Vince', next:'Second meeting with the managing partner', close:'2026-10-10' }),
+        d({ name:'Grand River Logistics',   stage:'meeting',   vertical:'General SME', package:'starter',    seniors:1, juniors:0, mrr:1997, infra:'shared',    intensity:1,   owner:'Vince', next:'Qualify — may not have the volume yet', close:'2026-10-30' })
+    ];
+}
+
+const BUILD_STEPS = [
+    { id:'b1', t:'Agent config schema (JSON)', d:'The actual cookie cutter: agent name, role, model, system prompt, tools, token budget, max_tokens, context ceiling. Everything else is plumbing around this.' },
+    { id:'b2', t:'Docker Compose template',    d:'Parameterised by client_id, with per-client env vars and Postgres schema.' },
+    { id:'b3', t:'Provisioning service',       d:'Node/Python service wrapping the Docker API (shared tier) and the Terraform/Vultr API (dedicated tier). Idempotent, with rollback on failure.' },
+    { id:'b4', t:'Portal UI — internal only',  d:'You and sales use it. Do not build client self-serve until you have onboarded five-plus by hand and know what actually varies.' },
+    { id:'b5', t:'Terraform modules',          d:'For the dedicated tier, so enterprise provisioning is terraform apply -var client=x. Remote backend with locking from day one.' },
+    { id:'b6', t:'Metering registration',      d:'client_id in the usage-logging table, token allowance, cap thresholds, alert webhooks. Without this you are guessing at margin.' }
+];
+
+const BURN_STEPS = [
+    { id:'t1', t:'Prompt caching',        d:'The single biggest lever. System prompts, agent definitions and static client context cache at roughly a 90% discount on repeat reads. Your agent configs are perfectly shaped for it — every agent re-sends the same system prompt every turn.' },
+    { id:'t2', t:'Model routing',         d:'Wilfred on Haiku. He touches every message, and routing is low-stakes.' },
+    { id:'t3', t:'Context discipline',    d:'Unbounded persistent memory means every turn re-sends a fatter context. Cap memory injection, summarise aggressively, set a hard context ceiling per agent.' },
+    { id:'t4', t:'DOM over vision',       d:'Screenshot-driven browser automation burns enormous input tokens. Extracting page text/DOM is often 10× cheaper for the same task — likely your largest single burn source once agents drive Firefox.' },
+    { id:'t5', t:'Skill reuse',           d:'A matured skill replaces a multi-turn reasoning loop with a direct execution. Every skill that matures is a permanent token reduction.' },
+    { id:'t6', t:'max_tokens per agent',  d:'Output bills at roughly 5× input. Cap the verbose agents — Claire is the most expensive one on the bench.' }
+];
+
+const HOST_STEPS = [
+    { id:'h1', t:'Five or more paying clients', d:'Below that, an idle GPU is pure loss — you eat it at 5 clients or 50. API pricing means a quiet month costs almost nothing.' },
+    { id:'h2', t:'Open-weight model benchmarks acceptably on your real agent traces', d:'Not leaderboards — your traces. Tool-calling accuracy is the binding constraint, not cost: a model that is 40% cheaper but fails 3× more often is more expensive and a worse product.' },
+    { id:'h3', t:'Token spend sustained above ~$1,500/mo', d:'Below that the GPU bill exceeds the API bill it replaces.' }
+];
+
+const GPU_OPTIONS = [
+    { o:'Fractional L40S / A16 (1/8–1/4)', c:'~$90–220', n:'The realistic entry point. Start here, serving Wilfred routing only.' },
+    { o:'L40S 48GB, 24/7',                 c:'~$650–875', n:'Flips the economics once it serves 5–10 tenants.' },
+    { o:'A100 80GB, 24/7',                 c:'~$940–1,300', n:'Only if concurrency demands it.' },
+    { o:'3-year commit',                   c:'−25–35%',   n:'Real saving, but it locks in a bet you cannot yet justify.' }
+];
+
+const ROUTES = [
+    { w:'Wilfred routing & triage',                m:'Self-hosted', why:'High volume, low stakes, touches every message — the biggest cost lever.' },
+    { w:'Memory compaction, summarisation, classification', m:'Self-hosted', why:'Bulk work, forgiving of quality.' },
+    { w:'Browser action decisions',                m:'Claude Sonnet', why:'Failure is expensive and client-visible.' },
+    { w:'Client-facing drafting, legal/insurance reasoning', m:'Claude Sonnet', why:'Quality is the product.' }
+];
+
+/* =========================================================================
+   2. STATE
+   ========================================================================= */
+const KEY = 'hwOps.v1';
+let DB;
+
+function uid(){ return 'x' + Math.random().toString(36).slice(2,9); }
+
+function load(){
+    try{
+        const raw = localStorage.getItem(KEY);
+        if(raw){
+            const parsed = JSON.parse(raw);
+            DB = Object.assign(defaults(), parsed);
+            DB.assumptions = Object.assign(defaults().assumptions, parsed.assumptions||{});
+            DB.models = Object.assign(defaults().models, parsed.models||{});
+            DB.volumes = Object.assign(defaults().volumes, parsed.volumes||{});
+            DB.infra = Object.assign(defaults().infra, parsed.infra||{});
+            DB.wFilter = Object.assign(defaults().wFilter, parsed.wFilter||{});
+            DB.ruleState = Object.assign(defaults().ruleState, parsed.ruleState||{});
+            if(!Array.isArray(DB.reps) || !DB.reps.length) DB.reps = seedReps();
+            if(!Array.isArray(DB.campaigns) || !DB.campaigns.length) DB.campaigns = seedCampaigns();
+            if(!Array.isArray(DB.opps)) DB.opps = seedOpps();
+            if(!Array.isArray(DB.feed)) DB.feed = [];
+            // Statuses changed to the AudcompAudit set — drop anything orphaned.
+            DB.opps.forEach(o => { if(!STATUSES.some(s=>s.id===o.status)) o.status = 'researched'; });
+            return;
+        }
+    }catch(e){ console.warn('Could not read saved state, starting fresh.', e); }
+    DB = defaults();
+}
+function save(){
+    try{
+        localStorage.setItem(KEY, JSON.stringify(DB));
+        const el = document.getElementById('savedAt');
+        if(el) el.textContent = 'Saved ' + new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
+    }catch(e){ toast('Could not save — storage is full or blocked.'); }
+}
+
+/* =========================================================================
+   3. FORMATTING
+   ========================================================================= */
+const cad  = n => { const r = Math.round(n); return '$' + (Object.is(r,-0) ? 0 : r).toLocaleString('en-CA'); };
+const cad2 = n => '$' + n.toLocaleString('en-CA',{minimumFractionDigits:2,maximumFractionDigits:2});
+const pct  = n => (n*100).toFixed(1) + '%';
+const esc  = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num  = id => parseFloat(document.getElementById(id).value) || 0;
+const val  = id => document.getElementById(id).value;
+
+/* =========================================================================
+   4. COST ENGINE
+   All internal maths is CAD/month unless stated. USD vendor prices are
+   converted at assumptions.fx.
+   ========================================================================= */
+
+// Effective CAD cost of one agent profile for one month at a given intensity.
+function agentTokenCost(profileKey, intensity){
+    const a = DB.assumptions, v = DB.volumes[profileKey], m = DB.models[v.model];
+    if(!v || !m) return 0;
+    const hit = Math.min(Math.max(a.cacheHit,0),95) / 100;
+    const inM  = v.inTok  * intensity;
+    const outM = v.outTok * intensity;
+    const effInPrice = (1 - hit) * m.in + hit * m.in * a.cacheReadMult;
+    return (inM * effInPrice + outM * m.out) * a.fx;
+}
+
+// Full monthly economics for a roster.
+// cfg: {seniors, juniors, intensity, infra, mrr, mgmtMode, mgmtVal, changes}
+function economics(cfg){
+    const a = DB.assumptions;
+    const seniors = Math.max(0, cfg.seniors|0);
+    const juniors = Math.max(0, cfg.juniors|0);
+    const agents  = seniors + juniors;
+    const intensity = cfg.intensity || 1;
+
+    // --- token cost ---
+    const tokWilfred = agentTokenCost('wilfred', intensity);
+    const tokSenior  = agentTokenCost('senior',  intensity) * seniors;
+    const tokJunior  = agentTokenCost('junior',  intensity) * juniors;
+    const tokens = tokWilfred + tokSenior + tokJunior;
+
+    // --- infrastructure ---
+    const infraTier = DB.infra[cfg.infra] || DB.infra.shared;
+    const infra = infraTier.monthly + a.platformPerClient;
+
+    // --- management (human) cost ---
+    const changes = cfg.changes == null ? 0 : cfg.changes;
+    const changeHrs = (changes * (a.changeUse/100) * a.changeMin) / 60;
+    const mgmtHrs = a.baseHrs + agents * a.agentHrs + changeHrs;
+    const mgmt = mgmtHrs * a.rate;
+
+    // --- revenue ---
+    const baseMrr = cfg.mrr || 0;
+    let mgmtFee = 0;
+    if(cfg.mgmtMode === 'flat')  mgmtFee = cfg.mgmtVal || 0;
+    if(cfg.mgmtMode === 'pct')   mgmtFee = baseMrr * ((cfg.mgmtVal||0)/100);
+    if(cfg.mgmtMode === 'agent') mgmtFee = (cfg.mgmtVal||0) * agents;
+    const mrr = baseMrr + mgmtFee;
+
+    const cogs = tokens + infra + mgmt;
+    const margin = mrr - cogs;
+    const marginPct = mrr > 0 ? margin / mrr : 0;
+
+    // token allowance = modelled burn + headroom
+    const allowance = tokens * (1 + a.overageHeadroom/100);
+
+    return {
+        agents, seniors, juniors, intensity,
+        tokens, tokWilfred, tokSenior, tokJunior,
+        infra, infraLabel: infraTier.label,
+        mgmt, mgmtHrs, changeHrs,
+        mgmtFee, baseMrr, mrr,
+        cogs, margin, marginPct, allowance,
+        healthy: marginPct * 100 >= a.targetMargin
+    };
+}
+
+function pkg(id){ return DB.packages.find(p=>p.id===id) || DB.packages[2]; }
+function stage(id){ return STAGES.find(s=>s.id===id) || STAGES[0]; }
+function prob(id){ return (DB.stageProbs[id] != null ? DB.stageProbs[id] : stage(id).prob) / 100; }
+
+// First-year contract value of a deal.
+function dealACV(d){ return d.mrr * 12 + (d.discovery||0) + (d.onboard||0); }
+function dealEcon(d){
+    return economics({
+        seniors:d.seniors, juniors:d.juniors, intensity:d.intensity,
+        infra:d.infra, mrr:d.mrr, mgmtMode:'included', mgmtVal:0,
+        changes: pkg(d.package).changes === 999 ? 300 : pkg(d.package).changes
+    });
+}
+
+const openDeals = () => DB.deals.filter(d => d.stage !== 'live' && d.stage !== 'lost');
+const liveDeals = () => DB.deals.filter(d => d.stage === 'live');
+
+/* =========================================================================
+   5. TOOLTIP
+   ========================================================================= */
+const ttEl = document.getElementById('tt');
+function ttShow(html, ev){
+    ttEl.innerHTML = html;
+    ttEl.classList.add('show');
+    ttMove(ev);
+}
+function ttMove(ev){
+    const pad = 14, r = ttEl.getBoundingClientRect();
+    let x = ev.clientX + pad, y = ev.clientY + pad;
+    if(x + r.width  > window.innerWidth  - 8) x = ev.clientX - r.width  - pad;
+    if(y + r.height > window.innerHeight - 8) y = ev.clientY - r.height - pad;
+    ttEl.style.left = x + 'px';
+    ttEl.style.top  = y + 'px';
+}
+function ttHide(){ ttEl.classList.remove('show'); }
+function bindTip(el, html){
+    el.addEventListener('mouseenter', e => ttShow(html, e));
+    el.addEventListener('mousemove', ttMove);
+    el.addEventListener('mouseleave', ttHide);
+}
+
+/* =========================================================================
+   6. CHART BUILDERS
+   ========================================================================= */
+
+// Horizontal ordinal bars (pipeline funnel).
+function funnel(container, rows){
+    const max = Math.max(...rows.map(r=>r.value), 1);
+    container.innerHTML = '';
+    rows.forEach(r => {
+        const wrap = document.createElement('div');
+        wrap.className = 'funnel-row';
+        wrap.innerHTML =
+            '<div class="funnel-label">' + esc(r.label) + '</div>' +
+            '<div class="funnel-track"><div class="funnel-bar" style="width:' + (r.value/max*100).toFixed(1) + '%;background:' + r.colour + ';"></div></div>' +
+            '<div class="funnel-val">' + cad(r.value) + '<small>' + esc(r.sub) + '</small></div>';
+        bindTip(wrap.querySelector('.funnel-track'), r.tip);
+        container.appendChild(wrap);
+    });
+}
+
+// Stacked bar + legend + table. segs: [{label, value, colour}]
+function stacked(container, segs, total, opts){
+    opts = opts || {};
+    const sum = total != null ? total : segs.reduce((s,x)=>s+x.value,0);
+    const bar = document.createElement('div');
+    bar.className = 'stackbar';
+    segs.forEach(s => {
+        const w = sum > 0 ? Math.max(0, s.value/sum*100) : 0;
+        const span = document.createElement('span');
+        span.style.width = w.toFixed(2) + '%';
+        span.style.background = s.colour;
+        bindTip(span, '<div class="tt-h">' + esc(s.label) + '</div><div class="tt-r"><span>Monthly</span><b>' + cad(s.value) + '</b></div><div class="tt-r"><span>Share</span><b>' + w.toFixed(1) + '%</b></div>');
+        bar.appendChild(span);
+    });
+    const legend = document.createElement('div');
+    legend.className = 'legend';
+    legend.innerHTML = segs.map(s =>
+        '<span class="legend-item"><span class="legend-swatch" style="background:' + s.colour + '"></span>' +
+        esc(s.label) + ' <b>' + cad(s.value) + '</b></span>').join('');
+    container.innerHTML = '';
+    if(opts.caption){
+        const cap = document.createElement('div');
+        cap.className = 'chart-title';
+        cap.textContent = opts.caption;
+        container.appendChild(cap);
+    }
+    container.appendChild(bar);
+    container.appendChild(legend);
+}
+
+// Single-series line with crosshair. points: [{label, value}]
+function lineChart(container, points, opts){
+    opts = opts || {};
+    const W = 560, H = 150, padL = 52, padR = 12, padT = 14, padB = 24;
+    const vals = points.map(p=>p.value);
+    const maxRaw = Math.max(...vals, opts.refValue||0, 1);
+    const max = maxRaw * 1.15;
+    const x = i => padL + (points.length<2 ? 0 : i*(W-padL-padR)/(points.length-1));
+    const y = v => H - padB - (v/max)*(H-padT-padB);
+
+    const ticks = [0, max/2, max];
+    let svg = '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="' + esc(opts.aria||'Trend') + '">';
+    ticks.forEach(t => {
+        svg += '<line x1="' + padL + '" x2="' + (W-padR) + '" y1="' + y(t).toFixed(1) + '" y2="' + y(t).toFixed(1) + '" stroke="var(--grid)" stroke-width="1"/>';
+        svg += '<text x="' + (padL-8) + '" y="' + (y(t)+3.5).toFixed(1) + '" text-anchor="end" fill="var(--muted)" font-size="9" font-family="Inter,sans-serif">' + cad(t) + '</text>';
+    });
+    if(opts.refValue){
+        svg += '<line x1="' + padL + '" x2="' + (W-padR) + '" y1="' + y(opts.refValue).toFixed(1) + '" y2="' + y(opts.refValue).toFixed(1) + '" stroke="var(--warning)" stroke-width="1.5" stroke-dasharray="5 4"/>';
+        svg += '<text x="' + (W-padR) + '" y="' + (y(opts.refValue)-6).toFixed(1) + '" text-anchor="end" fill="var(--warning)" font-size="9" font-weight="700" font-family="Inter,sans-serif">' + esc(opts.refLabel||'') + '</text>';
+    }
+    const area = points.map((p,i)=>x(i).toFixed(1)+','+y(p.value).toFixed(1)).join(' ');
+    svg += '<polyline points="' + area + '" fill="none" stroke="var(--series-tokens)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    points.forEach((p,i)=>{
+        if(i === points.length-1)
+            svg += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.value).toFixed(1) + '" r="4" fill="var(--series-tokens)" stroke="var(--surface)" stroke-width="2"/>';
+    });
+    points.forEach((p,i)=>{
+        if(i%2===0 || i===points.length-1)
+            svg += '<text x="' + x(i).toFixed(1) + '" y="' + (H-7) + '" text-anchor="middle" fill="var(--muted)" font-size="9" font-family="Inter,sans-serif">' + esc(p.label) + '</text>';
+    });
+    svg += '<line id="chx" x1="0" x2="0" y1="' + padT + '" y2="' + (H-padB) + '" stroke="var(--border-2)" stroke-width="1" style="opacity:0"/>';
+    svg += '<rect x="' + padL + '" y="0" width="' + (W-padL-padR) + '" height="' + H + '" fill="transparent" id="chit"/>';
+    svg += '</svg>';
+    container.innerHTML = svg;
+
+    const svgEl = container.querySelector('svg');
+    const hit   = container.querySelector('#chit');
+    const cross = container.querySelector('#chx');
+    hit.addEventListener('mousemove', ev => {
+        const r = svgEl.getBoundingClientRect();
+        const rel = (ev.clientX - r.left) / r.width * W;
+        let idx = 0, best = Infinity;
+        points.forEach((p,i)=>{ const d = Math.abs(x(i)-rel); if(d<best){best=d;idx=i;} });
+        cross.setAttribute('x1', x(idx)); cross.setAttribute('x2', x(idx));
+        cross.style.opacity = 1;
+        const p = points[idx];
+        ttShow('<div class="tt-h">' + esc(p.label) + '</div><div class="tt-r"><span>' + esc(opts.seriesName||'Value') + '</span><b>' + cad(p.value) + '</b></div>' +
+               (opts.refValue ? '<div class="tt-r"><span>' + esc(opts.refLabel||'Reference') + '</span><b>' + cad(opts.refValue) + '</b></div>' : ''), ev);
+    });
+    hit.addEventListener('mouseleave', ()=>{ cross.style.opacity = 0; ttHide(); });
+}
+
+// Ranked horizontal bars for a single measure.
+function rankBars(container, rows, colour){
+    const max = Math.max(...rows.map(r=>Math.abs(r.value)), 1);
+    container.innerHTML = rows.map(r =>
+        '<div class="funnel-row"><div class="funnel-label">' + esc(r.label) + '</div>' +
+        '<div class="funnel-track"><div class="funnel-bar" style="width:' + (Math.abs(r.value)/max*100).toFixed(1) + '%;background:' + (r.value<0 ? 'var(--critical)' : (r.colour||colour)) + ';"></div></div>' +
+        '<div class="funnel-val">' + (r.display || cad(r.value)) + '<small>' + esc(r.sub||'') + '</small></div></div>'
+    ).join('');
+    [...container.querySelectorAll('.funnel-track')].forEach((el,i)=> bindTip(el, rows[i].tip || ('<div class="tt-h">'+esc(rows[i].label)+'</div><div class="tt-r"><span>Value</span><b>'+cad(rows[i].value)+'</b></div>')));
+}
+
+/* =========================================================================
+   7. VIEWS
+   ========================================================================= */
+const TITLES = {
+    overview:['Overview','Pipeline, forecast and margin at a glance'],
+    wilfred:['Wilfred','Opportunities by status across Media, Animals and Experts — and the automations they trigger'],
+    pipeline:['Pipeline','Every open deal, by stage'],
+    quoter:['Scenario Quoter','Price a deal and see the margin before you send it'],
+    economics:['Cost Model','Infrastructure, token burn and management fees — every assumption'],
+    clients:['Book of Business','Live clients, modelled margin and token burn'],
+    provisioning:['Onboarding','Control plane, build order and the agent cookie cutter'],
+    roadmap:['Infra Roadmap','Cut burn first, self-host only on trigger'],
+    admin:['Administration','Packages, stages, catalog and data']
+};
+
+function go(view){
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('is-active', b.dataset.view === view));
+    document.querySelectorAll('.view').forEach(s => s.classList.toggle('is-active', s.id === 'view-' + view));
+    document.getElementById('viewTitle').textContent = TITLES[view][0];
+    document.getElementById('viewSub').textContent   = TITLES[view][1];
+    window.scrollTo({top:0,behavior:'instant'});
+    renderAll();
+}
+document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', ()=>go(b.dataset.view)));
+
+/* ---------- overview ---------- */
+function renderOverview(){
+    const open = openDeals(), live = liveDeals();
+    const weighted = open.reduce((s,d)=> s + dealACV(d)*prob(d.stage), 0);
+    const rawPipe  = open.reduce((s,d)=> s + dealACV(d), 0);
+    const mrr      = live.reduce((s,d)=> s + d.mrr, 0);
+    const bookEcon = live.map(dealEcon);
+    const cogs     = bookEcon.reduce((s,e)=> s + e.cogs, 0);
+    const grossM   = mrr - cogs;
+    const gmPct    = mrr>0 ? grossM/mrr : 0;
+    const burn     = bookEcon.reduce((s,e)=> s + e.tokens, 0);
+
+    document.getElementById('kpiRow').innerHTML = [
+        kpiTile('Recurring revenue', cad(mrr), live.length + ' live client' + (live.length===1?'':'s') + ' · ' + cad(mrr*12) + '/yr', 'accent'),
+        kpiTile('Gross margin', pct(gmPct), cad(grossM) + '/mo after tokens, infra and management', gmPct*100 >= DB.assumptions.targetMargin ? 'margin' : ''),
+        kpiTile('Weighted pipeline', cad(weighted), cad(rawPipe) + ' unweighted across ' + open.length + ' open deals', 'copper'),
+        kpiTile('Token burn', cad(burn), (burn/Math.max(mrr,1)*100).toFixed(1) + '% of revenue · GPU break-even at ' + cad(DB.assumptions.gpuMonthly), ''),
+        kpiTile('Discovery booked', cad(DB.deals.filter(d=>['discovery','building','live'].includes(d.stage)).reduce((s,d)=>s+(d.discovery||0),0)), 'One-time audit revenue, signed', '')
+    ].join('');
+
+    // funnel
+    const rows = STAGES.filter(s=>s.id!=='live').map(s => {
+        const ds = DB.deals.filter(d=>d.stage===s.id);
+        const raw = ds.reduce((a,d)=>a+dealACV(d),0);
+        const w   = raw * prob(s.id);
+        return {
+            label:s.name, value:w, colour:s.colour,
+            sub: ds.length + ' deal' + (ds.length===1?'':'s') + ' @ ' + Math.round(prob(s.id)*100) + '%',
+            tip:'<div class="tt-h">'+esc(s.name)+'</div>' +
+                '<div class="tt-r"><span>Deals</span><b>'+ds.length+'</b></div>' +
+                '<div class="tt-r"><span>Unweighted ACV</span><b>'+cad(raw)+'</b></div>' +
+                '<div class="tt-r"><span>Probability</span><b>'+Math.round(prob(s.id)*100)+'%</b></div>' +
+                '<div class="tt-r"><span>Weighted</span><b>'+cad(w)+'</b></div>'
+        };
+    });
+    funnel(document.getElementById('funnelChart'), rows);
+
+    document.getElementById('funnelTable').innerHTML =
+        '<thead><tr><th>Stage</th><th class="num">Deals</th><th class="num">ACV</th><th class="num">Prob.</th><th class="num">Weighted</th></tr></thead><tbody>' +
+        STAGES.filter(s=>s.id!=='live').map(s=>{
+            const ds = DB.deals.filter(d=>d.stage===s.id);
+            const raw = ds.reduce((a,d)=>a+dealACV(d),0);
+            return '<tr><td><strong>'+esc(s.name)+'</strong></td><td class="num">'+ds.length+'</td><td class="num">'+cad(raw)+'</td><td class="num">'+Math.round(prob(s.id)*100)+'%</td><td class="num"><strong>'+cad(raw*prob(s.id))+'</strong></td></tr>';
+        }).join('') +
+        '<tr class="total"><td>Total open</td><td class="num">'+open.length+'</td><td class="num">'+cad(rawPipe)+'</td><td class="num">—</td><td class="num">'+cad(weighted)+'</td></tr></tbody>';
+
+    // margin split of the signed book
+    const infraTot = bookEcon.reduce((s,e)=>s+e.infra,0);
+    const mgmtTot  = bookEcon.reduce((s,e)=>s+e.mgmt,0);
+    stacked(document.getElementById('bookMargin'), [
+        { label:'Token burn',    value:burn,     colour:'var(--series-tokens)' },
+        { label:'Infrastructure',value:infraTot, colour:'var(--series-infra)'  },
+        { label:'Management',    value:mgmtTot,  colour:'var(--series-mgmt)'   },
+        { label:'Gross margin',  value:Math.max(grossM,0), colour:'var(--series-margin)' }
+    ], mrr, { caption:'Recurring revenue ' + cad(mrr) + ' / month' });
+
+    // burn trend — modelled ramp as clients came on
+    lineChart(document.getElementById('burnChart'), burnSeries(burn), {
+        refValue: DB.assumptions.gpuMonthly,
+        refLabel: 'Dedicated GPU ' + cad(DB.assumptions.gpuMonthly) + '/mo',
+        seriesName:'Token cost',
+        aria:'Modelled monthly token cost, trailing twelve months'
+    });
+
+    // attention
+    const flags = [];
+    live.forEach(d => {
+        const e = dealEcon(d);
+        if(e.marginPct*100 < DB.assumptions.targetMargin)
+            flags.push(['bad','Margin below target', esc(d.name) + ' is running at ' + pct(e.marginPct) + ' gross against a ' + DB.assumptions.targetMargin + '% target — ' + cad(e.tokens) + '/mo of that is token burn at ' + d.intensity + '× usage.']);
+    });
+    open.filter(d => d.stage==='quoted').forEach(d => {
+        flags.push(['warn','Quote outstanding', esc(d.name) + ' — ' + cad(dealACV(d)) + ' first-year. Next: ' + esc(d.next||'no next step recorded')]);
+    });
+    if(burn > DB.assumptions.gpuMonthly)
+        flags.push(['warn','Token spend past the GPU line','Modelled burn of ' + cad(burn) + '/mo now exceeds a dedicated GPU at ' + cad(DB.assumptions.gpuMonthly) + '/mo. Work the burn checklist before buying hardware — self-hosting changes what tokens cost, it does not reduce how many you use.']);
+    const conc = live.map(d=>d.mrr).sort((a,b)=>b-a)[0] || 0;
+    if(mrr>0 && conc/mrr > 0.25)
+        flags.push(['warn','Revenue concentration','One client is ' + pct(conc/mrr) + ' of recurring revenue.']);
+    if(!flags.length) flags.push(['good','All clear','Every live client is above the ' + DB.assumptions.targetMargin + '% margin target and nothing is stuck.']);
+
+    document.getElementById('attention').innerHTML = flags.map(f =>
+        '<div style="display:flex;gap:0.7rem;padding:0.7rem 0;border-bottom:1px solid rgba(255,255,255,0.05);align-items:flex-start;">' +
+        '<span class="chip ' + f[0] + '">' + (f[0]==='bad'?'●':f[0]==='warn'?'▲':'✓') + ' ' + esc(f[1]) + '</span>' +
+        '<span class="note" style="flex:1;">' + f[2] + '</span></div>').join('');
+}
+function kpiTile(label, value, sub, cls){
+    return '<div class="kpi ' + (cls||'') + '"><div class="k-label">' + esc(label) + '</div><div class="k-value">' + value + '</div><div class="k-sub">' + sub + '</div></div>';
+}
+function burnSeries(current){
+    // Modelled ramp: clients landed over the trailing year, so burn grew toward `current`.
+    const months = ['Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul'];
+    const shape  = [0.18,0.22,0.28,0.31,0.36,0.44,0.52,0.58,0.71,0.80,0.92,1];
+    return months.map((m,i)=>({ label:m, value: current * shape[i] }));
+}
+
+/* =========================================================================
+   WILFRED — opportunity desk, status tracking and automation
+   ========================================================================= */
+const repById  = id => DB.reps.find(r=>r.id===id);
+const campaignById = id => DB.campaigns.find(c=>c.id===id) || DB.campaigns[0] || { id:'', name:'Unassigned', colour:'var(--muted)' };
+const oppOpen  = o => statusById(o.status).open;
+const oppWeighted = o => o.value * (statusById(o.status).prob/100);
+
+function filteredOpps(){
+    const f = DB.wFilter;
+    const q = (f.q||'').trim().toLowerCase();
+    return DB.opps.filter(o => {
+        if(f.campaign !== 'all' && o.campaign !== f.campaign) return false;
+        if(f.rep  !== 'all' && o.rep  !== f.rep)  return false;
+        if(f.status === 'open'  && !oppOpen(o)) return false;
+        if(f.status === 'closed' && oppOpen(o)) return false;
+        if(f.status !== 'all' && f.status !== 'open' && f.status !== 'closed' && o.status !== f.status) return false;
+        if(q && !(o.name + ' ' + o.company).toLowerCase().includes(q)) return false;
+        return true;
+    });
+}
+
+/* --- the automation engine --- */
+function fireAutomation(opp, fromStatus){
+    const rule = RULES.find(r => r.on === opp.status);
+    if(!rule) return null;
+    if(!DB.ruleState[rule.id]){
+        logFeed(opp, 'Rule <b>' + esc(rule.title) + '</b> is disabled — nothing fired for ' + esc(opp.company) + '.', true);
+        return null;
+    }
+    logFeed(opp, '<b>' + esc(opp.company) + '</b> moved ' + esc(statusById(fromStatus).name) + ' → <b>' +
+                 esc(statusById(opp.status).name) + '</b>. ' + esc(rule.agent) + ' fired <b>' + esc(rule.title) + '</b>.');
+
+    // Side effects that change data live here, so the log matches reality.
+    // The two systems join at the FIRST MEETING: a booked lead becomes a
+    // prospective AI client and enters the delivery pipeline. Nothing is ever
+    // written back to the lead — value and scope are established after the
+    // meeting, in the Pipeline and Scenario Quoter.
+    const findDeal = () => DB.deals.find(d => d.name.toLowerCase() === opp.company.toLowerCase());
+
+    if(opp.status === 'booked' && !findDeal()){
+        DB.deals.push({
+            id:uid(), created:Date.now(), name:opp.company, contact:'', stage:'meeting',
+            vertical:'General SME',
+            owner:(repById(opp.rep)||{}).name || '', package:'department', seniors:6, juniors:0,
+            mrr:0,                                   // set after the meeting, in the quoter
+            discovery: DB.assumptions.discoveryFee, onboard:1500,
+            infra:'shared', intensity:1, close:opp.close || '',
+            next:'First meeting booked from the Wilfred desk — size it in the quoter'
+        });
+        logFeed(opp, 'Handed <b>' + esc(opp.company) + '</b> to the client pipeline at Initial meeting. Size and price it in the Scenario Quoter.');
+    }
+
+    if(opp.status === 'closed'){
+        const d = findDeal();
+        if(d){
+            d.stage = 'building';
+            d.next = 'Closed from the Wilfred desk — provision the roster';
+            logFeed(opp, 'Advanced <b>' + esc(opp.company) + '</b> to Agent building.' +
+                (d.mrr ? '' : ' <b>No price set yet</b> — quote it before it goes live.'));
+        } else {
+            DB.deals.push({
+                id:uid(), created:Date.now(), name:opp.company, contact:'', stage:'building',
+                vertical:'General SME', owner:(repById(opp.rep)||{}).name || '',
+                package:'department', seniors:6, juniors:0, mrr:0,
+                discovery: DB.assumptions.discoveryFee, onboard:1500,
+                infra:'shared', intensity:1, close:opp.close || '',
+                next:'Closed without a booked meeting — check this is right, then quote it'
+            });
+            logFeed(opp, 'Created a deal for <b>' + esc(opp.company) + '</b> at Agent building — it closed without passing through a booked meeting.');
+        }
+    }
+    if(opp.status === 'replied')
+        logFeed(opp, 'Halted the send cadence for <b>' + esc(opp.company) + '</b> so they are not chased after replying.');
+    if(opp.status === 'disqualified')
+        logFeed(opp, 'Suppressed <b>' + esc(opp.company) + '</b> from every live cadence.');
+    if(opp.status === 'researched' && !opp.rep){
+        // Round-robin across BDMs, mirroring the assignment model in AudcompAudit.
+        const pool = DB.reps.filter(r=>r.isBdm);
+        if(pool.length){
+            const load = pool.map(r => ({ r, n: DB.opps.filter(x=>x.rep===r.id && oppOpen(x)).length }));
+            load.sort((a,b)=>a.n-b.n);
+            opp.rep = load[0].r.id;
+            logFeed(opp, 'Assigned <b>' + esc(load[0].r.name) + '</b> as owner (lightest open load).');
+        }
+    }
+    return rule;
+}
+function logFeed(opp, html, muted){
+    DB.feed.unshift({ id:uid(), at:Date.now(), oppId:opp ? opp.id : null, html, muted:!!muted });
+    if(DB.feed.length > 60) DB.feed.length = 60;
+}
+
+async function setOppStatus(id, status){
+    const o = DB.opps.find(x=>x.id===id);
+    if(!o || o.status === status) return;
+    const from = o.status;
+    o.status = status;
+    o.updated = Date.now();
+    fireAutomation(o, from);
+    save();
+    renderWilfred();
+    toast(o.company + ' → ' + statusById(status).name);
+    if(sbReady() && sbSession && o.remoteId){
+        // Writes the status column and nothing else. outreach_leads belongs to
+        // the AudcompAudit app — we do not stamp its funnel timestamps or add
+        // fields to it from here.
+        try{
+            await sbFetch('outreach_leads?id=eq.' + encodeURIComponent(o.remoteId),
+                { method:'PATCH', headers:{ Prefer:'return=minimal' }, body: JSON.stringify({ status }) });
+        }catch(e){ toast('Status saved locally — database write failed.'); console.warn(e); }
+    }
+}
+
+function renderWilfred(){
+    // connection banner
+    const notice = document.getElementById('wConnNotice');
+    if(sbState.status === 'live'){
+        notice.innerHTML = '';
+    } else {
+        notice.innerHTML = '<div class="callout warn" style="margin-bottom:1rem;">' +
+            '<b>Not connected to Supabase.</b> ' + esc(sbState.detail) +
+            ' Everything below is live and fully usable, it just persists to this browser instead of the database. ' +
+            'Paste the anon key into the <code>SUPABASE</code> block at the top of ops.html to switch over — the schema is in <code>supabase/migrations/</code>.</div>';
+    }
+
+    // filters
+    const f = DB.wFilter;
+    document.getElementById('wTeamTabs').innerHTML =
+        ['<button class="team-pill ' + (f.campaign==='all'?'is-active':'') + '" onclick="setWFilter(\'campaign\',\'all\')">All campaigns <span class="tp-n">' + DB.opps.filter(oppOpen).length + '</span></button>']
+        .concat(DB.campaigns.map(c => {
+            const n = DB.opps.filter(o=>o.campaign===c.id && oppOpen(o)).length;
+            return '<button class="team-pill ' + (f.campaign===c.id?'is-active':'') + '" onclick="setWFilter(\'campaign\',\'' + c.id + '\')">' +
+                   '<span class="tp-dot" style="background:' + c.colour + '"></span>' + esc(c.name) + ' <span class="tp-n">' + n + '</span></button>';
+        })).join('');
+
+    const repSel = document.getElementById('wRep');
+    repSel.innerHTML = '<option value="all">All reps</option>' +
+        DB.reps.map(r=>'<option value="'+r.id+'">'+esc(r.name)+(r.isBdm?' (BDM)':'')+'</option>').join('');
+    repSel.value = DB.reps.some(r=>r.id===f.rep) ? f.rep : 'all';
+    if(repSel.value === 'all') f.rep = 'all';
+
+    const stSel = document.getElementById('wStatusFilter');
+    stSel.innerHTML = '<option value="open">Open only</option><option value="all">All statuses</option><option value="closed">Closed</option>' +
+        STATUSES.map(s=>'<option value="'+s.id+'">'+esc(s.name)+'</option>').join('');
+    stSel.value = f.status;
+    document.getElementById('wSearch').value = f.q || '';
+
+    const rows = filteredOpps();
+    const open = rows.filter(oppOpen);
+    const openVal = open.reduce((s,o)=>s+o.value,0);
+    const won = DB.opps.filter(o=>o.status==='closed');
+    const lost = DB.opps.filter(o=>o.status==='disqualified');
+    const winRate = (won.length+lost.length) ? won.length/(won.length+lost.length) : 0;
+
+    // Leads carry no value in AudcompAudit — value is established after the
+    // first meeting, in the pipeline. So lead the desk with counts and
+    // conversion, and only show money once something has been quoted.
+    const reached   = rows.filter(o => ['contacted','replied','interested','booked','closed','disqualified'].includes(o.status)).length;
+    const replied   = rows.filter(o => ['replied','interested','booked','closed'].includes(o.status)).length;
+    const bookedSet = rows.filter(o => ['booked','closed'].includes(o.status));
+    const replyRate = reached ? replied/reached : 0;
+    const bookRate  = reached ? bookedSet.length/reached : 0;
+
+    document.getElementById('navOpps').textContent = DB.opps.filter(oppOpen).length;
+    document.getElementById('wKpis').innerHTML = [
+        kpiTile('Open leads', open.length, (f.campaign==='all'?'Across all campaigns':esc(campaignById(f.campaign).name) + ' campaign'), ''),
+        kpiTile('Meetings booked', bookedSet.length, pct(bookRate) + ' of everyone contacted', 'accent'),
+        kpiTile('Reply rate', pct(replyRate), replied + ' of ' + reached + ' contacted', 'copper'),
+        kpiTile('Close rate', pct(winRate), won.length + ' closed · ' + lost.length + ' disqualified', 'margin'),
+        openVal
+            ? kpiTile('Quoted value', cad(openVal), 'Only leads that have been priced', '')
+            : kpiTile('Automations fired', DB.feed.filter(x=>!x.muted).length, 'This session', '')
+    ].join('');
+
+    // table
+    document.getElementById('wTable').innerHTML = rows.length ?
+        '<thead><tr><th>Opportunity</th><th>Campaign</th><th>Owner</th><th class="num">Value</th><th>Status</th><th>Next action</th><th class="num">Updated</th><th></th></tr></thead><tbody>' +
+        rows.map(o => {
+            const r = repById(o.rep), t = campaignById(o.campaign), st = statusById(o.status);
+            return '<tr>' +
+                '<td><strong>' + esc(o.name) + '</strong><br><span class="note">' + esc(o.company) + '</span></td>' +
+                '<td><span class="chip" style="border-color:' + t.colour + ';color:' + t.colour + '">' + esc(t.name) + '</span></td>' +
+                '<td>' + (r ? '<span class="rep"><span class="rep-av" style="background:' + t.colour + '">' + esc(r.initials) + '</span>' + esc(r.name) + '</span>' : '<span class="note">Unassigned</span>') + '</td>' +
+                '<td class="num">' + (o.value
+                    ? '<strong>' + cad(o.value) + '</strong><br><span class="note">' + (o.recurring==='mrr'?'/mo':'one-time') + '</span>'
+                    : '<span class="note">not priced</span>') + '</td>' +
+                '<td><select class="status-sel" onchange="setOppStatus(\'' + o.id + '\',this.value)">' +
+                    STATUSES.map(s=>'<option value="'+s.id+'"'+(s.id===o.status?' selected':'')+'>'+esc(s.name)+'</option>').join('') +
+                '</select><div class="note" style="margin-top:0.25rem;"><span class="st-swatch" style="background:' + st.colour + '"></span>' + st.prob + '% · ' + cad(oppWeighted(o)) + '</div></td>' +
+                '<td>' + esc(o.next||'—') + (o.close ? '<br><span class="note">Close ' + esc(o.close) + '</span>' : '') + '</td>' +
+                '<td class="num note">' + relTime(o.updated) + '</td>' +
+                '<td class="num"><button class="btn sm" onclick="openOpp(\'' + o.id + '\')">Edit</button></td></tr>';
+        }).join('') +
+        '<tr class="total"><td>' + rows.length + ' shown</td><td></td><td></td><td class="num">' + cad(rows.reduce((s,o)=>s+o.value,0)) + '</td>' +
+        '<td colspan="4"></td></tr></tbody>'
+        : '<tbody><tr><td class="note">Nothing matches this filter.</td></tr></tbody>';
+
+    // charts
+    rankBars(document.getElementById('wStatusChart'), STATUSES.filter(s=>s.open).map(s => {
+        const set = rows.filter(o=>o.status===s.id);
+        const v = set.reduce((a,o)=>a+o.value,0);
+        return { label:s.name, value:set.length, display:set.length + (set.length===1?' lead':' leads'),
+            colour:s.colour, sub:v ? cad(v) + ' quoted' : '',
+            tip:'<div class="tt-h">'+esc(s.name)+'</div>' +
+                '<div class="tt-r"><span>Leads</span><b>'+set.length+'</b></div>' +
+                '<div class="tt-r"><span>Share of filter</span><b>'+(rows.length?pct(set.length/rows.length):'—')+'</b></div>' +
+                (v ? '<div class="tt-r"><span>Quoted value</span><b>'+cad(v)+'</b></div>' : '') };
+    }), 'var(--ord-3)');
+
+    // Campaigns are compared on meetings booked, not value — leads have none.
+    rankBars(document.getElementById('wTeamChart'), DB.campaigns.map(c => {
+        const all = DB.opps.filter(o=>o.campaign===c.id);
+        const bk  = all.filter(o=>['booked','closed'].includes(o.status)).length;
+        const ct  = all.filter(o=>o.status!=='researched').length;
+        return { label:c.name, value:bk, display:bk + (bk===1?' meeting':' meetings'),
+            colour:c.colour, sub:all.filter(oppOpen).length + ' open',
+            tip:'<div class="tt-h">'+esc(c.name)+'</div>' +
+                '<div class="tt-r"><span>Leads</span><b>'+all.length+'</b></div>' +
+                '<div class="tt-r"><span>Contacted</span><b>'+ct+'</b></div>' +
+                '<div class="tt-r"><span>Meetings booked</span><b>'+bk+'</b></div>' +
+                '<div class="tt-r"><span>Book rate</span><b>'+(ct?pct(bk/ct):'—')+'</b></div>' };
+    }), 'var(--series-tokens)');
+
+    const board = DB.reps.map(r => {
+        const set = DB.opps.filter(o=>o.rep===r.id && oppOpen(o));
+        const w = DB.opps.filter(o=>o.rep===r.id && o.status==='closed').length;
+        const l = DB.opps.filter(o=>o.rep===r.id && o.status==='disqualified').length;
+        return { r, open:set.length, value:set.reduce((a,o)=>a+o.value,0), weighted:set.reduce((a,o)=>a+oppWeighted(o),0), w, l };
+    }).sort((a,b)=>b.value-a.value);
+    document.getElementById('wRepTable').innerHTML =
+        '<thead><tr><th>Rep</th><th>Role</th><th class="num">Open</th><th class="num">Value</th><th class="num">Weighted</th><th class="num">C/D</th></tr></thead><tbody>' +
+        board.map(b => '<tr><td><span class="rep"><span class="rep-av" style="background:var(--surface-3);color:var(--ink)">' + esc(b.r.initials) + '</span><strong>' + esc(b.r.name) + '</strong></span></td>' +
+            '<td>' + (b.r.isBdm ? '<span class="chip s">BDM</span>' : '<span class="note">Expert</span>') + '</td><td class="num">' + b.open + '</td>' +
+            '<td class="num">' + cad(b.value) + '</td><td class="num">' + cad(b.weighted) + '</td>' +
+            '<td class="num">' + b.w + '/' + b.l + '</td></tr>').join('') + '</tbody>';
+
+    // rules
+    document.getElementById('wRules').innerHTML = RULES.map(r => {
+        const s = statusById(r.on);
+        return '<div class="auto-rule">' +
+            '<input type="checkbox" ' + (DB.ruleState[r.id] ? 'checked' : '') + ' onchange="toggleRule(\'' + r.id + '\')">' +
+            '<div><span class="ar-when"><span class="st-swatch" style="background:' + s.colour + '"></span>When status becomes ' + esc(s.name) + '</span>' +
+            '<span class="ar-do">' + esc(r.title) + ' <span class="chip" style="font-size:0.6rem;">' + esc(r.agent) + '</span></span>' +
+            '<span class="ar-detail">' + esc(r.detail) + '</span></div>' +
+            '<span class="chip ' + (DB.ruleState[r.id] ? 'good' : '') + '">' + (DB.ruleState[r.id] ? 'Live' : 'Off') + '</span></div>';
+    }).join('');
+
+    // feed
+    document.getElementById('wFeed').innerHTML = DB.feed.length
+        ? DB.feed.map(x => '<div class="feed-item"' + (x.muted ? ' style="opacity:0.55"' : '') + '><span class="feed-time">' + relTime(x.at) + '</span><span>' + x.html + '</span></div>').join('')
+        : '<p class="note">Nothing yet. Change an opportunity status and the rules that fire show up here.</p>';
+}
+function setWFilter(key, v){ DB.wFilter[key] = v; save(); renderWilfred(); }
+function toggleRule(id){
+    DB.ruleState[id] = !DB.ruleState[id];
+    save(); renderWilfred();
+    toast('Rule ' + (DB.ruleState[id] ? 'enabled' : 'disabled') + '.');
+}
+function relTime(ts){
+    if(!ts) return '—';
+    const s = Math.floor((Date.now()-ts)/1000);
+    if(s < 60) return 'just now';
+    if(s < 3600) return Math.floor(s/60) + 'm ago';
+    if(s < 86400) return Math.floor(s/3600) + 'h ago';
+    return Math.floor(s/86400) + 'd ago';
+}
+document.getElementById('wRep').addEventListener('change', e => setWFilter('rep', e.target.value));
+document.getElementById('wStatusFilter').addEventListener('change', e => setWFilter('status', e.target.value));
+document.getElementById('wSearch').addEventListener('input', e => { DB.wFilter.q = e.target.value; save(); renderWilfred(); });
+
+/* --- opportunity modal --- */
+let editingOpp = null;
+function openOpp(id){
+    editingOpp = id ? DB.opps.find(o=>o.id===id) : null;
+    document.getElementById('oppModalTitle').textContent = editingOpp ? 'Edit opportunity' : 'New opportunity';
+    document.getElementById('oDelete').style.display = editingOpp ? '' : 'none';
+    document.getElementById('oTeam').innerHTML   = DB.campaigns.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('');
+    document.getElementById('oStatus').innerHTML = STATUSES.map(s=>'<option value="'+s.id+'">'+esc(s.name)+'</option>').join('');
+    document.getElementById('oRep').innerHTML = '<option value="">Unassigned</option>' +
+        DB.reps.map(r=>'<option value="'+r.id+'">'+esc(r.name)+(r.isBdm?' (BDM)':'')+'</option>').join('');
+    const first = (DB.campaigns[0]||{}).id || '';
+    const o = editingOpp || { name:'', company:'', campaign:(DB.wFilter.campaign==='all'?first:DB.wFilter.campaign), rep:'', status:'researched', value:4997, recurring:'mrr', close:'', next:'' };
+    document.getElementById('oTeam').value = o.campaign;
+    document.getElementById('oRep').value = DB.reps.some(r=>r.id===o.rep) ? o.rep : '';
+    ['oName:name','oCompany:company','oStatus:status','oValue:value','oRecurring:recurring','oClose:close','oNext:next'].forEach(p=>{
+        const [el,k] = p.split(':');
+        document.getElementById(el).value = o[k] == null ? '' : o[k];
+    });
+    document.getElementById('oppModal').classList.add('show');
+}
+function closeOpp(){ document.getElementById('oppModal').classList.remove('show'); editingOpp = null; }
+document.getElementById('oppModal').addEventListener('click', e => { if(e.target.id==='oppModal') closeOpp(); });
+document.getElementById('oppForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const payload = {
+        name:val('oName').trim(), company:val('oCompany').trim(), campaign:val('oTeam'), rep:val('oRep'),
+        status:val('oStatus'), value:num('oValue'), recurring:val('oRecurring'),
+        close:val('oClose'), next:val('oNext').trim(), updated:Date.now()
+    };
+    if(!payload.name || !payload.company){ toast('Opportunity and company are both required.'); return; }
+    if(editingOpp){
+        const from = editingOpp.status;
+        Object.assign(editingOpp, payload);
+        if(from !== payload.status) fireAutomation(editingOpp, from);
+    } else {
+        const o = Object.assign({ id:uid(), created:Date.now() }, payload);
+        DB.opps.push(o);
+        fireAutomation(o, 'researched');
+    }
+    save(); closeOpp(); renderWilfred();
+    toast(payload.company + ' saved.');
+});
+function deleteOpp(){
+    if(!editingOpp) return;
+    if(!confirm('Delete the ' + editingOpp.company + ' opportunity?')) return;
+    DB.opps = DB.opps.filter(o=>o.id!==editingOpp.id);
+    save(); closeOpp(); renderWilfred(); toast('Opportunity deleted.');
+}
+
+/* --- connection badge + optional live load --- */
+function renderConn(){
+    const el = document.getElementById('connBadge');
+    if(!el) return;
+    const live = sbState.status === 'live';
+    el.innerHTML = '<span class="conn ' + (live?'live':'offline') + '"><span class="dot"></span>' +
+        (live ? 'Supabase connected' : 'Local data') + '</span>';
+}
+async function connectSupabase(){
+    if(!sbReady()){
+        sbState = { status:'offline', detail:'No anon key configured — running on local demo data.' };
+        renderConn(); return;
+    }
+    try{
+        // Reads the live AudcompAudit tables. outreach_leads IS the opportunity
+        // table — it already carries status, expert_id and next_action_note.
+        const [experts, campaigns, leads] = await Promise.all([
+            sbFetch('experts?select=id,full_name,email,is_bdm&order=full_name'),
+            sbFetch('outreach_campaigns?select=id,name,status,channel,expert_id&order=name'),
+            sbFetch('outreach_leads?select=id,company_name,contact_name,campaign_id,expert_id,assigned_rep,status,next_action_note,next_action_at,updated_at&order=updated_at.desc&limit=1000')
+        ]);
+        if(Array.isArray(experts) && experts.length){
+            DB.reps = experts.map(e=>({ id:e.id, remoteId:e.id, name:e.full_name, initials:initialsOf(e.full_name), isBdm:!!e.is_bdm }));
+        }
+        if(Array.isArray(campaigns) && campaigns.length){
+            DB.campaigns = campaigns.map((c,i)=>({
+                id:c.id, remoteId:c.id, name:c.name, channel:c.channel,
+                colour: CAMPAIGN_COLOURS[i] || 'var(--muted)'   // fixed order, never cycled
+            }));
+        }
+        if(Array.isArray(leads)){
+            DB.opps = leads.map(l=>({
+                id:l.id, remoteId:l.id,
+                name: l.contact_name || l.company_name,
+                company: l.company_name,
+                campaign: l.campaign_id,
+                rep: l.expert_id,
+                status: STATUSES.some(s=>s.id===l.status) ? l.status : 'researched',
+                value: 0,                       // outreach_leads carries no value column
+                recurring:'mrr',
+                next: l.next_action_note || '',
+                close: (l.next_action_at||'').slice(0,10),
+                updated: Date.parse(l.updated_at) || Date.now()
+            }));
+        }
+        sbState = { status:'live', detail:'Reading ' + DB.opps.length + ' leads from AudcompAudit.' };
+        save();
+    }catch(e){
+        sbState = { status:'offline', detail:'Connection failed — ' + e.message + ' RLS denies anonymous reads by design; staff sign-in is the next step.' };
+    }
+    renderConn(); renderAll();
+}
+function initialsOf(n){ return (n||'').split(/\s+/).map(x=>x[0]||'').join('').slice(0,2).toUpperCase(); }
+
+/* ---------- pipeline ---------- */
+function renderPipeline(){
+    const open = openDeals();
+    const weighted = open.reduce((s,d)=> s + dealACV(d)*prob(d.stage), 0);
+    const newMrr   = open.reduce((s,d)=> s + d.mrr*prob(d.stage), 0);
+    const audits   = DB.deals.filter(d=>d.stage==='discovery').reduce((s,d)=>s+(d.discovery||0),0);
+    document.getElementById('pipeKpis').innerHTML = [
+        kpiTile('Open deals', open.length, 'Across ' + STAGES.filter(s=>s.id!=='live').length + ' stages',''),
+        kpiTile('Weighted first-year', cad(weighted), 'Probability-adjusted ACV','copper'),
+        kpiTile('Weighted new MRR', cad(newMrr), 'If the pipeline lands as forecast','accent'),
+        kpiTile('Audits in flight', cad(audits), DB.deals.filter(d=>d.stage==='discovery').length + ' discovery engagements','')
+    ].join('');
+    document.getElementById('navDeals').textContent = open.length;
+
+    document.getElementById('board').innerHTML = STAGES.map(s => {
+        const ds = DB.deals.filter(d=>d.stage===s.id);
+        const sum = ds.reduce((a,d)=>a+dealACV(d),0);
+        return '<div class="col">' +
+            '<div class="col-head"><span class="col-dot" style="background:' + s.colour + '"></span><h3>' + esc(s.name) + '</h3><span class="count">' + ds.length + '</span></div>' +
+            '<div class="col-sum"><b>' + cad(sum) + '</b> ACV · ' + Math.round(prob(s.id)*100) + '% · <b>' + cad(sum*prob(s.id)) + '</b> weighted</div>' +
+            (ds.length ? ds.map(dealCard).join('') : '<div class="col-empty">Nothing here yet</div>') +
+            '</div>';
+    }).join('');
+
+    const closed = DB.deals.filter(d=>d.stage==='live'||d.stage==='lost');
+    document.getElementById('closedTable').innerHTML = closed.length ?
+        '<thead><tr><th>Client</th><th>Outcome</th><th>Vertical</th><th class="num">MRR</th><th class="num">One-time</th><th class="num">First-year</th><th></th></tr></thead><tbody>' +
+        closed.map(d =>
+            '<tr><td><strong>' + esc(d.name) + '</strong></td>' +
+            '<td>' + (d.stage==='live' ? '<span class="chip good">✓ Won</span>' : '<span class="chip bad">Lost</span>') + '</td>' +
+            '<td>' + esc(d.vertical) + '</td>' +
+            '<td class="num">' + cad(d.mrr) + '</td>' +
+            '<td class="num">' + cad((d.discovery||0)+(d.onboard||0)) + '</td>' +
+            '<td class="num"><strong>' + cad(dealACV(d)) + '</strong></td>' +
+            '<td class="num"><button class="btn sm" onclick="openDeal(\'' + d.id + '\')">Edit</button></td></tr>').join('') +
+        '</tbody>' : '<tbody><tr><td class="note">Nothing closed yet.</td></tr></tbody>';
+
+    document.getElementById('stageDefTable').innerHTML =
+        '<thead><tr><th>Stage</th><th class="num">Probability</th><th>What it means</th></tr></thead><tbody>' +
+        STAGES.map(s => '<tr><td><strong>' + esc(s.name) + '</strong></td><td class="num">' + Math.round(prob(s.id)*100) + '%</td><td>' + esc(s.note) + '</td></tr>').join('') +
+        '</tbody>';
+}
+function dealCard(d){
+    const e = dealEcon(d);
+    const i = STAGES.findIndex(s=>s.id===d.stage);
+    return '<div class="deal">' +
+        '<div class="d-name">' + esc(d.name) + '</div>' +
+        '<div class="d-meta">' + esc(d.vertical) + ' · ' + esc(pkg(d.package).name) + ' · ' + e.agents + ' agents · ' + esc(e.infraLabel) + '</div>' +
+        '<div class="d-money"><span>MRR</span><b>' + cad(d.mrr) + '</b></div>' +
+        '<div class="d-money"><span>One-time</span><b>' + cad((d.discovery||0)+(d.onboard||0)) + '</b></div>' +
+        '<div class="d-money"><span>Gross margin</span><b style="color:' + (e.healthy ? '#7fe3bd' : '#ff9b9b') + '">' + pct(e.marginPct) + '</b></div>' +
+        (d.next ? '<div class="d-next"><b>Next:</b> ' + esc(d.next) + (d.close ? ' · ' + esc(d.close) : '') + '</div>' : '') +
+        '<div class="deal-actions">' +
+            (i>0 ? '<button title="Move back" onclick="move(\'' + d.id + '\',-1)">←</button>' : '') +
+            '<button class="grow" onclick="openDeal(\'' + d.id + '\')">Edit</button>' +
+            (i<STAGES.length-1 ? '<button title="Advance" onclick="move(\'' + d.id + '\',1)">→</button>' : '') +
+            '<button title="Mark lost" onclick="lose(\'' + d.id + '\')">✕</button>' +
+        '</div></div>';
+}
+function move(id, dir){
+    const d = DB.deals.find(x=>x.id===id);
+    if(!d) return;
+    let i = STAGES.findIndex(s=>s.id===d.stage);
+    if(i === -1) i = 0;
+    i = Math.min(Math.max(i+dir,0), STAGES.length-1);
+    d.stage = STAGES[i].id;
+    save(); renderAll();
+    toast(d.name + ' → ' + STAGES[i].name);
+}
+function lose(id){
+    const d = DB.deals.find(x=>x.id===id);
+    if(!d) return;
+    if(!confirm('Mark ' + d.name + ' as lost?')) return;
+    d.stage = 'lost'; save(); renderAll(); toast(d.name + ' marked lost.');
+}
+
+/* ---------- deal modal ---------- */
+let editingDeal = null;
+function openDeal(id){
+    editingDeal = id ? DB.deals.find(d=>d.id===id) : null;
+    document.getElementById('dealModalTitle').textContent = editingDeal ? 'Edit deal' : 'New deal';
+    document.getElementById('dDelete').style.display = editingDeal ? '' : 'none';
+
+    const stageSel = document.getElementById('dStage');
+    stageSel.innerHTML = STAGES.map(s=>'<option value="'+s.id+'">'+esc(s.name)+'</option>').join('') + '<option value="lost">Lost</option>';
+    document.getElementById('dPackage').innerHTML = DB.packages.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('');
+    document.getElementById('dInfra').innerHTML = Object.entries(DB.infra).map(([k,v])=>'<option value="'+k+'">'+esc(v.label)+'</option>').join('');
+
+    const d = editingDeal || { name:'', contact:'', stage:'meeting', vertical:'General SME', owner:'Vince',
+        package:'department', seniors:6, juniors:0, mrr:4997, discovery:DB.assumptions.discoveryFee, onboard:1500,
+        infra:'shared', intensity:1, close:'', next:'' };
+    ['dName:name','dContact:contact','dStage:stage','dVertical:vertical','dOwner:owner','dPackage:package',
+     'dSeniors:seniors','dJuniors:juniors','dMrr:mrr','dDiscovery:discovery','dOnboard:onboard',
+     'dInfra:infra','dIntensity:intensity','dClose:close','dNext:next'].forEach(pair=>{
+        const [el,key] = pair.split(':');
+        document.getElementById(el).value = d[key] == null ? '' : d[key];
+    });
+    document.getElementById('dealModal').classList.add('show');
+}
+function closeDeal(){ document.getElementById('dealModal').classList.remove('show'); editingDeal = null; }
+document.getElementById('dealModal').addEventListener('click', e => { if(e.target.id==='dealModal') closeDeal(); });
+document.getElementById('dPackage').addEventListener('change', e => {
+    const p = pkg(e.target.value);
+    document.getElementById('dSeniors').value = p.seniors;
+    document.getElementById('dJuniors').value = p.juniors;
+    document.getElementById('dMrr').value = p.price;
+});
+document.getElementById('dealForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const payload = {
+        name:val('dName').trim(), contact:val('dContact').trim(), stage:val('dStage'),
+        vertical:val('dVertical'), owner:val('dOwner').trim(), package:val('dPackage'),
+        seniors:num('dSeniors'), juniors:num('dJuniors'), mrr:num('dMrr'),
+        discovery:num('dDiscovery'), onboard:num('dOnboard'),
+        infra:val('dInfra'), intensity:parseFloat(val('dIntensity')),
+        close:val('dClose'), next:val('dNext').trim()
+    };
+    if(!payload.name){ toast('A company name is required.'); return; }
+    if(editingDeal) Object.assign(editingDeal, payload);
+    else DB.deals.push(Object.assign({ id:uid(), created:Date.now() }, payload));
+    save(); closeDeal(); renderAll();
+    toast(payload.name + ' saved.');
+});
+function deleteDeal(){
+    if(!editingDeal) return;
+    if(!confirm('Delete ' + editingDeal.name + ' permanently?')) return;
+    DB.deals = DB.deals.filter(d => d.id !== editingDeal.id);
+    save(); closeDeal(); renderAll(); toast('Deal deleted.');
+}
+
+/* ---------- quoter ---------- */
+function scenarioCfg(){
+    return {
+        name: val('sName').trim() || 'Untitled scenario',
+        package: val('sPackage'),
+        vertical: val('sVertical'),
+        seniors: num('sSeniors'),
+        juniors: num('sJuniors'),
+        intensity: parseFloat(val('sIntensity')),
+        infra: val('sInfra'),
+        mrr: num('sMrr'),
+        discovery: num('sDiscovery'),
+        onboard: num('sOnboard'),
+        mgmtMode: val('sMgmtMode'),
+        mgmtVal: num('sMgmtVal'),
+        changes: num('sChanges')
+    };
+}
+function renderQuoterInputs(){
+    const sel = document.getElementById('sPackage');
+    if(sel.options.length !== DB.packages.length){
+        sel.innerHTML = DB.packages.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('');
+        sel.value = 'department';
+    }
+    const inf = document.getElementById('sInfra');
+    if(!inf.options.length){
+        inf.innerHTML = Object.entries(DB.infra).map(([k,v])=>'<option value="'+k+'">'+esc(v.label)+'</option>').join('');
+    }
+    if(!document.getElementById('sMrr').value){
+        const p = pkg(sel.value);
+        document.getElementById('sMrr').value = p.price;
+        document.getElementById('sSeniors').value = p.seniors;
+        document.getElementById('sJuniors').value = p.juniors;
+        document.getElementById('sChanges').value = p.changes === 999 ? 300 : p.changes;
+    }
+}
+function renderQuoter(){
+    renderQuoterInputs();
+    const cfg = scenarioCfg();
+    const e = economics(cfg);
+    const oneTime = cfg.discovery + cfg.onboard;
+
+    document.getElementById('sResultTag').textContent = '· ' + cfg.name + ' · ' + e.agents + ' agents · ' + e.infraLabel;
+    document.getElementById('sKpis').innerHTML = [
+        kpiTile('Monthly revenue', cad(e.mrr), e.mgmtFee ? cad(e.baseMrr) + ' + ' + cad(e.mgmtFee) + ' management fee' : 'Management included in price', 'accent'),
+        kpiTile('Gross margin', pct(e.marginPct), cad(e.margin) + '/mo · target ' + DB.assumptions.targetMargin + '%', e.healthy ? 'margin' : ''),
+        kpiTile('Year-one value', cad(e.mrr*12 + oneTime), cad(oneTime) + ' one-time (audit + build)', 'copper'),
+        kpiTile('Cost per agent', cad(e.agents ? e.cogs/e.agents : e.cogs), cad(e.cogs) + '/mo all-in for ' + e.agents + ' agents', '')
+    ].join('');
+
+    stacked(document.getElementById('sStack'), [
+        { label:'Token burn',     value:e.tokens, colour:'var(--series-tokens)' },
+        { label:'Infrastructure', value:e.infra,  colour:'var(--series-infra)'  },
+        { label:'Management',     value:e.mgmt,   colour:'var(--series-mgmt)'   },
+        { label:'Gross margin',   value:Math.max(e.margin,0), colour:'var(--series-margin)' }
+    ], e.mrr, { caption: e.margin < 0 ? 'Revenue ' + cad(e.mrr) + ' — LOSS of ' + cad(-e.margin) + '/mo' : 'Revenue ' + cad(e.mrr) + ' / month' });
+
+    const m = DB.models;
+    document.getElementById('sTable').innerHTML =
+        '<thead><tr><th>Line</th><th>Basis</th><th class="num">CAD / month</th><th class="num">% of rev.</th></tr></thead><tbody>' +
+        row('Recurring price', esc(pkg(cfg.package).name) + ' list', e.baseMrr, e.mrr) +
+        (e.mgmtFee ? row('Management fee', cfg.mgmtMode==='pct' ? cfg.mgmtVal+'% of MRR' : cfg.mgmtMode==='agent' ? cad(cfg.mgmtVal)+' × '+e.agents+' agents' : 'Flat', e.mgmtFee, e.mrr) : '') +
+        '<tr class="total"><td>Total revenue</td><td></td><td class="num">' + cad(e.mrr) + '</td><td class="num">100%</td></tr>' +
+        row('— Wilfred tokens', m[DB.volumes.wilfred.model].label + ' · orchestrator', -e.tokWilfred, e.mrr) +
+        row('— Senior agent tokens', cfg.seniors + ' × ' + m[DB.volumes.senior.model].label, -e.tokSenior, e.mrr) +
+        row('— Junior agent tokens', cfg.juniors + ' × ' + m[DB.volumes.junior.model].label, -e.tokJunior, e.mrr) +
+        row('— Infrastructure', e.infraLabel + ' + platform overhead', -e.infra, e.mrr) +
+        row('— Management', e.mgmtHrs.toFixed(1) + ' hrs @ ' + cad(DB.assumptions.rate) + ' (incl. ' + e.changeHrs.toFixed(1) + ' hrs of changes)', -e.mgmt, e.mrr) +
+        '<tr class="total"><td>Gross margin</td><td>' + (e.healthy ? '<span class="chip good">✓ Above target</span>' : '<span class="chip bad">Below ' + DB.assumptions.targetMargin + '% target</span>') + '</td><td class="num">' + cad(e.margin) + '</td><td class="num">' + pct(e.marginPct) + '</td></tr>' +
+        '</tbody>';
+
+    // sensitivity
+    const levels = [
+        {l:'Light (0.6×)', v:0.6}, {l:'Normal (1.0×)', v:1}, {l:'Heavy (1.7×)', v:1.7}, {l:'Very heavy (2.5×)', v:2.5}
+    ];
+    rankBars(document.getElementById('sSensitivity'), levels.map(L => {
+        const ee = economics(Object.assign({}, cfg, {intensity:L.v}));
+        return {
+            label:L.l, value:ee.margin, display:pct(ee.marginPct),
+            sub: cad(ee.margin) + '/mo',
+            colour: ee.marginPct*100 >= DB.assumptions.targetMargin ? 'var(--series-margin)' : 'var(--series-mgmt)',
+            tip:'<div class="tt-h">'+esc(L.l)+'</div>' +
+                '<div class="tt-r"><span>Token burn</span><b>'+cad(ee.tokens)+'</b></div>' +
+                '<div class="tt-r"><span>Total COGS</span><b>'+cad(ee.cogs)+'</b></div>' +
+                '<div class="tt-r"><span>Gross margin</span><b>'+cad(ee.margin)+' ('+pct(ee.marginPct)+')</b></div>'
+        };
+    }), 'var(--series-margin)');
+
+    renderScenTable();
+}
+function row(label, basis, value, base){
+    const share = base ? Math.abs(value)/base : 0;
+    return '<tr><td><strong>' + label + '</strong></td><td>' + basis + '</td><td class="num">' + (value<0 ? '−' + cad(-value) : cad(value)) + '</td><td class="num">' + (share*100).toFixed(1) + '%</td></tr>';
+}
+function renderScenTable(){
+    const t = document.getElementById('scenTable');
+    if(!DB.scenarios.length){ t.innerHTML = '<tbody><tr><td class="note">No saved scenarios yet — build one above and hit “Save to compare”.</td></tr></tbody>'; return; }
+    t.innerHTML = '<thead><tr><th>Scenario</th><th>Roster</th><th>Infra</th><th class="num">MRR</th><th class="num">COGS</th><th class="num">Margin</th><th class="num">GM %</th><th class="num">Year one</th><th></th></tr></thead><tbody>' +
+        DB.scenarios.map((s,i)=>{
+            const e = economics(s);
+            return '<tr><td><strong>' + esc(s.name) + '</strong><br><span class="note">' + esc(s.vertical) + ' · ' + esc(pkg(s.package).name) + '</span></td>' +
+            '<td>' + s.seniors + ' senior' + (s.juniors ? ' + ' + s.juniors + ' junior' : '') + '<br><span class="note">' + s.intensity + '× usage</span></td>' +
+            '<td>' + esc(e.infraLabel) + '</td>' +
+            '<td class="num">' + cad(e.mrr) + '</td><td class="num">' + cad(e.cogs) + '</td>' +
+            '<td class="num">' + cad(e.margin) + '</td>' +
+            '<td class="num">' + (e.healthy ? '<span class="chip good">' + pct(e.marginPct) + '</span>' : '<span class="chip bad">' + pct(e.marginPct) + '</span>') + '</td>' +
+            '<td class="num">' + cad(e.mrr*12 + s.discovery + s.onboard) + '</td>' +
+            '<td class="num"><button class="btn sm" onclick="loadScenario(' + i + ')">Load</button> <button class="btn sm danger" onclick="dropScenario(' + i + ')">✕</button></td></tr>';
+        }).join('') + '</tbody>';
+}
+function saveScenario(){
+    DB.scenarios.push(scenarioCfg());
+    if(DB.scenarios.length > 8) DB.scenarios.shift();
+    save(); renderScenTable(); toast('Scenario saved to the comparison table.');
+}
+function loadScenario(i){
+    const s = DB.scenarios[i]; if(!s) return;
+    document.getElementById('sName').value = s.name;
+    document.getElementById('sPackage').value = s.package;
+    document.getElementById('sVertical').value = s.vertical;
+    document.getElementById('sSeniors').value = s.seniors;
+    document.getElementById('sJuniors').value = s.juniors;
+    document.getElementById('sIntensity').value = s.intensity;
+    document.getElementById('sInfra').value = s.infra;
+    document.getElementById('sMrr').value = s.mrr;
+    document.getElementById('sDiscovery').value = s.discovery;
+    document.getElementById('sOnboard').value = s.onboard;
+    document.getElementById('sMgmtMode').value = s.mgmtMode;
+    document.getElementById('sMgmtVal').value = s.mgmtVal;
+    document.getElementById('sChanges').value = s.changes;
+    renderQuoter();
+}
+function dropScenario(i){ DB.scenarios.splice(i,1); save(); renderScenTable(); }
+function scenarioToDeal(){
+    const c = scenarioCfg();
+    DB.deals.push({
+        id:uid(), created:Date.now(), name:c.name, contact:'', stage:'quoted',
+        vertical:c.vertical, owner:'', package:c.package, seniors:c.seniors, juniors:c.juniors,
+        mrr:c.mrr, discovery:c.discovery, onboard:c.onboard, infra:c.infra, intensity:c.intensity,
+        close:'', next:'Quote sent from the scenario quoter'
+    });
+    save(); toast(c.name + ' added to the pipeline at Quoted.'); go('pipeline');
+}
+function copyScenario(){
+    const c = scenarioCfg(), e = economics(c);
+    const txt = [
+        c.name + ' — ' + pkg(c.package).name + ' (' + c.vertical + ')',
+        e.agents + ' agents · ' + e.infraLabel + ' · ' + c.intensity + '× usage',
+        'Recurring: ' + cad(e.mrr) + '/mo' + (e.mgmtFee ? ' (incl. ' + cad(e.mgmtFee) + ' management fee)' : ''),
+        'One-time: ' + cad(c.discovery) + ' discovery & audit + ' + cad(c.onboard) + ' build',
+        'Year one: ' + cad(e.mrr*12 + c.discovery + c.onboard),
+        '',
+        'INTERNAL — cost of delivery:',
+        '  Tokens        ' + cad(e.tokens) + '/mo',
+        '  Infrastructure ' + cad(e.infra) + '/mo',
+        '  Management     ' + cad(e.mgmt) + '/mo (' + e.mgmtHrs.toFixed(1) + ' hrs)',
+        '  Gross margin   ' + cad(e.margin) + '/mo (' + pct(e.marginPct) + ')'
+    ].join('\n');
+    navigator.clipboard.writeText(txt).then(()=>toast('Scenario summary copied.'), ()=>toast('Copy blocked by the browser.'));
+}
+['sName','sPackage','sVertical','sSeniors','sJuniors','sIntensity','sInfra','sMrr','sDiscovery','sOnboard','sMgmtMode','sMgmtVal','sChanges']
+    .forEach(id => document.getElementById(id).addEventListener('input', renderQuoter));
+document.getElementById('sPackage').addEventListener('change', e => {
+    const p = pkg(e.target.value);
+    document.getElementById('sSeniors').value = p.seniors;
+    document.getElementById('sJuniors').value = p.juniors;
+    document.getElementById('sMrr').value = p.price;
+    document.getElementById('sChanges').value = p.changes === 999 ? 300 : p.changes;
+    renderQuoter();
+});
+
+/* ---------- economics ---------- */
+function renderEconomics(){
+    const a = DB.assumptions;
+    setVal('aCacheHit',a.cacheHit); setVal('aFx',a.fx); setVal('aPlatform',a.platformPerClient);
+    setVal('aRate',a.rate); setVal('aBaseHrs',a.baseHrs); setVal('aAgentHrs',a.agentHrs);
+    setVal('aChangeMin',a.changeMin); setVal('aChangeUse',a.changeUse);
+    setVal('aTargetMargin',a.targetMargin); setVal('aDiscovery',a.discoveryFee);
+    setVal('aGpu',a.gpuMonthly); setVal('aOverage',a.overageHeadroom);
+
+    document.getElementById('modelTable').innerHTML =
+        '<thead><tr><th>Model</th><th class="num">In</th><th class="num">Out</th><th class="num">Eff. in*</th></tr></thead><tbody>' +
+        Object.entries(DB.models).map(([k,m])=>{
+            const hit = a.cacheHit/100;
+            const eff = (1-hit)*m.in + hit*m.in*a.cacheReadMult;
+            return '<tr><td><strong>' + esc(m.label) + '</strong></td>' +
+                '<td class="num"><input class="inp" style="width:56px;text-align:right;" type="number" step="0.5" value="' + m.in + '" onchange="setModel(\'' + k + '\',\'in\',this.value)"></td>' +
+                '<td class="num"><input class="inp" style="width:56px;text-align:right;" type="number" step="0.5" value="' + m.out + '" onchange="setModel(\'' + k + '\',\'out\',this.value)"></td>' +
+                '<td class="num">$' + eff.toFixed(2) + '</td></tr>';
+        }).join('') +
+        '<tr><td colspan="4" class="note" style="padding-top:0.6rem;">*Effective input rate after the ' + a.cacheHit + '% prompt-cache hit rate — cached reads bill at ' + (a.cacheReadMult*100) + '% of list.</td></tr></tbody>';
+
+    document.getElementById('volTable').innerHTML =
+        '<thead><tr><th>Profile &amp; model</th><th class="num">In (M)</th><th class="num">Out (M)</th><th class="num">CAD/mo</th></tr></thead><tbody>' +
+        Object.entries(DB.volumes).map(([k,v])=>
+            '<tr><td><div class="cell-stack"><strong>' + esc(v.label) + '</strong>' +
+            '<select class="inp" onchange="setVol(\'' + k + '\',\'model\',this.value)">' +
+                Object.entries(DB.models).map(([mk,m])=>'<option value="'+mk+'"'+(v.model===mk?' selected':'')+'>'+esc(m.label)+'</option>').join('') +
+            '</select></div></td>' +
+            '<td class="num"><input class="inp" style="width:56px;text-align:right;" type="number" step="1" value="' + v.inTok + '" onchange="setVol(\'' + k + '\',\'inTok\',this.value)"></td>' +
+            '<td class="num"><input class="inp" style="width:56px;text-align:right;" type="number" step="0.1" value="' + v.outTok + '" onchange="setVol(\'' + k + '\',\'outTok\',this.value)"></td>' +
+            '<td class="num"><strong>' + cad2(agentTokenCost(k,1)) + '</strong></td></tr>').join('') + '</tbody>';
+
+    document.getElementById('infraTable').innerHTML =
+        '<thead><tr><th>Tier</th><th class="num">CAD/mo</th></tr></thead><tbody>' +
+        Object.entries(DB.infra).map(([k,v])=>
+            '<tr><td><strong>' + esc(v.label) + '</strong><br><span class="note">' + esc(v.note) + '</span></td>' +
+            '<td class="num"><input class="inp" style="width:70px;text-align:right;" type="number" step="1" value="' + v.monthly + '" onchange="setInfra(\'' + k + '\',this.value)"></td></tr>').join('') + '</tbody>';
+
+    // unit economics per package
+    document.getElementById('unitTable').innerHTML =
+        '<thead><tr><th>Package</th><th class="num">Agents</th><th class="num">List MRR</th><th class="num">Tokens</th><th class="num">Infra</th><th class="num">Mgmt</th><th class="num">COGS</th><th class="num">Gross margin</th><th class="num">GM %</th><th class="num">Token allowance</th></tr></thead><tbody>' +
+        DB.packages.map(p => {
+            const e = economics({ seniors:p.seniors, juniors:p.juniors, intensity:1, infra:'shared', mrr:p.price, mgmtMode:'included', mgmtVal:0, changes: p.changes===999?300:p.changes });
+            return '<tr><td><strong>' + esc(p.name) + '</strong></td>' +
+                '<td class="num">' + e.agents + '</td>' +
+                '<td class="num">' + cad(p.price) + '</td>' +
+                '<td class="num">' + cad(e.tokens) + '</td>' +
+                '<td class="num">' + cad(e.infra) + '</td>' +
+                '<td class="num">' + cad(e.mgmt) + '</td>' +
+                '<td class="num">' + cad(e.cogs) + '</td>' +
+                '<td class="num"><strong>' + cad(e.margin) + '</strong></td>' +
+                '<td class="num">' + (e.healthy ? '<span class="chip good">' + pct(e.marginPct) + '</span>' : '<span class="chip bad">' + pct(e.marginPct) + '</span>') + '</td>' +
+                '<td class="num">' + cad(e.allowance) + '</td></tr>';
+        }).join('') + '</tbody>';
+}
+function setVal(id,v){ const el = document.getElementById(id); if(el && document.activeElement !== el) el.value = v; }
+function setModel(k,f,v){ DB.models[k][f] = parseFloat(v)||0; save(); renderAll(); }
+function setVol(k,f,v){ DB.volumes[k][f] = (f==='model') ? v : (parseFloat(v)||0); save(); renderAll(); }
+function setInfra(k,v){ DB.infra[k].monthly = parseFloat(v)||0; save(); renderAll(); }
+[['aCacheHit','cacheHit'],['aFx','fx'],['aPlatform','platformPerClient'],['aRate','rate'],['aBaseHrs','baseHrs'],
+ ['aAgentHrs','agentHrs'],['aChangeMin','changeMin'],['aChangeUse','changeUse'],['aTargetMargin','targetMargin'],
+ ['aDiscovery','discoveryFee'],['aGpu','gpuMonthly'],['aOverage','overageHeadroom']].forEach(([id,key])=>{
+    document.getElementById(id).addEventListener('input', e => {
+        DB.assumptions[key] = parseFloat(e.target.value) || 0;
+        save(); renderAll();
+    });
+});
+
+/* ---------- clients ---------- */
+function renderClients(){
+    const live = liveDeals();
+    const rows = live.map(d => ({ d, e: dealEcon(d) }));
+    const mrr  = rows.reduce((s,r)=>s+r.e.mrr,0);
+    const cogs = rows.reduce((s,r)=>s+r.e.cogs,0);
+    const burn = rows.reduce((s,r)=>s+r.e.tokens,0);
+
+    document.getElementById('clientKpis').innerHTML = [
+        kpiTile('Live clients', live.length, 'Billing today',''),
+        kpiTile('Recurring revenue', cad(mrr), cad(mrr*12) + ' annualised','accent'),
+        kpiTile('Cost of delivery', cad(cogs), (cogs/Math.max(mrr,1)*100).toFixed(1) + '% of revenue',''),
+        kpiTile('Gross margin', pct(mrr?(mrr-cogs)/mrr:0), cad(mrr-cogs) + '/mo','margin'),
+        kpiTile('Token burn', cad(burn), 'Modelled, not metered — wire in usage logging','')
+    ].join('');
+
+    document.getElementById('clientTable').innerHTML = rows.length ?
+        '<thead><tr><th>Client</th><th>Package</th><th>Infra</th><th class="num">Usage</th><th class="num">MRR</th><th class="num">Tokens</th><th class="num">Allowance</th><th class="num">Infra</th><th class="num">Mgmt</th><th class="num">Margin</th><th class="num">GM %</th></tr></thead><tbody>' +
+        rows.map(({d,e}) =>
+            '<tr><td><strong>' + esc(d.name) + '</strong><br><span class="note">' + esc(d.vertical) + ' · ' + e.agents + ' agents</span></td>' +
+            '<td>' + esc(pkg(d.package).name) + '</td>' +
+            '<td>' + esc(e.infraLabel) + '</td>' +
+            '<td class="num">' + d.intensity + '×</td>' +
+            '<td class="num">' + cad(e.mrr) + '</td>' +
+            '<td class="num">' + cad(e.tokens) + '</td>' +
+            '<td class="num">' + cad(e.allowance) + '</td>' +
+            '<td class="num">' + cad(e.infra) + '</td>' +
+            '<td class="num">' + cad(e.mgmt) + '</td>' +
+            '<td class="num"><strong>' + cad(e.margin) + '</strong></td>' +
+            '<td class="num">' + (e.healthy ? '<span class="chip good">' + pct(e.marginPct) + '</span>' : '<span class="chip bad">' + pct(e.marginPct) + '</span>') + '</td></tr>').join('') +
+        '<tr class="total"><td>Total</td><td></td><td></td><td class="num">—</td><td class="num">' + cad(mrr) + '</td><td class="num">' + cad(burn) + '</td><td class="num">—</td>' +
+        '<td class="num">' + cad(rows.reduce((s,r)=>s+r.e.infra,0)) + '</td><td class="num">' + cad(rows.reduce((s,r)=>s+r.e.mgmt,0)) + '</td>' +
+        '<td class="num">' + cad(mrr-cogs) + '</td><td class="num">' + pct(mrr?(mrr-cogs)/mrr:0) + '</td></tr></tbody>'
+        : '<tbody><tr><td class="note">No live clients yet. Move a deal to the Live stage on the pipeline board.</td></tr></tbody>';
+
+    rankBars(document.getElementById('clientMarginChart'),
+        rows.slice().sort((a,b)=>b.e.margin-a.e.margin).map(({d,e})=>({
+            label:d.name, value:e.margin, sub:pct(e.marginPct),
+            colour: e.healthy ? 'var(--series-margin)' : 'var(--series-mgmt)',
+            tip:'<div class="tt-h">'+esc(d.name)+'</div>' +
+                '<div class="tt-r"><span>Revenue</span><b>'+cad(e.mrr)+'</b></div>' +
+                '<div class="tt-r"><span>Tokens</span><b>'+cad(e.tokens)+'</b></div>' +
+                '<div class="tt-r"><span>Infra</span><b>'+cad(e.infra)+'</b></div>' +
+                '<div class="tt-r"><span>Management</span><b>'+cad(e.mgmt)+'</b></div>' +
+                '<div class="tt-r"><span>Gross margin</span><b>'+cad(e.margin)+' ('+pct(e.marginPct)+')</b></div>'
+        })), 'var(--series-margin)');
+
+    rankBars(document.getElementById('concChart'),
+        rows.slice().sort((a,b)=>b.e.mrr-a.e.mrr).map(({d,e})=>({
+            label:d.name, value:e.mrr, display:pct(mrr?e.mrr/mrr:0), sub:cad(e.mrr)+'/mo',
+            colour: (mrr && e.mrr/mrr > 0.25) ? 'var(--series-infra)' : 'var(--series-tokens)',
+            tip:'<div class="tt-h">'+esc(d.name)+'</div><div class="tt-r"><span>MRR</span><b>'+cad(e.mrr)+'</b></div><div class="tt-r"><span>Share of book</span><b>'+pct(mrr?e.mrr/mrr:0)+'</b></div>'
+        })), 'var(--series-tokens)');
+}
+
+/* ---------- provisioning ---------- */
+function renderProvisioning(){
+    document.getElementById('buildList').innerHTML = checklist(BUILD_STEPS);
+    const sel = document.getElementById('pvClient');
+    const keep = sel.value;
+    sel.innerHTML =
+        '<optgroup label="Pipeline & clients">' + DB.deals.map(d=>'<option value="deal:'+d.id+'">'+esc(d.name)+' — '+esc(stage(d.stage).name)+'</option>').join('') + '</optgroup>' +
+        (DB.scenarios.length ? '<optgroup label="Saved scenarios">' + DB.scenarios.map((s,i)=>'<option value="scen:'+i+'">'+esc(s.name)+'</option>').join('') + '</optgroup>' : '');
+    if(keep) sel.value = keep;
+}
+function checklist(steps){
+    return steps.map(s => {
+        const done = !!DB.checks[s.id];
+        return '<li class="' + (done?'done':'') + '"><input type="checkbox" ' + (done?'checked':'') + ' onchange="toggleCheck(\'' + s.id + '\')">' +
+            '<span><span class="ck-title">' + esc(s.t) + '</span>' + esc(s.d) + '</span></li>';
+    }).join('');
+}
+function toggleCheck(id){ DB.checks[id] = !DB.checks[id]; save(); renderAll(); }
+
+function genConfig(){
+    const v = val('pvClient');
+    if(!v){ toast('Nothing to generate from yet.'); return; }
+    let rec;
+    if(v.startsWith('deal:')){
+        const d = DB.deals.find(x=>x.id===v.slice(5));
+        if(!d) return;
+        rec = { name:d.name, vertical:d.vertical, package:d.package, seniors:d.seniors, juniors:d.juniors, intensity:d.intensity, infra:d.infra, mrr:d.mrr };
+    } else {
+        const s = DB.scenarios[parseInt(v.slice(5),10)];
+        if(!s) return;
+        rec = { name:s.name, vertical:s.vertical, package:s.package, seniors:s.seniors, juniors:s.juniors, intensity:s.intensity, infra:s.infra, mrr:s.mrr };
+    }
+    const slug = rec.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,24) || 'client';
+    const e = economics({ seniors:rec.seniors, juniors:rec.juniors, intensity:rec.intensity, infra:rec.infra, mrr:rec.mrr, mgmtMode:'included', mgmtVal:0, changes:pkg(rec.package).changes===999?300:pkg(rec.package).changes });
+    const tier = val('pvTier');
+
+    const seniors = DB.catalog.filter(c=>c.tier==='senior').slice(0, rec.seniors);
+    const juniors = DB.catalog.filter(c=>c.tier==='junior').slice(0, rec.juniors);
+    const agent = (c) => ({
+        name: c.name,
+        role: c.role,
+        model: DB.models[DB.volumes[c.tier==='junior'?'junior':'senior'].model] ? DB.volumes[c.tier==='junior'?'junior':'senior'].model : 'sonnet-5',
+        system_prompt: 'prompts/' + c.name.toLowerCase() + '.' + rec.vertical.toLowerCase().replace(/\s+/g,'-') + '.md',
+        tools: c.tier==='junior' ? ['search','read','write'] : ['search','read','write','browser','email','crm'],
+        max_tokens: c.tier==='junior' ? 2048 : 4096,
+        context_ceiling_tokens: c.tier==='junior' ? 32000 : 64000,
+        prompt_cache: true,
+        monthly_token_budget_cad: Math.round(agentTokenCost(c.tier==='junior'?'junior':'senior', rec.intensity))
+    });
+
+    const cfg = {
+        client_id: slug,
+        display_name: rec.name,
+        vertical: rec.vertical,
+        tier: tier,
+        subdomain: slug + '.hirewilfred.ca',
+        region: 'ca-central / Vultr Toronto',
+        billing: { currency:'CAD', mrr: rec.mrr, package: pkg(rec.package).name },
+        metering: {
+            token_allowance_cad: Math.round(e.allowance),
+            soft_cap_pct: 80,
+            hard_cap_pct: 120,
+            alert_webhook: 'https://control.hirewilfred.ca/hooks/usage/' + slug
+        },
+        orchestrator: {
+            name:'Wilfred',
+            role:'Workforce conductor — routing and triage',
+            model: DB.volumes.wilfred.model,
+            system_prompt: 'prompts/wilfred.' + rec.vertical.toLowerCase().replace(/\s+/g,'-') + '.md',
+            tools:['route','delegate','summarise','escalate'],
+            max_tokens: 2048,
+            context_ceiling_tokens: 24000,
+            prompt_cache: true
+        },
+        agents: seniors.concat(juniors).map(agent)
+    };
+    document.getElementById('pvOut').textContent = JSON.stringify(cfg, null, 2);
+
+    const compose = tier === 'shared'
+? `# docker-compose.${slug}.yml — SHARED TIER
+# Deploy: docker compose -p hw-${slug} -f docker-compose.${slug}.yml up -d
+# Idempotent: re-running is safe. Rollback: docker compose -p hw-${slug} down
+services:
+  orchestrator:
+    image: registry.hirewilfred.ca/wilfred-orchestrator:\${WILFRED_VERSION:-stable}
+    container_name: hw-${slug}-orchestrator
+    restart: unless-stopped
+    environment:
+      CLIENT_ID: ${slug}
+      PGHOST: \${SHARED_PG_HOST}
+      PGSCHEMA: tenant_${slug.replace(/-/g,'_')}
+      AGENT_CONFIG: /etc/wilfred/agents.json
+      TOKEN_ALLOWANCE_CAD: "${Math.round(e.allowance)}"
+      USAGE_SINK: https://control.hirewilfred.ca/ingest/usage
+      # Model keys are injected at egress by the control plane, never mounted here
+    volumes:
+      - ./config/${slug}/agents.json:/etc/wilfred/agents.json:ro
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.${slug}.rule: Host(\`${slug}.hirewilfred.ca\`)
+      traefik.http.routers.${slug}.tls.certresolver: le
+    networks: [tenant_${slug.replace(/-/g,'_')}]
+    mem_limit: 2g
+    cpus: 1.0
+
+  worker:
+    image: registry.hirewilfred.ca/wilfred-worker:\${WILFRED_VERSION:-stable}
+    container_name: hw-${slug}-worker
+    restart: unless-stopped
+    depends_on: [orchestrator]
+    environment:
+      CLIENT_ID: ${slug}
+      AGENT_COUNT: "${e.agents}"
+    networks: [tenant_${slug.replace(/-/g,'_')}]
+    mem_limit: 4g
+
+networks:
+  tenant_${slug.replace(/-/g,'_')}:
+    driver: bridge
+    internal: false   # tenant network is isolated from every other tenant`
+: `# main.tf — DEDICATED TIER
+# terraform apply -var client=${slug}
+# Remote backend with locking. Never run this against local state.
+terraform {
+  backend "s3" {
+    bucket = "hw-tfstate"
+    key    = "tenants/${slug}.tfstate"
+    region = "ca-central-1"
+    dynamodb_table = "hw-tfstate-lock"
+  }
+}
+
+module "tenant" {
+  source        = "../modules/wilfred-tenant"
+  client        = "${slug}"
+  display_name  = "${rec.name}"
+  region        = "yto"              # Vultr Toronto
+  plan          = "vc2-4c-8gb"
+  agent_count   = ${e.agents}
+  subdomain     = "${slug}.hirewilfred.ca"
+  token_allowance_cad = ${Math.round(e.allowance)}
+  private_vpc   = ${rec.infra === 'sovereign' ? 'true' : 'false'}
+
+  # cloud-init installs Docker, pulls agent images, seeds agents.json
+  agent_config  = file("\${path.module}/config/${slug}/agents.json")
+}
+
+output "tenant_ip"  { value = module.tenant.ipv4 }
+output "tenant_url" { value = "https://${slug}.hirewilfred.ca" }`;
+
+    document.getElementById('pvCompose').textContent = compose;
+    toast('Config generated for ' + rec.name + '.');
+}
+function copyEl(id){
+    navigator.clipboard.writeText(document.getElementById(id).textContent)
+        .then(()=>toast('Copied.'), ()=>toast('Copy blocked by the browser.'));
+}
+
+/* ---------- roadmap ---------- */
+function renderRoadmap(){
+    document.getElementById('burnList').innerHTML = checklist(BURN_STEPS);
+    document.getElementById('hostList').innerHTML = checklist(HOST_STEPS);
+    document.getElementById('gpuTable').innerHTML =
+        '<thead><tr><th>Option</th><th class="num">CAD / month</th><th>Notes</th></tr></thead><tbody>' +
+        GPU_OPTIONS.map(g=>'<tr><td><strong>'+esc(g.o)+'</strong></td><td class="num">'+esc(g.c)+'</td><td>'+esc(g.n)+'</td></tr>').join('') +
+        '</tbody>';
+    document.getElementById('routeTable').innerHTML =
+        '<thead><tr><th>Workload</th><th>Model</th><th>Why</th></tr></thead><tbody>' +
+        ROUTES.map(r=>'<tr><td><strong>'+esc(r.w)+'</strong></td><td>'+(r.m==='Self-hosted'?'<span class="chip j">'+esc(r.m)+'</span>':'<span class="chip s">'+esc(r.m)+'</span>')+'</td><td>'+esc(r.why)+'</td></tr>').join('') +
+        '</tbody>';
+}
+
+/* ---------- admin ---------- */
+function renderAdmin(){
+    document.getElementById('pkgTable').innerHTML =
+        '<thead><tr><th>Package</th><th class="num">Seniors</th><th class="num">Juniors</th><th class="num">Price/mo</th><th class="num">Changes/mo</th></tr></thead><tbody>' +
+        DB.packages.map((p,i)=>'<tr><td><strong>'+esc(p.name)+'</strong></td>' +
+            numCell(p.seniors,'setPkg('+i+',\'seniors\',this.value)') +
+            numCell(p.juniors,'setPkg('+i+',\'juniors\',this.value)') +
+            numCell(p.price,'setPkg('+i+',\'price\',this.value)') +
+            numCell(p.changes,'setPkg('+i+',\'changes\',this.value)') +
+            '</tr>').join('') + '</tbody>';
+
+    document.getElementById('stageAdminTable').innerHTML =
+        '<thead><tr><th>Stage</th><th class="num">Close probability %</th></tr></thead><tbody>' +
+        STAGES.map(s=>'<tr><td><strong>'+esc(s.name)+'</strong></td>' +
+            numCell(Math.round(prob(s.id)*100),'setStage(\''+s.id+'\',this.value)') + '</tr>').join('') + '</tbody>';
+
+    document.getElementById('catTable').innerHTML =
+        '<thead><tr><th>Agent</th><th>Role</th><th>Tier</th><th class="num">Price/mo</th><th class="num">Modelled token cost</th><th></th></tr></thead><tbody>' +
+        DB.catalog.map((c,i)=>'<tr><td><strong>'+esc(c.name)+'</strong></td><td>'+esc(c.role)+'</td>' +
+            '<td>'+(c.tier==='junior'?'<span class="chip j">Junior</span>':'<span class="chip s">Senior</span>')+'</td>' +
+            numCell(c.price,'setCat('+i+',\'price\',this.value)') +
+            '<td class="num">'+cad2(agentTokenCost(c.tier==='junior'?'junior':'senior',1))+'</td>' +
+            '<td class="num"><button class="btn sm danger" onclick="dropAgent('+i+')">✕</button></td></tr>').join('') + '</tbody>';
+}
+function numCell(v, handler){
+    return '<td class="num"><input class="inp" style="width:88px;padding:0.28rem 0.4rem;text-align:right;" type="number" value="' + v + '" onchange="' + handler + '"></td>';
+}
+function setPkg(i,f,v){ DB.packages[i][f] = parseFloat(v)||0; save(); renderAll(); }
+function setStage(id,v){ DB.stageProbs[id] = Math.min(100,Math.max(0,parseFloat(v)||0)); save(); renderAll(); }
+function setCat(i,f,v){ DB.catalog[i][f] = parseFloat(v)||0; save(); renderAll(); }
+function addAgent(){
+    const n = val('newAgentName').trim(), r = val('newAgentRole').trim();
+    if(!n || !r){ toast('Name and role are required.'); return; }
+    DB.catalog.push({ name:n, role:r, tier:val('newAgentTier'), price:num('newAgentPrice')||0 });
+    ['newAgentName','newAgentRole','newAgentPrice'].forEach(id=>document.getElementById(id).value='');
+    save(); renderAll(); toast(n + ' added to the catalog.');
+}
+function dropAgent(i){
+    if(!confirm('Remove ' + DB.catalog[i].name + ' from the catalog?')) return;
+    DB.catalog.splice(i,1); save(); renderAll();
+}
+
+/* =========================================================================
+   8. DATA IO
+   ========================================================================= */
+function exportData(){
+    const blob = new Blob([JSON.stringify(DB,null,2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'hirewilfred-ops-' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('Exported.');
+}
+function importData(ev){
+    const f = ev.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+        try{
+            const parsed = JSON.parse(r.result);
+            if(!parsed || !Array.isArray(parsed.deals)) throw new Error('Not an ops export');
+            DB = Object.assign(defaults(), parsed);
+            DB.assumptions = Object.assign(defaults().assumptions, parsed.assumptions||{});
+            save(); renderAll(); toast('Imported ' + DB.deals.length + ' deals.');
+        }catch(e){ toast('That file is not a valid ops export.'); }
+    };
+    r.readAsText(f);
+    ev.target.value = '';
+}
+function reseed(){
+    if(!confirm('Replace the current pipeline with the demo deals? Assumptions are kept.')) return;
+    DB.deals = seedDeals(); save(); renderAll(); toast('Demo pipeline reloaded.');
+}
+function wipe(){
+    if(!confirm('Delete everything in this console — deals, scenarios and assumptions?')) return;
+    localStorage.removeItem(KEY); DB = defaults(); save(); renderAll(); toast('Wiped back to defaults.');
+}
+
+/* =========================================================================
+   9. BOOT
+   ========================================================================= */
+let toastTimer;
+function toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>t.classList.remove('show'), 3000);
+}
+function renderAll(){
+    document.getElementById('navDeals').textContent = openDeals().length;
+    document.getElementById('navOpps').textContent  = DB.opps.filter(oppOpen).length;
+    const active = document.querySelector('.view.is-active');
+    if(!active) return;
+    switch(active.id){
+        case 'view-overview':     renderOverview(); break;
+        case 'view-wilfred':      renderWilfred(); break;
+        case 'view-pipeline':     renderPipeline(); break;
+        case 'view-quoter':       renderQuoter(); break;
+        case 'view-economics':    renderEconomics(); break;
+        case 'view-clients':      renderClients(); break;
+        case 'view-provisioning': renderProvisioning(); break;
+        case 'view-roadmap':      renderRoadmap(); break;
+        case 'view-admin':        renderAdmin(); break;
+    }
+}
+/* nav shadow on scroll, matching the public pages */
+window.addEventListener('scroll', () => {
+    document.getElementById('siteNav').classList.toggle('is-scrolled', window.scrollY > 12);
+}, { passive:true });
+
+load();
+renderQuoterInputs();
+renderConn();
+renderAll();
+save();
+connectSupabase();
+</script>
+</body>
+</html>

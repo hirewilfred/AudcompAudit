@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, UserCircle, Home, LogOut, Building2, Megaphone, Zap, Users2, ClipboardList, GraduationCap, KeyRound, Globe, Activity, Bot, Linkedin, Layout, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Users, UserCircle, Home, LogOut, Building2, Megaphone, Zap, Users2, ClipboardList, GraduationCap, KeyRound, Globe, Activity, Bot, Linkedin, Layout, Gauge, ChevronRight } from 'lucide-react';
 
 const SECTIONS = [
     { label: 'Command Center', items: [{ label: 'Admin Home', href: '/admin', icon: LayoutDashboard }] },
@@ -42,16 +42,28 @@ const SECTIONS = [
         label: 'Sales Enablement',
         items: [{ label: 'Sales Training Hub', href: '/admin/sales-training', icon: GraduationCap }],
     },
+    {
+        label: 'HireWilfred',
+        items: [
+            { label: 'Ops Console', href: '/admin/hirewilfred', icon: Gauge },
+            { label: 'Agent Console', href: '/admin/hirewilfred/agents', icon: Bot },
+            { label: 'Client Portal', href: '/admin/hirewilfred/portal', icon: Layout },
+        ],
+    },
 ];
 
 const STORAGE_KEY = 'admin_nav_open_sections_v1';
 
+// Hrefs that are also the prefix of a sibling's href, so a startsWith test
+// would light up two items at once. These match exactly instead.
+const EXACT_MATCH = new Set(['/admin', '/admin/hirewilfred']);
+const hrefMatches = (href: string, pathname: string | null) =>
+    !pathname ? false : (EXACT_MATCH.has(href) ? pathname === href : pathname.startsWith(href));
+
 const sectionContains = (label: string, pathname: string | null) => {
     const sec = SECTIONS.find(s => s.label === label);
     if (!sec || !pathname) return false;
-    return sec.items.some(i =>
-        i.href === '/admin' ? pathname === '/admin' : pathname.startsWith(i.href)
-    );
+    return sec.items.some(i => hrefMatches(i.href, pathname));
 };
 
 export default function AdminNavbar() {
@@ -91,8 +103,7 @@ export default function AdminNavbar() {
         });
     };
 
-    const isActive = (href: string) =>
-        href === '/admin' ? pathname === '/admin' : (pathname?.startsWith(href) ?? false);
+    const isActive = (href: string) => hrefMatches(href, pathname);
 
     return (
         <nav className="w-64 bg-white text-slate-800 min-h-screen flex flex-col fixed left-0 top-0 z-50 shadow-sm border-r border-slate-100 overflow-hidden">
