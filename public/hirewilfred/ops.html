@@ -712,6 +712,7 @@ tr.total.strong td{font-size:0.95rem;}
                     <button class="btn" onclick="addSub()">+ Add subscription</button>
                 </div>
                 <div class="table-wrap" style="margin-top:1rem;"><table id="subsTable"></table></div>
+                <div id="subsOverlap" style="margin-top:1rem;"></div>
                 <div id="subsSummary" style="margin-top:1rem;"></div>
             </div>
 
@@ -1270,8 +1271,28 @@ function seedSubscriptions(){
           note:'Build seats only — per-client agent inference is metered separately under Token volumes.' },
         { id:uid(), vendor:'Apify',    purpose:'Contact scraping for outreach',   monthly:0, note:'' },
         { id:uid(), vendor:'Supabase', purpose:'Database, auth and edge functions', monthly:0, note:'' },
-        { id:uid(), vendor:'Vercel',   purpose:'Hosting and deploys',             monthly:0, note:'' }
+        { id:uid(), vendor:'Vercel',   purpose:'Hosting and deploys',             monthly:0, note:'' },
+        { id:uid(), vendor:'VPS — Audcomp', purpose:'First VPS: runs the Audcomp app and the demo agent fleet', monthly:0,
+          note:'This is the host the shared infrastructure tier allocates from — see the double-count check below before adding it to per-client infra as well.' }
     ];
+}
+
+/* The known overlaps between fixed subscriptions and the per-client cost
+   model. Each of these bills once in real life and can easily be counted
+   twice here — once as a subscription, once inside economics(). */
+function overlapWarnings(){
+    const paid = v => DB.subscriptions.some(s => s.vendor.toLowerCase().includes(v) && (+s.monthly||0) > 0);
+    const out = [];
+    if(paid('vps') && DB.infra.shared.monthly > 0)
+        out.push('<strong>VPS vs shared tier.</strong> The shared infrastructure tier is charging ' +
+            cad(DB.infra.shared.monthly) + ' per client while the VPS is also billed in full above. ' +
+            'If that VPS <em>is</em> the shared host, set the shared tier to $0 in Infrastructure and let this line carry the cost — otherwise the same box is counted twice.');
+    if((paid('supabase') || paid('vercel')) && DB.assumptions.platformPerClient > 0)
+        out.push('<strong>Platform overhead.</strong> Supabase and Vercel are billed here <em>and</em> allocated at ' +
+            cad(DB.assumptions.platformPerClient) + ' per client as platform overhead. Pick one.');
+    if(paid('claude'))
+        out.push('<strong>Claude.</strong> This line is build seats only. Agent inference is metered per agent under Token volumes and is already in cost of delivery — do not fold them together.');
+    return out;
 }
 
 function seedDeals(){
@@ -1355,7 +1376,15 @@ function load(){
             if(!Array.isArray(DB.campaigns) || !DB.campaigns.length) DB.campaigns = seedCampaigns();
             if(!Array.isArray(DB.opps)) DB.opps = seedOpps();
             if(!Array.isArray(DB.feed)) DB.feed = [];
-            if(!Array.isArray(DB.subscriptions) || !DB.subscriptions.length) DB.subscriptions = seedSubscriptions();
+            if(!Array.isArray(DB.subscriptions) || !DB.subscriptions.length){
+                DB.subscriptions = seedSubscriptions();
+            } else {
+                // Append vendors added to the seed since this browser last saved,
+                // without disturbing figures already entered against the others.
+                seedSubscriptions().forEach(s => {
+                    if(!DB.subscriptions.some(x => x.vendor === s.vendor)) DB.subscriptions.push(s);
+                });
+            }
             // Statuses changed to the AudcompAudit set — drop anything orphaned.
             DB.opps.forEach(o => { if(!STATUSES.some(s=>s.id===o.status)) o.status = 'researched'; });
             return;
@@ -2612,6 +2641,14 @@ function renderSubs(){
           (active ? '<div class="row" style="margin-top:0.9rem;">' +
             '<button class="btn" onclick="applySubsToOverhead()">Use ' + cad(perClient) + ' as the per-client platform overhead</button>' +
             '<span class="note">Currently ' + cad(DB.assumptions.platformPerClient) + '. This is the only place subscriptions touch the margin maths, and only if you ask.</span></div>' : '');
+
+    // Double-count check — the one thing that quietly wrecks a cost model.
+    const warns = overlapWarnings();
+    const warnEl = document.getElementById('subsOverlap');
+    warnEl.innerHTML = warns.length
+        ? '<div class="callout warn"><b>Double-count check</b><ul style="margin:0.5rem 0 0 1.05rem;padding:0;line-height:1.75;">' +
+            warns.map(w => '<li>' + w + '</li>').join('') + '</ul></div>'
+        : '';
 }
 function setSub(i, v){ DB.subscriptions[i].monthly = Math.max(0, parseFloat(v)||0); save(); renderEconomics(); }
 function dropSub(i){
