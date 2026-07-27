@@ -182,15 +182,13 @@
             .main { padding: 1.2rem; }
         }
     </style>
+    <link rel="stylesheet" href="/hirewilfred/audcomp-theme.css?v=1">
 </head>
 <body>
-
-    <div class="preview-band"><strong>Product preview</strong> — this portal is a design mockup with sample data. Your live portal is provisioned during onboarding. <a href="https://hirewilfred.ai/index.html" style="text-decoration:underline;">← Back to hirewilfred.ai</a></div>
 
     <!-- ================= LOGIN ================= -->
     <div class="login-wrap" id="loginView">
         <form class="login-card" id="loginForm">
-            <img class="logo" src="hirewilfred_logo_reverse.svg" alt="Hire Wilfred">
             <h1>Client Portal</h1>
             <p>Log in to manage your AI team — see what they did, approve work, and request changes.</p>
             <div class="field">
@@ -209,7 +207,6 @@
     <!-- ================= APP ================= -->
     <div class="app" id="appView">
         <aside class="sidebar">
-            <img class="logo" src="hirewilfred_logo_reverse.svg" alt="Hire Wilfred">
             <button class="side-link is-active" data-view="overview">📊 Overview</button>
             <button class="side-link" data-view="agents">👥 My Agents</button>
             <button class="side-link" data-view="approvals">✅ Approvals <span id="apBadge" style="margin-left:auto; background:var(--warn); color:#0D0D0D; font-size:0.68rem; font-weight:800; border-radius:999px; padding:0.1rem 0.5rem;">3</span></button>
@@ -499,5 +496,13 @@
             toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
         }
     </script>
+<script>
+/* injected by sync-hirewilfred-dashboards.mjs — embedded build */
+(function () {
+    var login = document.getElementById("loginView");
+    var app = document.getElementById("appView");
+    if (login && app) { login.style.display = "none"; app.classList.add("is-open"); }
+})();
+</script>
 </body>
 </html>

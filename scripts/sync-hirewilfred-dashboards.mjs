@@ -7,7 +7,13 @@
  * work from the /hirewilfred sub-path. The admin pages under
  * src/app/admin/hirewilfred/ embed them.
  *
- * Do not hand-edit anything in public/hirewilfred/ — it is overwritten.
+ * It also strips the HireWilfred nav, banner and footer, and links
+ * audcomp-theme.css so the dashboards read as part of this portal.
+ *
+ * Files in public/hirewilfred/ are OVERWRITTEN — do not hand-edit them. The
+ * one exception is audcomp-theme.css, which is authored in this repo and is
+ * never touched by this script; edit that to change how they look here.
+ *
  * Change the source repo, then re-run:
  *
  *   node scripts/sync-hirewilfred-dashboards.mjs [path-to-hirewilfredwww]
@@ -56,6 +62,43 @@ for (const a of ASSETS) {
 
 for (const f of HTML) {
     let html = readFileSync(join(SRC, f), 'utf8');
+
+    // --- strip the HireWilfred chrome -------------------------------------
+    // Inside the portal the Audcomp shell supplies the branding and nav, so
+    // the marketing nav, the internal banner and the marketing footer are all
+    // duplicate furniture. The sidebar logos in admin.html / dashboard.html go
+    // for the same reason.
+    html = html
+        .replace(/<nav class="site-nav"[\s\S]*?<\/nav>\s*/i, '')
+        .replace(/<div class="preview-band">[\s\S]*?<\/div>\s*/i, '')
+        .replace(/<footer class="site-footer">[\s\S]*?<\/footer>\s*/i, '')
+        .replace(/<a href="index\.html"><img class="logo"[^>]*><\/a>\s*/i, '')
+        .replace(/<img class="logo"[^>]*>\s*/gi, '');
+
+    // The marketing stylesheet only dressed the nav and footer we just removed.
+    html = html.replace(/\s*<link rel="stylesheet" href="style\.css[^"]*">/i, '');
+
+    // --- Audcomp theme, last so it wins the cascade ------------------------
+    html = html.replace('</head>',
+        '    <link rel="stylesheet" href="/hirewilfred/audcomp-theme.css?v=1">\n</head>');
+
+    // --- skip the demo sign-in ---------------------------------------------
+    // admin.html and dashboard.html open on a mock login where any email works.
+    // Reaching them here already required an admin session, so a second, fake
+    // login is friction that makes the embed look half-built. Open straight
+    // into the console instead. This is presentation only — that login never
+    // authenticated anything.
+    if (html.includes("id=\"loginView\"")) {
+        html = html.replace('</body>',
+            '<script>\n' +
+            '/* injected by sync-hirewilfred-dashboards.mjs — embedded build */\n' +
+            '(function () {\n' +
+            '    var login = document.getElementById("loginView");\n' +
+            '    var app = document.getElementById("appView");\n' +
+            '    if (login && app) { login.style.display = "none"; app.classList.add("is-open"); }\n' +
+            '})();\n' +
+            '</script>\n</body>');
+    }
 
     // Root-absolute asset paths -> the /hirewilfred sub-path.
     for (const a of ASSETS) html = html.split('"/' + a).join('"/hirewilfred/' + a);

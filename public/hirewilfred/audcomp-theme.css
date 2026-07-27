@@ -1,0 +1,305 @@
+/* =====================================================================
+   Audcomp Admin Portal theme for the embedded HireWilfred dashboards.
+
+   The dashboards ship dark, to match hirewilfred.ai. Inside this portal they
+   need to read as part of the Audcomp admin: white cards on slate-50, blue
+   → indigo accents, slate ink. Because the dashboards are written entirely
+   against CSS custom properties, almost all of that is a variable remap;
+   the rules further down only cover components that hard-coded a colour.
+
+   Loaded by scripts/sync-hirewilfred-dashboards.mjs, which also strips the
+   HireWilfred nav, banner and footer. It is applied ONLY to the copy in this
+   repo — the canonical dashboards stay dark.
+
+   CHART COLOURS: the dark palette was validated against #161616 and does not
+   hold on white, so these are the light steps of the same ramps, re-validated
+   against #ffffff (categorical: worst adjacent CVD ΔE 9.1, normal-vision
+   22.9; ordinal: monotone, gaps >= 0.06). Aqua and yellow sit below 3:1 on
+   white, which is allowed here only because every chart carries visible
+   direct labels and a data table beneath it — the relief rule. Do not remove
+   those labels without re-checking contrast.
+   ===================================================================== */
+
+:root {
+    /* --- surfaces --- */
+    --bg:        #f8fafc;   /* slate-50  — page */
+    --surface:   #ffffff;   /* white     — cards */
+    --surface-2: #f8fafc;   /* slate-50  — inset */
+    --surface-3: #f1f5f9;   /* slate-100 — deeper inset */
+
+    --border:    #e2e8f0;   /* slate-200 */
+    --border-2:  #cbd5e1;   /* slate-300 */
+
+    /* --- ink --- */
+    --ink:       #0f172a;   /* slate-900 */
+    --ink-2:     #475569;   /* slate-600 */
+    --ink-3:     #94a3b8;   /* slate-400 */
+
+    /* --- accents (portal blue -> indigo) --- */
+    --accent:      #2563eb;
+    --accent-soft: rgba(37, 99, 235, 0.10);
+    --copper:      #4f46e5;
+
+    /* --- categorical series, light steps --- */
+    --series-tokens: #2a78d6;
+    --series-infra:  #eb6834;
+    --series-margin: #1baf7a;
+    --series-mgmt:   #eda100;
+
+    /* --- ordinal ramp, light steps --- */
+    --ord-1: #86b6ef;
+    --ord-2: #5598e7;
+    --ord-3: #2a78d6;
+    --ord-4: #1c5cab;
+    --ord-5: #104281;
+
+    /* --- status --- */
+    --good:     #0ca30c;
+    --warning:  #fab219;
+    --serious:  #ec835a;
+    --critical: #d03b3b;
+    /* admin.html / dashboard.html spell two of these differently. */
+    --warn:     #fab219;
+    --junior:   #0ca30c;
+
+    /* --- chart chrome --- */
+    --grid:     #e2e8f0;
+    --baseline: #cbd5e1;
+    --muted:    #64748b;
+
+    --radius: 12px;         /* rounded-xl */
+}
+
+/* The site nav is stripped, so the offset that cleared it must go too. */
+body {
+    padding-top: 0;
+    background: var(--bg);
+    color: var(--ink);
+}
+
+/* --- header: a compact toolbar; the portal supplies the page title --- */
+.ops-head {
+    padding-top: 0;
+    background: #ffffff;
+    border-bottom: 1px solid var(--border);
+}
+.ops-head-shell { padding-top: 1.1rem; }
+.ops-badge { display: none; }           /* the portal header already says HireWilfred */
+.ops-head-top h1 {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 1.3rem;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+}
+.ops-head-top .sub { color: var(--ink-3); font-size: 0.83rem; }
+
+/* --- tabs --- */
+.tab { color: var(--ink-3); font-weight: 700; }
+.tab:hover { color: var(--ink); }
+.tab.is-active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab .badge { background: var(--surface-3); color: var(--ink-2); }
+.tab.is-active .badge { background: var(--accent); color: #ffffff; }
+
+/* --- cards --- */
+.panel, .kpi {
+    background: #ffffff;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.panel > h2, .kpi .k-value { color: var(--ink); font-weight: 900; letter-spacing: -0.02em; }
+.kpi .k-label { color: var(--ink-3); }
+.kpi .k-sub { color: var(--ink-3); }
+.kpi.accent .k-value { color: var(--accent); }
+.kpi.margin .k-value { color: #0f766e; }
+.kpi.copper .k-value { color: var(--copper); }
+
+/* --- buttons --- */
+.btn {
+    background: #ffffff;
+    border: 1px solid var(--border-2);
+    color: var(--ink-2);
+    font-weight: 700;
+    border-radius: 10px;
+}
+.btn:hover { background: #f1f5f9; color: var(--ink); border-color: #94a3b8; }
+.btn.primary {
+    background: linear-gradient(to right, #2563eb, #4f46e5);
+    color: #ffffff;
+    border: 0;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.30);
+}
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--accent); }
+.btn.ghost:hover { background: var(--accent-soft); }
+.btn.danger { color: #dc2626; border-color: #fecaca; background: #fff1f2; }
+
+/* --- form controls --- */
+.field input, .field select, .field textarea, .inp {
+    background: #ffffff;
+    border: 1px solid var(--border-2);
+    color: var(--ink);
+}
+.field input::placeholder, .inp::placeholder { color: #cbd5e1; }
+.field label, .lbl, .chart-title { color: var(--ink-3); }
+
+/* --- tables --- */
+th { color: var(--ink-3); border-bottom-color: var(--border); }
+td { color: var(--ink-2); border-bottom-color: #f1f5f9; }
+td strong, tr.total td { color: var(--ink); }
+tr.total td { border-top-color: var(--border-2); }
+
+/* --- chips --- */
+.chip { border-color: var(--border-2); color: var(--ink-2); background: #ffffff; }
+.chip.j    { background: #ecfdf5; border-color: #6ee7b7; color: #047857; }
+.chip.s    { background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; }
+.chip.pack { background: #eef2ff; border-color: #c7d2fe; color: #4338ca; }
+.chip.good { background: #ecfdf5; border-color: #6ee7b7; color: #047857; }
+.chip.warn { background: #fffbeb; border-color: #fcd34d; color: #b45309; }
+.chip.bad  { background: #fef2f2; border-color: #fca5a5; color: #b91c1c; }
+
+/* --- chart furniture --- */
+.funnel-track, .stackbar { background: #f1f5f9; }
+.funnel-label { color: var(--ink-2); }
+.funnel-val { color: var(--ink); }
+.funnel-val small { color: var(--ink-3); }
+.legend-item { color: var(--ink-2); }
+.legend-item b { color: var(--ink); }
+
+/* --- pipeline board --- */
+.col { background: #ffffff; border-color: #f1f5f9; box-shadow: 0 1px 2px rgba(15,23,42,0.04); }
+.col-head h3 { color: var(--ink); }
+.col-sum { color: var(--ink-3); }
+.col-sum b { color: var(--ink-2); }
+.col-empty { color: var(--ink-3); border-color: var(--border); }
+.deal { background: #f8fafc; border-color: #e2e8f0; }
+.deal:hover { border-color: #94a3b8; background: #ffffff; }
+.deal .d-name { color: var(--ink); }
+.deal .d-meta, .deal .d-next { color: var(--ink-3); }
+.deal .d-money { color: var(--ink-2); }
+.deal .d-money b { color: var(--ink); }
+.deal .d-next b { color: var(--copper); }
+.deal-actions button { background: #ffffff; border-color: var(--border-2); color: var(--ink-2); }
+.deal-actions button:hover { color: var(--ink); border-color: #94a3b8; }
+
+/* --- Wilfred desk --- */
+.team-pill { background: #ffffff; border-color: var(--border-2); color: var(--ink-2); }
+.team-pill:hover { border-color: #94a3b8; color: var(--ink); }
+.team-pill.is-active { background: var(--accent-soft); border-color: #93c5fd; color: #1d4ed8; }
+select.status-sel { background: #ffffff; border-color: var(--border-2); color: var(--ink); }
+.rep-av { color: #ffffff; }
+.conn { border-color: var(--border-2); color: var(--ink-2); background: #ffffff; }
+.conn.live    { background: #ecfdf5; border-color: #6ee7b7; color: #047857; }
+.conn.offline { background: #fffbeb; border-color: #fcd34d; color: #b45309; }
+.auto-rule { border-bottom-color: #f1f5f9; }
+.auto-rule .ar-when { color: var(--ink-3); }
+.auto-rule .ar-do { color: var(--ink); }
+.auto-rule .ar-detail { color: var(--ink-2); }
+.feed-item { color: var(--ink-2); border-bottom-color: #f1f5f9; }
+.feed-item b { color: var(--ink); }
+.feed-time { color: var(--ink-3); }
+
+/* --- callouts --- */
+.callout      { background: var(--accent-soft); border-left-color: var(--accent); color: var(--ink-2); }
+.callout.warn { background: #fffbeb; border-left-color: #f59e0b; }
+.callout.risk { background: #fef2f2; border-left-color: #dc2626; }
+.callout b { color: var(--ink); }
+.note { color: var(--ink-3); }
+.note strong { color: var(--ink-2); }
+.plane { background: #f8fafc; border-color: var(--border); }
+.plane ul { color: var(--ink-2); }
+.checklist li { color: var(--ink-2); border-bottom-color: #f1f5f9; }
+.checklist .ck-title { color: var(--ink); }
+.checklist li.done .ck-title { color: var(--ink-3); }
+
+/* Code stays dark — a light-on-dark block is the portal's own convention for
+   generated config, and it keeps JSON/YAML readable. */
+pre {
+    background: #0f172a;
+    border-color: #1e293b;
+    color: #e2e8f0;
+}
+code { color: #1d4ed8; }
+
+/* --- overlays --- */
+.modal-bg { background: rgba(15, 23, 42, 0.45); }
+.modal { background: #ffffff; border-color: var(--border); box-shadow: 0 24px 60px rgba(15,23,42,0.18); }
+.modal h2 { color: var(--ink); }
+.tt {
+    background: #ffffff;
+    border-color: var(--border-2);
+    color: var(--ink);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+}
+.tt .tt-r { color: var(--ink-2); }
+.tt .tt-r b { color: var(--ink); }
+.toast { background: #0f172a; color: #ffffff; }
+
+/* --- scrollbars --- */
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* =====================================================================
+   admin.html and dashboard.html — the Agent Console and Client Portal.
+   Same authoring style, own sidebar shell rather than the ops tab strip.
+   ===================================================================== */
+.sidebar {
+    background: #ffffff;
+    border-right: 1px solid #f1f5f9;
+}
+.side-link { color: var(--ink-2); font-weight: 700; }
+.side-link:hover { background: #eff6ff; color: #1d4ed8; }
+.side-link.is-active {
+    background: linear-gradient(to right, #2563eb, #4f46e5);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.30);
+}
+.side-foot { color: var(--ink-3); border-top-color: #f1f5f9; }
+.admin-tag { color: var(--accent); }
+
+.topbar {
+    background: #ffffff;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: none;
+}
+.topbar h1 { color: var(--ink); font-weight: 900; }
+.topbar .sub { color: var(--ink-3); }
+
+/* Sign-in screens */
+.login-wrap { background: var(--bg); }
+.login-card {
+    background: #ffffff;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+}
+.login-card h1 { color: var(--ink); }
+.login-card > p, .login-note { color: var(--ink-3); }
+.btn-main {
+    background: linear-gradient(to right, #2563eb, #4f46e5);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.30);
+}
+.btn-sm { background: #ffffff; border: 1px solid var(--border-2); color: var(--ink-2); }
+.btn-sm:hover { background: #f1f5f9; color: var(--ink); }
+.btn-sm.primary { background: linear-gradient(to right, #2563eb, #4f46e5); color: #ffffff; border: 0; }
+
+/* Agent catalog / quote builder (admin.html) */
+.c-card, .q-item, .quote-doc { background: #ffffff; border-color: #f1f5f9; }
+.c-card .c-name { color: var(--ink); }
+.c-card .c-role, .q-group-head, .quote-empty { color: var(--ink-3); }
+.c-card .c-price { color: var(--ink); }
+.q-item:hover { background: #f8fafc; }
+.q-name { color: var(--ink); }
+.q-price { color: var(--ink-2); }
+.who { color: var(--ink-3); }
+
+/* Client portal (dashboard.html) */
+.a-card { background: #ffffff; border-color: #f1f5f9; }
+.a-head, .a-stats { color: var(--ink-2); }
+.approval, .request-log, .feed { border-color: #f1f5f9; color: var(--ink-2); }
+.bar-track, .meter-track { background: #f1f5f9; }
+.meter-caption { color: var(--ink-3); }
+.wilfred-note { background: var(--accent-soft); color: var(--ink-2); }
+.btn-approve { background: #059669; color: #ffffff; }
+.btn-decline { background: #ffffff; border: 1px solid #fca5a5; color: #b91c1c; }
