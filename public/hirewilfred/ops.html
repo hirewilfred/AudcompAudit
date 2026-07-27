@@ -265,6 +265,53 @@ select.status-sel:focus{outline:2px solid var(--accent);outline-offset:-1px;}
     .ops-head-shell,.view{padding-left:1.1rem;padding-right:1.1rem;}
     .ops-head-top h1{font-size:1.6rem;}
 }
+
+/* ---------- P&L report ---------- */
+.pl-head{display:flex;justify-content:space-between;align-items:flex-start;gap:1.5rem;padding-bottom:1rem;border-bottom:2px solid var(--border-2);margin-bottom:1.2rem;}
+.pl-org{font-size:0.7rem;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-3);}
+.pl-heads{display:flex;gap:2rem;}
+.pl-total{text-align:right;}
+.pl-total .note{font-size:0.68rem;}
+.pl-total span{display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;}
+.pl-total strong{font-size:1.8rem;font-weight:800;letter-spacing:-0.03em;}
+.pl-table td:first-child{width:56%;}
+.pl-table .num{font-variant-numeric:tabular-nums;}
+tr.pl-section td{padding-top:1.1rem;font-size:0.68rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);border-bottom:1px solid var(--border);}
+tr.total.strong td{font-size:0.95rem;}
+.pl-notes{margin-top:1.3rem;padding-top:1rem;border-top:1px solid var(--border);font-size:0.8rem;color:var(--ink-2);line-height:1.7;}
+.pl-notes p{margin:0 0 0.6rem;}
+.pl-notes strong{color:var(--ink);}
+
+/* ---------- print / save as PDF ----------
+   The console is dark and full of chrome; a printed P&L must be a plain
+   black-on-white document. Everything except the report is removed rather
+   than hidden behind colour, so nothing bleeds ink or leaks a nav bar. */
+@media print{
+    @page{margin:16mm 14mm;}
+    :root{
+        --bg:#ffffff;--surface:#ffffff;--surface-2:#ffffff;--surface-3:#f4f4f5;
+        --border:#d4d4d8;--border-2:#a1a1aa;
+        --ink:#000000;--ink-2:#27272a;--ink-3:#52525b;
+        --accent:#000000;--good:#15803d;--critical:#b91c1c;
+    }
+    html,body{background:#ffffff !important;color:#000000 !important;padding-top:0 !important;}
+    .site-nav,.preview-band,.ops-head,.site-footer,.no-print,.tabs,
+    .toast,.tt,.modal-bg,#connBadge,#dataBadge{display:none !important;}
+    .view{display:none !important;padding:0 !important;}
+    .view#view-pl{display:block !important;}
+    .ops-main{max-width:none;margin:0;}
+    .panel{border:0 !important;box-shadow:none !important;padding:0 !important;background:#ffffff !important;}
+    .print-page{break-inside:auto;}
+    .print-page + .print-page{break-before:page;}
+    table{width:100%;}
+    thead{display:table-header-group;}   /* repeat headers across pages */
+    tr{break-inside:avoid;}
+    tr.pl-section{break-after:avoid;}
+    td,th{color:#000000 !important;}
+    .note,.pl-org{color:#3f3f46 !important;}
+    .chip{border:1px solid #a1a1aa !important;color:#000 !important;background:#fff !important;}
+    a{text-decoration:none;color:#000 !important;}
+}
 </style>
     <link rel="stylesheet" href="/hirewilfred/audcomp-theme.css?v=1">
 </head>
@@ -295,6 +342,7 @@ select.status-sel:focus{outline:2px solid var(--accent);outline-offset:-1px;}
             <button class="tab" data-view="clients" role="tab">Book of Business</button>
             <button class="tab" data-view="provisioning" role="tab">Onboarding</button>
             <button class="tab" data-view="roadmap" role="tab">Infra Roadmap</button>
+            <button class="tab" data-view="pl" role="tab">P&amp;L</button>
             <button class="tab" data-view="admin" role="tab">Administration</button>
         </div>
     </div>
@@ -792,6 +840,33 @@ select.status-sel:focus{outline:2px solid var(--accent);outline-offset:-1px;}
                     <p class="note" style="margin-top:0.9rem;"><strong>On open-weight models:</strong> running them through someone else's API sends client data off your infrastructure and contradicts the PIPEDA/sovereignty positioning the whole pitch rests on. If you go open-weight, self-hosting stops being a cost optimisation and becomes a requirement. Check the licence before you benchmark — Apache 2.0 and MIT are resale-safe, custom licences are not a footnote when you're reselling. And benchmark on your own agent traces, not leaderboards: start with Wilfred's routing traffic only, keep client-facing legal and insurance reasoning on the quality model until your own eval says otherwise.</p>
                 </div>
             </div>
+        </section>
+
+        <!-- ---------------- P&L ---------------- -->
+        <section class="view" id="view-pl">
+            <div class="panel no-print" style="margin-bottom:1rem;">
+                <div class="row" style="justify-content:space-between;align-items:flex-end;">
+                    <div>
+                        <h2>Profit &amp; loss <span class="muted">· income against monthly costs</span></h2>
+                        <p class="panel-note" style="margin-bottom:0;max-width:760px;">Recurring revenue and every cost line are <strong>monthly rates</strong>, multiplied by the period. Project fees are <strong>one-off amounts already booked</strong>, so they are shown as booked-in-period rather than multiplied — that distinction is the whole reason this report is trustworthy.</p>
+                    </div>
+                    <div class="row" style="gap:0.5rem;">
+                        <select class="inp" id="plPeriod" style="width:auto;" onchange="renderPL()">
+                            <option value="1">1 month</option>
+                            <option value="3">Quarter</option>
+                            <option value="6">6 months</option>
+                            <option value="12" selected>12 months</option>
+                        </select>
+                        <label class="row" style="gap:0.35rem;font-size:0.82rem;color:var(--ink-2);">
+                            <input type="checkbox" id="plIncludeProjects" checked onchange="renderPL()" style="accent-color:var(--accent);width:15px;height:15px;">
+                            Include booked project fees
+                        </label>
+                        <button class="btn primary" onclick="window.print()">Print / Save as PDF</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="plReport" class="print-doc"></div>
         </section>
 
         <!-- ---------------- ADMIN ---------------- -->
@@ -1332,15 +1407,20 @@ function economics(cfg){
     const agents  = seniors + juniors;
     const intensity = cfg.intensity || 1;
 
+    // Nothing is deployed until there are agents, so a client still in audit
+    // carries no inference and no hosting — only the human time. Charging them
+    // the full managed-service cost overstates delivery cost badly.
+    const deployed = agents > 0;
+
     // --- token cost ---
-    const tokWilfred = agentTokenCost('wilfred', intensity);
+    const tokWilfred = deployed ? agentTokenCost('wilfred', intensity) : 0;
     const tokSenior  = agentTokenCost('senior',  intensity) * seniors;
     const tokJunior  = agentTokenCost('junior',  intensity) * juniors;
     const tokens = tokWilfred + tokSenior + tokJunior;
 
     // --- infrastructure ---
     const infraTier = DB.infra[cfg.infra] || DB.infra.shared;
-    const infra = infraTier.monthly + a.platformPerClient;
+    const infra = deployed ? infraTier.monthly + a.platformPerClient : 0;
 
     // --- management (human) cost ---
     const changes = cfg.changes == null ? 0 : cfg.changes;
@@ -1402,7 +1482,10 @@ function dealEcon(d){
     return economics({
         seniors:d.seniors, juniors:d.juniors, intensity:d.intensity,
         infra:d.infra, mrr:d.mrr, mgmtMode:'included', mgmtVal:0,
-        changes: pkg(d.package).changes === 999 ? 300 : pkg(d.package).changes
+        // No agents means no change allowance to service either.
+        changes: (d.seniors + d.juniors) === 0
+            ? 0
+            : (pkg(d.package).changes === 999 ? 300 : pkg(d.package).changes)
     });
 }
 
@@ -1559,6 +1642,7 @@ const TITLES = {
     clients:['Book of Business','Live clients, modelled margin and token burn'],
     provisioning:['Onboarding','Control plane, build order and the agent cookie cutter'],
     roadmap:['Infra Roadmap','Cut burn first, self-host only on trigger'],
+    pl:['Profit & Loss','All income against monthly costs — printable'],
     admin:['Administration','Packages, stages, catalog and data']
 };
 
@@ -2788,6 +2872,155 @@ function renderRoadmap(){
         '</tbody>';
 }
 
+/* =========================================================================
+   P&L — income against monthly costs
+   -------------------------------------------------------------------------
+   Two kinds of money live in this book and they must not be added naively:
+     - RATES (recurring revenue, token burn, infra, management, subscriptions)
+       are per month and scale with the period.
+     - BOOKED amounts (project phase fees, one-off discovery/build fees) have
+       already happened once and must never be multiplied.
+   Everything below keeps those separate and says which is which.
+   ========================================================================= */
+function plFigures(months, includeProjects){
+    const signed   = liveDeals();
+    const retainer = signed.filter(d => !isProject(d));
+    const econ     = signed.map(dealEcon);   // every signed client consumes delivery cost
+
+    // --- monthly rates ---
+    const mrrMonthly   = retainer.reduce((s,d)=> s + (d.mrr||0), 0);
+    const tokensMonthly= econ.reduce((s,e)=> s + e.tokens, 0);
+    const infraMonthly = econ.reduce((s,e)=> s + e.infra, 0);
+    const mgmtMonthly  = econ.reduce((s,e)=> s + e.mgmt, 0);
+    const subsMonthly  = subsTotal();
+
+    // --- one-off amounts already booked ---
+    const projectFees = signed.reduce((s,d)=> s + phaseTotal(d), 0);
+    const oneOffFees  = signed.reduce((s,d)=> s + (d.discovery||0) + (d.onboard||0), 0);
+    const booked      = includeProjects ? projectFees + oneOffFees : 0;
+
+    const recurringRev = mrrMonthly * months;
+    const revenue      = recurringRev + booked;
+    const delivery     = (tokensMonthly + infraMonthly + mgmtMonthly) * months;
+    const opex         = subsMonthly * months;
+
+    const grossProfit  = revenue - delivery;
+    const operProfit   = grossProfit - opex;
+    const monthlyBurn  = tokensMonthly + infraMonthly + mgmtMonthly + subsMonthly;
+
+    return {
+        months, signed, retainer, econ,
+        mrrMonthly, tokensMonthly, infraMonthly, mgmtMonthly, subsMonthly, monthlyBurn,
+        projectFees, oneOffFees, booked, recurringRev, revenue, delivery, opex,
+        grossProfit, operProfit,
+        grossMargin: revenue ? grossProfit/revenue : 0,
+        operMargin:  revenue ? operProfit/revenue  : 0,
+        runwayMonths: monthlyBurn > 0 ? booked / monthlyBurn : null,
+        // The repeatable number: what recurs each month, ignoring one-off fees.
+        runRate: mrrMonthly - monthlyBurn
+    };
+}
+
+function renderPL(){
+    const months = parseInt(val('plPeriod'), 10) || 12;
+    const includeProjects = document.getElementById('plIncludeProjects').checked;
+    const f = plFigures(months, includeProjects);
+    const per = months + (months === 1 ? ' month' : ' months');
+    const today = new Date().toLocaleDateString('en-CA', { year:'numeric', month:'long', day:'numeric' });
+
+    const line = (label, note, amount, opts) => {
+        opts = opts || {};
+        return '<tr' + (opts.cls ? ' class="' + opts.cls + '"' : '') + '>' +
+            '<td><strong>' + esc(label) + '</strong>' + (note ? '<br><span class="note">' + esc(note) + '</span>' : '') + '</td>' +
+            '<td class="num">' + (opts.rate == null ? '' : (opts.rate ? cad(opts.rate) + '/mo' : '—')) + '</td>' +
+            '<td class="num">' + (amount < 0 ? '(' + cad(-amount) + ')' : cad(amount)) + '</td></tr>';
+    };
+
+    document.getElementById('plReport').innerHTML =
+        '<div class="panel print-page">' +
+            '<div class="pl-head">' +
+                '<div><div class="pl-org">Wilfred AI Staffing Inc.</div>' +
+                '<h2 style="margin:0.2rem 0 0;">Profit &amp; loss</h2>' +
+                '<div class="note">' + esc(per.charAt(0).toUpperCase() + per.slice(1)) + ' · ' +
+                    (IS_LIVE ? 'live book' : 'DEMO DATA — not the real book') + ' · prepared ' + esc(today) + '</div></div>' +
+                // Two headline figures on purpose. A single one flips from profit
+                // to loss purely with the period, because booked fees do not scale
+                // and costs do — showing both stops that reading as a real swing.
+                '<div class="pl-heads">' +
+                    '<div class="pl-total"><span class="note">Monthly run rate</span>' +
+                        '<strong style="color:' + (f.runRate < 0 ? 'var(--critical)' : 'var(--good)') + '">' +
+                        (f.runRate < 0 ? '(' + cad(-f.runRate) + ')' : cad(f.runRate)) + '</strong>' +
+                        '<span class="note">recurring less monthly cost</span></div>' +
+                    '<div class="pl-total"><span class="note">Result for ' + esc(per) + '</span>' +
+                        '<strong style="color:' + (f.operProfit < 0 ? 'var(--critical)' : 'var(--good)') + '">' +
+                        (f.operProfit < 0 ? '(' + cad(-f.operProfit) + ')' : cad(f.operProfit)) + '</strong>' +
+                        '<span class="note">' + (includeProjects ? 'includes booked fees' : 'recurring only') + '</span></div>' +
+                '</div>' +
+            '</div>' +
+
+            '<table class="pl-table"><thead><tr><th>Line</th><th class="num">Monthly rate</th><th class="num">' + esc(per) + '</th></tr></thead><tbody>' +
+            '<tr class="pl-section"><td colspan="3">Revenue</td></tr>' +
+            line('Recurring revenue', f.retainer.length + ' retainer client' + (f.retainer.length===1?'':'s'), f.recurringRev, { rate:f.mrrMonthly }) +
+            (includeProjects ? line('Project phase fees', 'Booked once — audit, agents, hardening. Not multiplied by the period.', f.projectFees, { rate:0 }) : '') +
+            (includeProjects && f.oneOffFees ? line('Discovery and build fees', 'Booked once', f.oneOffFees, { rate:0 }) : '') +
+            line('Total revenue', '', f.revenue, { cls:'total' }) +
+
+            '<tr class="pl-section"><td colspan="3">Cost of delivery</td></tr>' +
+            line('Token burn', 'Agent inference, metered per agent', -f.tokensMonthly*months, { rate:f.tokensMonthly }) +
+            line('Infrastructure', 'Hosting per client plus platform overhead', -f.infraMonthly*months, { rate:f.infraMonthly }) +
+            line('Management', 'Success manager, monitoring, change allowance', -f.mgmtMonthly*months, { rate:f.mgmtMonthly }) +
+            line('Total cost of delivery', '', -f.delivery, { cls:'total' }) +
+            line('Gross profit', f.revenue ? pct(f.grossMargin) + ' margin' : '', f.grossProfit, { cls:'total strong' }) +
+
+            '<tr class="pl-section"><td colspan="3">Operating expenses</td></tr>' +
+            DB.subscriptions.map(s => line(s.vendor, s.purpose, -(+s.monthly||0)*months, { rate:(+s.monthly||0) })).join('') +
+            line('Total operating expenses', '', -f.opex, { cls:'total' }) +
+
+            line(f.operProfit < 0 ? 'Operating loss' : 'Operating profit',
+                 f.revenue ? pct(f.operMargin) + ' of revenue' : 'No revenue in period',
+                 f.operProfit, { cls:'total strong' }) +
+            '</tbody></table>' +
+
+            '<div class="pl-notes">' +
+                '<p><strong>How to read this.</strong> The middle column is the monthly run rate; the right column is that rate over ' + esc(per) + '. ' +
+                'Project phase fees are one-off amounts already invoiced, so they appear once at full value and are never multiplied — ' +
+                'that is why total revenue is not simply the monthly rate times ' + months + '.</p>' +
+                (includeProjects && f.booked > 0
+                    ? '<p><strong>Read the two headline figures together.</strong> Because booked fees do not scale with the period but costs do, ' +
+                      'the period result moves with the length of the period while the underlying business does not. ' +
+                      'The monthly run rate is the repeatable number; the period result answers "did the money booked cover the months it ran against". ' +
+                      'Those fees were also earned across the life of the book, not necessarily within ' + esc(per) + '.</p>'
+                    : '') +
+                '<p><strong>Monthly burn is ' + cad(f.monthlyBurn) + '</strong> — delivery cost plus subscriptions. ' +
+                (f.runwayMonths != null && f.booked > 0
+                    ? 'The ' + cad(f.booked) + ' booked to date covers <strong>' + f.runwayMonths.toFixed(1) + ' months</strong> of that.'
+                    : 'Nothing booked in this view to set against it.') + '</p>' +
+                (f.mrrMonthly === 0 ? '<p><strong>There is no recurring revenue on the book</strong>, so every month of cost has to be met from project fees. ' +
+                    'The margin percentages above are period figures, not repeatable ones — until a retainer signs, the run rate is simply the monthly cost.</p>' : '') +
+            '</div>' +
+        '</div>' +
+
+        // ---- appendix: per client, page 2 ----
+        '<div class="panel print-page" style="margin-top:1rem;">' +
+            '<h2>Appendix — signed clients</h2>' +
+            '<p class="note" style="margin-bottom:0.9rem;">Delivery cost is modelled from the roster and usage level, not metered.</p>' +
+            '<table class="pl-table"><thead><tr><th>Client</th><th>Stage</th><th class="num">Booked fees</th><th class="num">MRR</th><th class="num">Delivery cost /mo</th></tr></thead><tbody>' +
+            (f.signed.length ? f.signed.map((d,i) => {
+                const e = f.econ[i];
+                return '<tr><td><strong>' + esc(d.name) + '</strong>' + (d.won ? ' <span class="chip good">WON</span>' : '') + '</td>' +
+                    '<td>' + esc(stage(d.stage).name) + '</td>' +
+                    '<td class="num">' + cad(phaseTotal(d) + (d.discovery||0) + (d.onboard||0)) + '</td>' +
+                    '<td class="num">' + (d.mrr ? cad(d.mrr) : '—') + '</td>' +
+                    '<td class="num">' + cad(e.cogs) + '</td></tr>';
+            }).join('') : '<tr><td colspan="5" class="note">No signed clients.</td></tr>') +
+            '<tr class="total"><td>Total</td><td>' + f.signed.length + ' client' + (f.signed.length===1?'':'s') + '</td>' +
+            '<td class="num">' + cad(f.projectFees + f.oneOffFees) + '</td>' +
+            '<td class="num">' + cad(f.mrrMonthly) + '</td>' +
+            '<td class="num">' + cad(f.tokensMonthly + f.infraMonthly + f.mgmtMonthly) + '</td></tr>' +
+            '</tbody></table>' +
+        '</div>';
+}
+
 /* ---------- admin ---------- */
 function renderAdmin(){
     document.getElementById('pkgTable').innerHTML =
@@ -2890,6 +3123,7 @@ function renderAll(){
         case 'view-clients':      renderClients(); break;
         case 'view-provisioning': renderProvisioning(); break;
         case 'view-roadmap':      renderRoadmap(); break;
+        case 'view-pl':           renderPL(); break;
         case 'view-admin':        renderAdmin(); break;
     }
 }
