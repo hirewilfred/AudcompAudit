@@ -656,6 +656,18 @@ select.status-sel:focus{outline:2px solid var(--accent);outline-offset:-1px;}
             </div>
 
             <div class="panel" style="margin-top:1rem;">
+                <div class="row" style="justify-content:space-between;align-items:flex-start;">
+                    <div>
+                        <h2>Operating subscriptions <span class="muted">· CAD per month</span></h2>
+                        <p class="panel-note" style="margin-bottom:0;">Fixed overhead that doesn't scale per client. Kept separate from the per-client cost model on purpose — the <strong>Claude</strong> line here is build seats, while agent inference is metered per agent under <strong>Token volumes</strong>. Putting inference in both places would double-count it.</p>
+                    </div>
+                    <button class="btn" onclick="addSub()">+ Add subscription</button>
+                </div>
+                <div class="table-wrap" style="margin-top:1rem;"><table id="subsTable"></table></div>
+                <div id="subsSummary" style="margin-top:1rem;"></div>
+            </div>
+
+            <div class="panel" style="margin-top:1rem;">
                 <h2>Unit economics by package <span class="muted">· at current assumptions, normal usage, shared tier</span></h2>
                 <p class="panel-note">The reference card. If a package line goes red here, it is losing money at list price — not just on one deal.</p>
                 <div class="table-wrap"><table id="unitTable"></table></div>
@@ -1122,6 +1134,7 @@ function demoDefaults(){ return {
         { name:'Rory',   role:'Junior Inbox Manager',          tier:'junior', price:497  }
     ],
     deals:seedDeals(),
+    subscriptions:seedSubscriptions(),
     scenarios:[],
     checks:{},
     reps:seedReps(),
@@ -1168,6 +1181,21 @@ function seedLiveDeals(){
             next:'First meeting held — scope and quote' }),
         d({ name:'Envirotex Products Inc', stage:'meeting', projected:5000,
             next:'No meeting booked yet — get one in the diary' })
+    ];
+}
+
+/* Company-wide operating subscriptions, in CAD per month.
+   These are FIXED overhead — they do not scale per client, and they are
+   deliberately kept out of economics() so they can never be double-counted
+   against the per-client token burn, which is metered separately per agent.
+   The Claude line here is the build/development seat, not agent inference. */
+function seedSubscriptions(){
+    return [
+        { id:uid(), vendor:'Claude',   purpose:'Agent building and development',  monthly:0,
+          note:'Build seats only — per-client agent inference is metered separately under Token volumes.' },
+        { id:uid(), vendor:'Apify',    purpose:'Contact scraping for outreach',   monthly:0, note:'' },
+        { id:uid(), vendor:'Supabase', purpose:'Database, auth and edge functions', monthly:0, note:'' },
+        { id:uid(), vendor:'Vercel',   purpose:'Hosting and deploys',             monthly:0, note:'' }
     ];
 }
 
@@ -1252,6 +1280,7 @@ function load(){
             if(!Array.isArray(DB.campaigns) || !DB.campaigns.length) DB.campaigns = seedCampaigns();
             if(!Array.isArray(DB.opps)) DB.opps = seedOpps();
             if(!Array.isArray(DB.feed)) DB.feed = [];
+            if(!Array.isArray(DB.subscriptions) || !DB.subscriptions.length) DB.subscriptions = seedSubscriptions();
             // Statuses changed to the AudcompAudit set — drop anything orphaned.
             DB.opps.forEach(o => { if(!STATUSES.some(s=>s.id===o.status)) o.status = 'researched'; });
             return;
@@ -1574,6 +1603,17 @@ function renderOverview(){
     }
     const auditFees = DB.deals.reduce((s,d)=> s + (d.discovery||0) + (d.p1||0), 0);
     tiles.push(kpiTile('Audit revenue', cad(auditFees), 'Discovery and Phase 1 fees, signed', ''));
+    const subs = subsTotal();
+    if(subs > 0){
+        // Name the vendors actually carrying a cost, so the tile can't go stale
+        // when one is added or dropped.
+        const paying = DB.subscriptions.filter(s => (+s.monthly||0) > 0).map(s => s.vendor);
+        const named = paying.length > 3
+            ? paying.slice(0,3).join(', ') + ' +' + (paying.length-3) + ' more'
+            : paying.join(', ');
+        tiles.push(kpiTile('Fixed monthly cost', cad(subs),
+            esc(named) + ' · ' + cad(subs*12) + ' a year', ''));
+    }
     document.getElementById('kpiRow').innerHTML = tiles.join('');
 
     // funnel
@@ -2433,6 +2473,8 @@ function renderEconomics(){
             '<tr><td><strong>' + esc(v.label) + '</strong><br><span class="note">' + esc(v.note) + '</span></td>' +
             '<td class="num"><input class="inp" style="width:70px;text-align:right;" type="number" step="1" value="' + v.monthly + '" onchange="setInfra(\'' + k + '\',this.value)"></td></tr>').join('') + '</tbody>';
 
+    renderSubs();
+
     // unit economics per package
     document.getElementById('unitTable').innerHTML =
         '<thead><tr><th>Package</th><th class="num">Agents</th><th class="num">List MRR</th><th class="num">Tokens</th><th class="num">Infra</th><th class="num">Mgmt</th><th class="num">COGS</th><th class="num">Gross margin</th><th class="num">GM %</th><th class="num">Token allowance</th></tr></thead><tbody>' +
@@ -2450,6 +2492,62 @@ function renderEconomics(){
                 '<td class="num">' + cad(e.allowance) + '</td></tr>';
         }).join('') + '</tbody>';
 }
+/* ---------- operating subscriptions ---------- */
+const subsTotal = () => DB.subscriptions.reduce((s,x)=> s + (+x.monthly||0), 0);
+
+function renderSubs(){
+    const t = subsTotal();
+    document.getElementById('subsTable').innerHTML =
+        '<thead><tr><th>Vendor</th><th>What it is for</th><th class="num">CAD / month</th><th class="num">CAD / year</th><th></th></tr></thead><tbody>' +
+        DB.subscriptions.map((s,i)=>
+            '<tr><td><strong>' + esc(s.vendor) + '</strong></td>' +
+            '<td>' + esc(s.purpose) + (s.note ? '<br><span class="note">' + esc(s.note) + '</span>' : '') + '</td>' +
+            '<td class="num"><input class="inp" style="width:100px;text-align:right;" type="number" min="0" step="1" value="' + (+s.monthly||0) + '" onchange="setSub(' + i + ',this.value)"></td>' +
+            '<td class="num">' + ((+s.monthly||0) ? cad((+s.monthly||0)*12) : '<span class="note">—</span>') + '</td>' +
+            '<td class="num"><button class="btn sm danger" onclick="dropSub(' + i + ')">✕</button></td></tr>').join('') +
+        '<tr class="total"><td>Total</td><td>' + DB.subscriptions.length + ' subscription' + (DB.subscriptions.length===1?'':'s') + '</td>' +
+        '<td class="num">' + cad(t) + '</td><td class="num">' + cad(t*12) + '</td><td></td></tr></tbody>';
+
+    // What this overhead means per active client, and against the book.
+    const active = liveDeals().length;
+    const perClient = active ? t / active : 0;
+    const mrr = liveDeals().filter(d=>!isProject(d)).reduce((s,d)=>s+(d.mrr||0),0);
+    const signed = liveDeals().filter(isProject).reduce((s,d)=>s+phaseTotal(d),0);
+
+    document.getElementById('subsSummary').innerHTML = !t
+        ? '<p class="note">Nothing entered yet — put the monthly CAD figure against each vendor above and the totals, per-client allocation and coverage all fill in.</p>'
+        : '<div class="kpis" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));">' +
+            kpiTile('Fixed monthly cost', cad(t), cad(t*12) + ' a year', 'accent') +
+            kpiTile('Per active client', active ? cad(perClient) : '—',
+                active ? 'Spread across ' + active + ' signed client' + (active===1?'':'s') : 'No signed clients to spread it across', '') +
+            (mrr ? kpiTile('Covered by retainers', pct(Math.min(mrr/t,1)),
+                cad(mrr) + '/mo recurring against ' + cad(t) + ' of overhead', mrr >= t ? 'margin' : '') : '') +
+            (signed ? kpiTile('Months covered by signed fees', (signed/t).toFixed(1),
+                cad(signed) + ' of project fees ÷ ' + cad(t) + '/mo', 'copper') : '') +
+          '</div>' +
+          (active ? '<div class="row" style="margin-top:0.9rem;">' +
+            '<button class="btn" onclick="applySubsToOverhead()">Use ' + cad(perClient) + ' as the per-client platform overhead</button>' +
+            '<span class="note">Currently ' + cad(DB.assumptions.platformPerClient) + '. This is the only place subscriptions touch the margin maths, and only if you ask.</span></div>' : '');
+}
+function setSub(i, v){ DB.subscriptions[i].monthly = Math.max(0, parseFloat(v)||0); save(); renderEconomics(); }
+function dropSub(i){
+    if(!confirm('Remove ' + DB.subscriptions[i].vendor + ' from the subscription list?')) return;
+    DB.subscriptions.splice(i,1); save(); renderEconomics();
+}
+function addSub(){
+    const vendor = prompt('Vendor name');
+    if(!vendor) return;
+    DB.subscriptions.push({ id:uid(), vendor:vendor.trim(), purpose:'', monthly:0, note:'' });
+    save(); renderEconomics(); toast(vendor.trim() + ' added.');
+}
+function applySubsToOverhead(){
+    const active = liveDeals().length;
+    if(!active) return;
+    DB.assumptions.platformPerClient = Math.round(subsTotal() / active);
+    save(); renderAll();
+    toast('Platform overhead set to ' + cad(DB.assumptions.platformPerClient) + ' per client.');
+}
+
 function setVal(id,v){ const el = document.getElementById(id); if(el && document.activeElement !== el) el.value = v; }
 function setModel(k,f,v){ DB.models[k][f] = parseFloat(v)||0; save(); renderAll(); }
 function setVol(k,f,v){ DB.volumes[k][f] = (f==='model') ? v : (parseFloat(v)||0); save(); renderAll(); }
