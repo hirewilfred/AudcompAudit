@@ -2936,18 +2936,23 @@ function plFigures(months, includeProjects){
     const oneOffFees  = signed.reduce((s,d)=> s + (d.discovery||0) + (d.onboard||0), 0);
     const booked      = includeProjects ? projectFees + oneOffFees : 0;
 
+    // Management is deliberately NOT in the P&L. It is a modelled estimate of
+    // success-manager time, not an invoice, and mixing modelled labour into a
+    // financial statement makes the statement untrustworthy. It still drives
+    // pricing in the Cost Model and Scenario Quoter, where an estimate belongs.
     const recurringRev = mrrMonthly * months;
     const revenue      = recurringRev + booked;
-    const delivery     = (tokensMonthly + infraMonthly + mgmtMonthly) * months;
+    const deliveryRate = tokensMonthly + infraMonthly;
+    const delivery     = deliveryRate * months;
     const opex         = subsMonthly * months;
 
     const grossProfit  = revenue - delivery;
     const operProfit   = grossProfit - opex;
-    const monthlyBurn  = tokensMonthly + infraMonthly + mgmtMonthly + subsMonthly;
+    const monthlyBurn  = deliveryRate + subsMonthly;
 
     return {
         months, signed, retainer, econ,
-        mrrMonthly, tokensMonthly, infraMonthly, mgmtMonthly, subsMonthly, monthlyBurn,
+        mrrMonthly, tokensMonthly, infraMonthly, subsMonthly, monthlyBurn, deliveryRate,
         projectFees, oneOffFees, booked, recurringRev, revenue, delivery, opex,
         grossProfit, operProfit,
         grossMargin: revenue ? grossProfit/revenue : 0,
@@ -3002,12 +3007,16 @@ function renderPL(){
             (includeProjects && f.oneOffFees ? line('Discovery and build fees', 'Booked once', f.oneOffFees, { rate:0 }) : '') +
             line('Total revenue', '', f.revenue, { cls:'total' }) +
 
-            '<tr class="pl-section"><td colspan="3">Cost of delivery</td></tr>' +
-            line('Token burn', 'Agent inference, metered per agent', -f.tokensMonthly*months, { rate:f.tokensMonthly }) +
-            line('Infrastructure', 'Hosting per client plus platform overhead', -f.infraMonthly*months, { rate:f.infraMonthly }) +
-            line('Management', 'Success manager, monitoring, change allowance', -f.mgmtMonthly*months, { rate:f.mgmtMonthly }) +
-            line('Total cost of delivery', '', -f.delivery, { cls:'total' }) +
-            line('Gross profit', f.revenue ? pct(f.grossMargin) + ' margin' : '', f.grossProfit, { cls:'total strong' }) +
+            // Only shown when something is actually deployed. With no agents
+            // running there is no inference and no hosting, and an empty
+            // section of zeroes just invites the reader to distrust the rest.
+            (f.deliveryRate > 0
+                ? '<tr class="pl-section"><td colspan="3">Cost of delivery</td></tr>' +
+                  line('Token burn', 'Agent inference, metered per agent', -f.tokensMonthly*months, { rate:f.tokensMonthly }) +
+                  line('Infrastructure', 'Hosting per client plus platform overhead', -f.infraMonthly*months, { rate:f.infraMonthly }) +
+                  line('Total cost of delivery', '', -f.delivery, { cls:'total' }) +
+                  line('Gross profit', f.revenue ? pct(f.grossMargin) + ' margin' : '', f.grossProfit, { cls:'total strong' })
+                : '') +
 
             '<tr class="pl-section"><td colspan="3">Operating expenses</td></tr>' +
             DB.subscriptions.map(s => line(s.vendor, s.purpose, -(+s.monthly||0)*months, { rate:(+s.monthly||0) })).join('') +
@@ -3028,7 +3037,8 @@ function renderPL(){
                       'The monthly run rate is the repeatable number; the period result answers "did the money booked cover the months it ran against". ' +
                       'Those fees were also earned across the life of the book, not necessarily within ' + esc(per) + '.</p>'
                     : '') +
-                '<p><strong>Monthly burn is ' + cad(f.monthlyBurn) + '</strong> — delivery cost plus subscriptions. ' +
+                '<p><strong>This statement carries cash costs only.</strong> Success-manager time, monitoring and the change allowance are modelled estimates rather than invoices, so they are not counted here — they still drive pricing in the Cost Model and Scenario Quoter, which is where an estimate belongs.</p>' +
+                '<p><strong>Monthly burn is ' + cad(f.monthlyBurn) + '</strong> — ' + (f.deliveryRate > 0 ? 'delivery cost plus subscriptions. ' : 'subscriptions only, with nothing deployed yet. ') +
                 (f.runwayMonths != null && f.booked > 0
                     ? 'The ' + cad(f.booked) + ' booked to date covers <strong>' + f.runwayMonths.toFixed(1) + ' months</strong> of that.'
                     : 'Nothing booked in this view to set against it.') + '</p>' +
@@ -3040,20 +3050,17 @@ function renderPL(){
         // ---- appendix: per client, page 2 ----
         '<div class="panel print-page" style="margin-top:1rem;">' +
             '<h2>Appendix — signed clients</h2>' +
-            '<p class="note" style="margin-bottom:0.9rem;">Delivery cost is modelled from the roster and usage level, not metered.</p>' +
-            '<table class="pl-table"><thead><tr><th>Client</th><th>Stage</th><th class="num">Booked fees</th><th class="num">MRR</th><th class="num">Delivery cost /mo</th></tr></thead><tbody>' +
-            (f.signed.length ? f.signed.map((d,i) => {
-                const e = f.econ[i];
-                return '<tr><td><strong>' + esc(d.name) + '</strong>' + (d.won ? ' <span class="chip good">WON</span>' : '') + '</td>' +
+            '<p class="note" style="margin-bottom:0.9rem;">Fees invoiced against each signed client.</p>' +
+            '<table class="pl-table"><thead><tr><th>Client</th><th>Stage</th><th class="num">Booked fees</th><th class="num">MRR</th></tr></thead><tbody>' +
+            (f.signed.length ? f.signed.map(d =>
+                '<tr><td><strong>' + esc(d.name) + '</strong>' + (d.won ? ' <span class="chip good">WON</span>' : '') + '</td>' +
                     '<td>' + esc(stage(d.stage).name) + '</td>' +
                     '<td class="num">' + cad(phaseTotal(d) + (d.discovery||0) + (d.onboard||0)) + '</td>' +
-                    '<td class="num">' + (d.mrr ? cad(d.mrr) : '—') + '</td>' +
-                    '<td class="num">' + cad(e.cogs) + '</td></tr>';
-            }).join('') : '<tr><td colspan="5" class="note">No signed clients.</td></tr>') +
+                    '<td class="num">' + (d.mrr ? cad(d.mrr) : '—') + '</td></tr>'
+            ).join('') : '<tr><td colspan="4" class="note">No signed clients.</td></tr>') +
             '<tr class="total"><td>Total</td><td>' + f.signed.length + ' client' + (f.signed.length===1?'':'s') + '</td>' +
             '<td class="num">' + cad(f.projectFees + f.oneOffFees) + '</td>' +
-            '<td class="num">' + cad(f.mrrMonthly) + '</td>' +
-            '<td class="num">' + cad(f.tokensMonthly + f.infraMonthly + f.mgmtMonthly) + '</td></tr>' +
+            '<td class="num">' + cad(f.mrrMonthly) + '</td></tr>' +
             '</tbody></table>' +
         '</div>';
 }
