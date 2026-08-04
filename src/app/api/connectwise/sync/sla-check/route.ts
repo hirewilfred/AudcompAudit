@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { logSyncRun } from '@/lib/connectwise/sync';
 import { fetchTickets, ticketToRow } from '@/lib/connectwise/tickets';
 import { authorizeSync } from '@/lib/connectwise/auth';
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     if (unauth) return unauth;
     try {
         const result = await logSyncRun('sla_check', async () => {
-            const supabase = await createClient();
+            const supabase = createAdminClient();
             const { data: boards } = await supabase
                 .from('cw_monitored_boards')
                 .select('board_id')
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
             }).length;
             return { count: rows.length, meta: { boardIds, breached, atRisk } };
         });
-        return NextResponse.json({ ok: true, ...result });
+        return NextResponse.json(result);
     } catch (err) {
         return NextResponse.json({ ok: false, error: (err as Error).message }, { status: 502 });
     }

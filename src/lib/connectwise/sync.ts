@@ -1,10 +1,11 @@
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function logSyncRun<T>(
     scope: string,
     fn: () => Promise<{ count: number; meta?: Record<string, unknown> } & T>,
 ) {
-    const supabase = await createClient();
+    // cw_sync_runs has RLS on with no INSERT policy — this must use the service role.
+    const supabase = createAdminClient();
     const { data: run } = await supabase
         .from('cw_sync_runs')
         .insert({ scope })

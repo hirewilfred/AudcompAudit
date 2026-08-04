@@ -15,6 +15,11 @@ CW_PRIVATE_KEY=
 CW_CLIENT_ID=
 CW_PENDING_CLOSURE_STATUSES=Pending Closure
 
+# Required — sync writes bypass RLS via the service role, and Vercel Cron
+# authenticates with CRON_SECRET (no user session exists on a cron run).
+SUPABASE_SERVICE_ROLE_KEY=
+CRON_SECRET=
+
 # SmileBack CSAT (optional — alternative is CW Surveys)
 SMILEBACK_API_TOKEN=
 `;
@@ -41,7 +46,7 @@ const STEPS: { id: string; title: string; body: React.ReactNode }[] = [
         id: 'migrate',
         title: '3. Run the Supabase migration',
         body: (
-            <p>Apply <code className="px-1 bg-slate-100 rounded">supabase/migrations/connectwise_service_kpi.sql</code> against your Supabase project. This creates <code className="text-xs">cw_tickets</code>, <code className="text-xs">cw_monitored_boards</code>, <code className="text-xs">cw_sync_runs</code>, and the location/department lookup tables.</p>
+            <p>Apply <code className="px-1 bg-slate-100 rounded">supabase/migrations/20260511_connectwise_service_kpi.sql</code> against your Supabase project. This creates <code className="text-xs">cw_tickets</code>, <code className="text-xs">cw_monitored_boards</code>, <code className="text-xs">cw_sync_runs</code>, and the location/department lookup tables.</p>
         ),
     },
     {
@@ -256,7 +261,7 @@ export default function ServiceKpiSetupPage() {
                                             <strong className="font-bold">Sync failed:</strong> {errResult.error ?? 'Unknown error'}
                                             {(errResult.error ?? '').includes('403') && (
                                                 <p className="mt-1 text-red-600">
-                                                    The API member's role doesn't have <em>Inquire</em> permission on these endpoints. In ConnectWise: <strong>System → Members → API Members → [your key] → Role ID</strong> — make sure that role has <em>System &gt; Locations</em>, <em>System &gt; Departments</em>, and <em>Service &gt; Service Boards</em> set to <strong>All</strong> for Inquire-Level access.
+                                                    The API member role is missing <em>Inquire</em> permission on the <strong>System</strong> module. Look up the role name under <strong>System → Members → API Members → [your key] → Role ID</strong>, then edit that role at <strong>System → Security Roles → System</strong> and set <em>Table Setup</em> (this covers Locations and Departments) and <em>Member Maintenance</em> to <strong>All</strong> under Inquire Level. Service-module permissions are separate: if boards and tickets already sync, leave those alone.
                                                 </p>
                                             )}
                                         </div>

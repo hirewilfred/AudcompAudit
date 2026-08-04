@@ -70,10 +70,15 @@ drop policy if exists cw_board_prefs_owner_rw on public.cw_board_preferences;
 create policy cw_board_prefs_owner_rw on public.cw_board_preferences
     for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 
--- Note: bulk upserts into cw_tickets / cw_*_runs run on the server with the
--- user's session. They are gated by authorizeSync() (which already requires
--- staff/admin or the cron secret). If you later move sync to a background
--- worker using the service-role key, RLS is bypassed automatically.
+-- Note: there are deliberately NO INSERT policies above. Bulk upserts into
+-- cw_tickets / cw_locations / cw_departments / cw_monitored_boards and the
+-- cw_sync_runs log all run through the service-role key (see
+-- src/lib/supabase/admin.ts), which bypasses RLS. They are gated in the app by
+-- authorizeSync(), which requires staff/admin or the cron secret.
+--
+-- Do not switch those writes back to the anon/session client: Vercel Cron
+-- invocations carry no user session, so auth.uid() is null, is_staff_or_admin()
+-- returns false, and every policy check here fails.
 
 -- ---- Retention helper --------------------------------------------------
 -- Trims cw_sync_runs to keep the latest 1000 rows per scope.
