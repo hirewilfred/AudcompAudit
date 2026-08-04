@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Loader2, RefreshCw, Settings as SettingsIcon, AlertTriangle, ListChecks, Activity, CheckCircle2, Wrench, Info } from 'lucide-react';
+import { Loader2, RefreshCw, Settings as SettingsIcon, AlertTriangle, ListChecks, Activity, CheckCircle2, Wrench } from 'lucide-react';
 
 type Tab = 'today' | 'sla' | 'kpis' | 'settings';
 
@@ -56,14 +56,6 @@ const HEADER_GRADIENT =
 
 export default function ServiceKpiPage() {
     const [tab, setTab] = useState<Tab>('today');
-    const [usingSample, setUsingSample] = useState(false);
-
-    useEffect(() => {
-        fetch('/api/connectwise/tickets?scope=today')
-            .then(r => r.json())
-            .then(d => setUsingSample(Boolean(d.sample)))
-            .catch(() => {});
-    }, []);
 
     return (
         <div className="min-h-screen">
@@ -94,12 +86,6 @@ export default function ServiceKpiPage() {
                             <Wrench className="h-4 w-4" /> Setup &amp; Configuration
                         </Link>
                     </div>
-                    {usingSample && (
-                        <div className="mt-5 inline-flex items-center gap-2 rounded-lg bg-amber-500/15 border border-amber-400/30 px-3 py-2 text-xs font-semibold text-amber-200">
-                            <Info className="h-4 w-4" />
-                            Showing placeholder sample data — finish <Link href="/admin/service-kpi/setup" className="underline">setup</Link> to pull live ConnectWise tickets.
-                        </div>
-                    )}
                     <nav className="mt-6 flex gap-1 border-b border-slate-800/40">
                         {TABS.map(t => {
                             const active = tab === t.id;

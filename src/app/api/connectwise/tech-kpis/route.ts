@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { sampleAllTickets } from '@/lib/connectwise/sampleData';
 
 export const runtime = 'nodejs';
 
@@ -90,18 +89,8 @@ export async function GET(req: NextRequest) {
         .select('id, assigned_resource, resources, date_entered, date_closed, actual_hours, board_id')
         .or(`date_entered.gte.${new Date(sinceMs).toISOString()},date_closed.gte.${new Date(sinceMs).toISOString()}`);
 
-    const allowSample = process.env.NODE_ENV !== 'production';
     if (error) {
-        if (allowSample) {
-            return NextResponse.json({ ok: true, sample: true, days, rows: rollup(sampleAllTickets(), sinceMs), warning: error.message });
-        }
         return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     }
-    if (!data || data.length === 0) {
-        if (allowSample) {
-            return NextResponse.json({ ok: true, sample: true, days, rows: rollup(sampleAllTickets(), sinceMs) });
-        }
-        return NextResponse.json({ ok: true, sample: false, days, rows: [] });
-    }
-    return NextResponse.json({ ok: true, sample: false, days, rows: rollup(data, sinceMs) });
+    return NextResponse.json({ ok: true, days, rows: rollup(data ?? [], sinceMs) });
 }

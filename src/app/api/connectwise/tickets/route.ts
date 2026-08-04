@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import {
-    sampleTodayTickets,
-    samplePendingClosureTickets,
-    sampleSlaTickets,
-    sampleOpenTickets,
-} from '@/lib/connectwise/sampleData';
 
 export const runtime = 'nodejs';
 
@@ -13,16 +7,6 @@ const PENDING_STATUS_NAMES = (process.env.CW_PENDING_CLOSURE_STATUSES || 'Pendin
     .split(',')
     .map(s => s.trim())
     .filter(Boolean);
-
-function sampleFor(scope: string) {
-    switch (scope) {
-        case 'pending': return samplePendingClosureTickets();
-        case 'sla':     return sampleSlaTickets();
-        case 'open':    return sampleOpenTickets();
-        case 'today':
-        default:        return sampleTodayTickets();
-    }
-}
 
 export async function GET(req: NextRequest) {
     const url = new URL(req.url);
@@ -52,18 +36,8 @@ export async function GET(req: NextRequest) {
     }
 
     const { data, error } = await q;
-    const allowSample = process.env.NODE_ENV !== 'production';
     if (error) {
-        if (allowSample) {
-            return NextResponse.json({ ok: true, sample: true, tickets: sampleFor(scope), warning: error.message });
-        }
         return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     }
-    if (!data || data.length === 0) {
-        if (allowSample) {
-            return NextResponse.json({ ok: true, sample: true, tickets: sampleFor(scope) });
-        }
-        return NextResponse.json({ ok: true, sample: false, tickets: [] });
-    }
-    return NextResponse.json({ ok: true, sample: false, tickets: data });
+    return NextResponse.json({ ok: true, tickets: data ?? [] });
 }

@@ -84,8 +84,8 @@ export default function ServiceKpiSetupPage() {
             fetch('/api/connectwise/sync-runs').then(r => r.json()).catch(() => ({})),
         ]);
         setCounts({
-            boards: b.sample ? 0 : (b.boards?.length ?? 0),
-            tickets: t.sample ? 0 : (t.tickets?.length ?? 0),
+            boards: b.boards?.length ?? 0,
+            tickets: t.tickets?.length ?? 0,
             runs: r.runs?.length ?? 0,
         });
     };
@@ -145,7 +145,7 @@ export default function ServiceKpiSetupPage() {
                         Service KPI <span className="text-blue-300">Setup</span>
                     </h1>
                     <p className="mt-2 text-slate-300 text-sm max-w-2xl">
-                        Connect ConnectWise Manage and (optionally) SmileBack so the dashboard pulls real ticket and CSAT data. Until this is done, the dashboard renders placeholder sample data.
+                        Connect ConnectWise Manage and (optionally) SmileBack so the dashboard pulls real ticket and CSAT data. Until this is done, the dashboard will be empty.
                     </p>
                 </div>
             </header>
@@ -273,7 +273,7 @@ export default function ServiceKpiSetupPage() {
                 ))}
 
                 <p className="text-xs text-slate-500">
-                    Until ConnectWise is connected, the dashboard pages return placeholder sample data so you can preview the UI. Real data appears automatically as soon as a sync run completes.
+                    The dashboard pages show only live ConnectWise data. They stay empty until the first sync run completes, then populate automatically.
                 </p>
             </main>
         </div>
