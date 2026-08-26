@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Loader2, RefreshCw, Settings as SettingsIcon, AlertTriangle, ListChecks, Activity, CheckCircle2, Wrench } from 'lucide-react';
 
@@ -421,25 +421,50 @@ interface TechKpiRow {
 function KpisTab() {
     const [tickets, setTickets] = useState<TicketRow[]>([]);
     const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
     const [techRows, setTechRows] = useState<TechKpiRow[]>([]);
     const [techDays, setTechDays] = useState(7);
     const [techLoading, setTechLoading] = useState(false);
 
-    useEffect(() => {
+    const loadTickets = useCallback(async () => {
         setLoading(true);
-        fetch('/api/connectwise/tickets?scope=open')
-            .then(r => r.json())
-            .then(d => setTickets(d.tickets ?? []))
-            .finally(() => setLoading(false));
+        try {
+            const d = await fetch('/api/connectwise/tickets?scope=open').then(r => r.json());
+            setTickets(d.tickets ?? []);
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
-    useEffect(() => {
+    const loadTech = useCallback(async () => {
         setTechLoading(true);
-        fetch(`/api/connectwise/tech-kpis?days=${techDays}`)
-            .then(r => r.json())
-            .then(d => setTechRows(d.rows ?? []))
-            .finally(() => setTechLoading(false));
+        try {
+            const d = await fetch(`/api/connectwise/tech-kpis?days=${techDays}`).then(r => r.json());
+            setTechRows(d.rows ?? []);
+        } finally {
+            setTechLoading(false);
+        }
     }, [techDays]);
+
+    useEffect(() => { loadTickets(); }, [loadTickets]);
+    useEffect(() => { loadTech(); }, [loadTech]);
+
+    // All three ticket syncs: sla-check is the only one that pulls the whole
+    // open queue, daily covers today's arrivals, and pending-closure covers the
+    // pending set. The tech table also needs tickets closed today.
+    const refresh = async () => {
+        setRefreshing(true);
+        try {
+            await Promise.all([
+                fetch('/api/connectwise/sync/daily', { method: 'POST' }),
+                fetch('/api/connectwise/sync/pending-closure', { method: 'POST' }),
+                fetch('/api/connectwise/sync/sla-check', { method: 'POST' }),
+            ]);
+            await Promise.all([loadTickets(), loadTech()]);
+        } finally {
+            setRefreshing(false);
+        }
+    };
 
     const byBoard = useMemo(() => {
         const m = new Map<string, number>();
@@ -470,6 +495,19 @@ function KpisTab() {
 
     return (
         <div className="space-y-6">
+            <ActionBar
+                left={<>Open tickets across selected boards. Refresh pulls live from ConnectWise.</>}
+                right={
+                    <button
+                        onClick={refresh}
+                        disabled={refreshing}
+                        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                    >
+                        {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                        Refresh from ConnectWise
+                    </button>
+                }
+            />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <StatCard label="Open tickets" value={tickets.length} tone="neutral" />
                 <StatCard
