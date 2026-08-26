@@ -8,6 +8,10 @@ const PENDING_STATUS_NAMES = (process.env.CW_PENDING_CLOSURE_STATUSES || 'Pendin
     .map(s => s.trim())
     .filter(Boolean);
 
+// PostgREST value list, e.g. ("Pending Closure","Waiting on Client").
+// Quoted because status names contain spaces.
+const PENDING_STATUS_LIST = `(${PENDING_STATUS_NAMES.map(s => `"${s.replace(/"/g, '""')}"`).join(',')})`;
+
 export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const scope = url.searchParams.get('scope') ?? 'today';
@@ -24,7 +28,15 @@ export async function GET(req: NextRequest) {
     } else if (scope === 'sla') {
         q = q.not('minutes_until_breach', 'is', null).order('minutes_until_breach', { ascending: true });
     } else if (scope === 'open') {
-        q = q.is('date_closed', null).order('date_entered', { ascending: false });
+        // Open excludes pending-closure so it stays disjoint from the `pending`
+        // scope. `not.in` evaluates to NULL for a null status_name and PostgREST
+        // drops those rows, so keep them explicitly — no status is not
+        // "pending closure".
+        q = q.is('date_closed', null);
+        if (PENDING_STATUS_NAMES.length) {
+            q = q.or(`status_name.is.null,status_name.not.in.${PENDING_STATUS_LIST}`);
+        }
+        q = q.order('date_entered', { ascending: false });
     } else {
         q = q.order('date_entered', { ascending: false }).limit(500);
     }
