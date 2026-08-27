@@ -9,6 +9,14 @@ const FLAG_BOARD_AGE_DAYS = Number(process.env.CW_FLAG_BOARD_AGE_DAYS || 3);
 const FLAG_TRIAGE_STATUS = process.env.CW_FLAG_TRIAGE_STATUS || 'Triaged';
 const FLAG_TRIAGE_HOURS = Number(process.env.CW_FLAG_TRIAGE_HOURS || 3);
 
+// Flags are a "needs action" list, so tickets already on their way out are not
+// flagged. Closed is handled by date_closed; this drops pending closure too.
+const PENDING_STATUS_NAMES = (process.env.CW_PENDING_CLOSURE_STATUSES || 'Pending Closure')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+const PENDING_STATUS_LIST = `(${PENDING_STATUS_NAMES.map(s => `"${s.replace(/"/g, '""')}"`).join(',')})`;
+
 interface FlaggedTicket {
     id: number;
     summary: string | null;
@@ -35,12 +43,17 @@ export async function GET() {
 
     // Two independent rules, so two queries rather than one OR — a ticket can
     // breach both and must then carry both reasons.
+    // `not.in` evaluates to NULL for a null status_name and PostgREST drops
+    // those rows, so keep them explicitly — no status is not "pending closure".
+    const notPending = `status_name.is.null,status_name.not.in.${PENDING_STATUS_LIST}`;
+
     const [staleBoard, staleTriage] = await Promise.all([
         supabase
             .from('cw_tickets')
             .select('*')
             .is('date_closed', null)
             .eq('board_name', FLAG_BOARD_NAME)
+            .or(notPending)
             .lt('date_entered', boardCutoff),
         supabase
             .from('cw_tickets')
