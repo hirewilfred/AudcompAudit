@@ -416,6 +416,8 @@ interface TechKpiRow {
     open: number;
     avg_hours: number;
     closure_rate: number;
+    // Current queue state, not windowed like the other columns.
+    pending_closure: number;
 }
 
 function KpisTab() {
@@ -423,7 +425,7 @@ function KpisTab() {
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [techRows, setTechRows] = useState<TechKpiRow[]>([]);
-    const [techDays, setTechDays] = useState(7);
+    const [techDays, setTechDays] = useState(1);
     const [techLoading, setTechLoading] = useState(false);
 
     const loadTickets = useCallback(async () => {
@@ -588,6 +590,7 @@ function TechKpiPanel({ rows, days, setDays, loading }: { rows: TechKpiRow[]; da
                             <th className="text-right px-4 py-2.5 font-semibold">Touched</th>
                             <th className="text-right px-4 py-2.5 font-semibold">Closed</th>
                             <th className="text-right px-4 py-2.5 font-semibold">Still open</th>
+                            <th className="text-right px-4 py-2.5 font-semibold">Pending closure (now)</th>
                             <th className="text-right px-4 py-2.5 font-semibold">Closure rate</th>
                             <th className="text-right px-4 py-2.5 font-semibold">Avg hrs</th>
                             <th className="text-left px-4 py-2.5 font-semibold w-1/4">Volume</th>
@@ -595,12 +598,12 @@ function TechKpiPanel({ rows, days, setDays, loading }: { rows: TechKpiRow[]; da
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {loading && (
-                            <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-400">
+                            <tr><td colSpan={9} className="px-4 py-8 text-center text-slate-400">
                                 <Loader2 className="h-4 w-4 animate-spin inline" />
                             </td></tr>
                         )}
                         {!loading && rows.length === 0 && (
-                            <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-400">No tech activity in the selected window</td></tr>
+                            <tr><td colSpan={9} className="px-4 py-8 text-center text-slate-400">No tech activity in the selected window</td></tr>
                         )}
                         {rows.map(r => {
                             const rateColor = r.closure_rate >= 80 ? 'bg-emerald-100 text-emerald-800'
@@ -614,6 +617,7 @@ function TechKpiPanel({ rows, days, setDays, loading }: { rows: TechKpiRow[]; da
                                     <td className="px-4 py-2 text-right tabular-nums">{r.touched}</td>
                                     <td className="px-4 py-2 text-right tabular-nums font-semibold text-emerald-700">{r.closed_by_me}</td>
                                     <td className="px-4 py-2 text-right tabular-nums text-slate-600">{r.open}</td>
+                                    <td className="px-4 py-2 text-right tabular-nums font-semibold text-amber-700">{r.pending_closure}</td>
                                     <td className="px-4 py-2 text-right">
                                         <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${rateColor}`}>
                                             {r.closure_rate}%
