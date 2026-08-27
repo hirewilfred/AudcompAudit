@@ -32,6 +32,9 @@ interface TicketRow {
     required_date: string | null;
     minutes_until_breach: number | null;
     date_entered: string | null;
+    status_since?: string | null;
+    // Only present on rows from /api/connectwise/flagged-tickets.
+    flags?: string[];
 }
 
 interface SyncRun {
@@ -123,17 +126,20 @@ export default function ServiceKpiPage() {
 function TodayBoardTab() {
     const [today, setToday] = useState<TicketRow[]>([]);
     const [pending, setPending] = useState<TicketRow[]>([]);
+    const [flagged, setFlagged] = useState<TicketRow[]>([]);
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
     const load = async () => {
         setLoading(true);
-        const [t, p] = await Promise.all([
+        const [t, p, f] = await Promise.all([
             fetch('/api/connectwise/tickets?scope=today').then(r => r.json()),
             fetch('/api/connectwise/tickets?scope=pending').then(r => r.json()),
+            fetch('/api/connectwise/flagged-tickets').then(r => r.json()),
         ]);
         setToday(t.tickets ?? []);
         setPending(p.tickets ?? []);
+        setFlagged(f.tickets ?? []);
         setLoading(false);
     };
 
@@ -164,13 +170,33 @@ function TodayBoardTab() {
                     </button>
                 }
             />
+            <TicketGrid title="Flagged" tickets={flagged} loading={loading} showFlags />
             <TicketGrid title="Created Today" tickets={today} loading={loading} />
             <TicketGrid title="Pending Closure" tickets={pending} loading={loading} />
         </div>
     );
 }
 
-function TicketGrid({ title, tickets, loading }: { title: string; tickets: TicketRow[]; loading: boolean }) {
+const FLAG_LABELS: Record<string, string> = {
+    helpdesk_stale: 'Help Desk >3d',
+    triaged_stale: 'Triaged >3h',
+};
+
+function FlagBadges({ flags }: { flags?: string[] }) {
+    if (!flags?.length) return null;
+    return (
+        <div className="flex flex-wrap gap-1">
+            {flags.map(f => (
+                <span key={f} className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-100 text-red-800">
+                    {FLAG_LABELS[f] ?? f}
+                </span>
+            ))}
+        </div>
+    );
+}
+
+function TicketGrid({ title, tickets, loading, showFlags }: { title: string; tickets: TicketRow[]; loading: boolean; showFlags?: boolean }) {
+    const colCount = showFlags ? 11 : 10;
     return (
         <section className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
@@ -183,6 +209,7 @@ function TicketGrid({ title, tickets, loading }: { title: string; tickets: Ticke
                 <table className="min-w-full text-sm">
                     <thead className="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500">
                         <tr>
+                            {showFlags && <th className="text-left px-4 py-2.5 font-semibold">Flags</th>}
                             <th className="text-left px-4 py-2.5 font-semibold">Ticket #</th>
                             <th className="text-left px-4 py-2.5 font-semibold">Company</th>
                             <th className="text-left px-4 py-2.5 font-semibold">Summary</th>
@@ -197,15 +224,16 @@ function TicketGrid({ title, tickets, loading }: { title: string; tickets: Ticke
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {tickets.length === 0 && !loading && (
-                            <tr><td colSpan={10} className="px-4 py-8 text-center text-slate-400">No tickets</td></tr>
+                            <tr><td colSpan={colCount} className="px-4 py-8 text-center text-slate-400">No tickets</td></tr>
                         )}
                         {loading && (
-                            <tr><td colSpan={10} className="px-4 py-8 text-center text-slate-400">
+                            <tr><td colSpan={colCount} className="px-4 py-8 text-center text-slate-400">
                                 <Loader2 className="h-4 w-4 animate-spin inline" />
                             </td></tr>
                         )}
                         {tickets.map(t => (
                             <tr key={t.id} className="hover:bg-blue-50/50">
+                                {showFlags && <td className="px-4 py-2"><FlagBadges flags={t.flags} /></td>}
                                 <td className="px-4 py-2 text-blue-600 font-semibold">{t.id}</td>
                                 <td className="px-4 py-2">{t.company_name}</td>
                                 <td className="px-4 py-2 max-w-md truncate text-blue-700">{t.summary}</td>
