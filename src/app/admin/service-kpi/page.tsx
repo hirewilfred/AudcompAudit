@@ -57,6 +57,16 @@ const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: st
 const HEADER_GRADIENT =
     'relative overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 text-white';
 
+// ConnectWise Manage deep link. The UI host is CW_SITE without the `api-`
+// prefix (api-na.myconnectwise.net -> na.myconnectwise.net). Overridable in
+// case the instance moves or is on-prem.
+const CW_HOST = process.env.NEXT_PUBLIC_CW_HOST || 'na.myconnectwise.net';
+
+function ticketUrl(id: number): string | null {
+    if (!CW_HOST) return null;
+    return `https://${CW_HOST}/v4_6_release/services/system_io/router/openrecord.rails?recordType=ServiceFV&recordId=${id}`;
+}
+
 export default function ServiceKpiPage() {
     const [tab, setTab] = useState<Tab>('today');
 
@@ -177,6 +187,23 @@ function TodayBoardTab() {
     );
 }
 
+function TicketLink({ id }: { id: number }) {
+    const href = ticketUrl(id);
+    // Render plain text rather than a dead link if no host is configured.
+    if (!href) return <span className="text-blue-600">{id}</span>;
+    return (
+        <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Open in ConnectWise"
+            className="text-blue-600 hover:text-blue-800 hover:underline"
+        >
+            {id}
+        </a>
+    );
+}
+
 const FLAG_LABELS: Record<string, string> = {
     helpdesk_stale: 'Help Desk >3d',
     triaged_stale: 'Triaged >3h',
@@ -234,7 +261,7 @@ function TicketGrid({ title, tickets, loading, showFlags }: { title: string; tic
                         {tickets.map(t => (
                             <tr key={t.id} className="hover:bg-blue-50/50">
                                 {showFlags && <td className="px-4 py-2"><FlagBadges flags={t.flags} /></td>}
-                                <td className="px-4 py-2 text-blue-600 font-semibold">{t.id}</td>
+                                <td className="px-4 py-2 font-semibold"><TicketLink id={t.id} /></td>
                                 <td className="px-4 py-2">{t.company_name}</td>
                                 <td className="px-4 py-2 max-w-md truncate text-blue-700">{t.summary}</td>
                                 <td className="px-4 py-2"><PriorityChip name={t.priority_name} sort={t.priority_sort} /></td>
@@ -392,7 +419,7 @@ function SlaDashboardTab() {
                             )}
                             {tickets.map(t => (
                                 <tr key={t.id} className="hover:bg-blue-50/50">
-                                    <td className="px-4 py-2 text-blue-600 font-semibold">{t.id}</td>
+                                    <td className="px-4 py-2 font-semibold"><TicketLink id={t.id} /></td>
                                     <td className="px-4 py-2">{t.company_name}</td>
                                     <td className="px-4 py-2 max-w-md truncate text-blue-700">{t.summary}</td>
                                     <td className="px-4 py-2">{t.board_name}</td>
